@@ -10,8 +10,7 @@ export const getClassBasedSelector = (el: HTMLElement): string | null => {
 
     let selector = el.tagName.toLowerCase();
     for (let i = 0; i < len; i++) {
-      // todo: optimize class selection to be more specific here
-      selector += '.' + classes[i];
+      selector += '.' + CSS.escape(classes[i]);
     }
 
     return selector;
@@ -23,7 +22,7 @@ export const getClassBasedSelector = (el: HTMLElement): string | null => {
 export const getIdBasedSelector = (el: HTMLElement): string | null => {
   const id = el.getAttribute('id');
   if (id) {
-    return `#${id}`;
+    return `#${CSS.escape(id)}`;
   }
 
   return null;

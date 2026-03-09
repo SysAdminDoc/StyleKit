@@ -5,47 +5,40 @@ import {
   GetStylesForPageResponse,
 } from '@stylebot/types';
 
-export const getCurrentTab = (
-  callback: (tab: chrome.tabs.Tab) => void
-): void => {
-  chrome.windows.getCurrent({ populate: true }, ({ tabs }) => {
-    if (tabs) {
-      for (let i = 0; i < tabs.length; i++) {
-        if (tabs[i].active) {
-          callback(tabs[i]);
-        }
-      }
-    }
-  });
+export const getCurrentTab = async (): Promise<chrome.tabs.Tab | undefined> => {
+  const window = await chrome.windows.getCurrent({ populate: true });
+  if (window.tabs) {
+    return window.tabs.find(tab => tab.active);
+  }
 };
 
-export const getStyles = (
-  tab: chrome.tabs.Tab,
-  callback: (styles: GetStylesForPageResponse) => void
-): void => {
+export const getStyles = async (
+  tab: chrome.tabs.Tab
+): Promise<GetStylesForPageResponse> => {
   const message: GetStylesForPage = {
     name: 'GetStylesForPage',
     tab,
   };
 
-  chrome.runtime.sendMessage(message, response => {
-    callback(response);
-  });
+  return chrome.runtime.sendMessage(message);
 };
 
-export const getIsStylebotOpen = (
-  tab: chrome.tabs.Tab,
-  callback: (isOpen: boolean) => void
-): void => {
+export const getIsStylebotOpen = async (
+  tab: chrome.tabs.Tab
+): Promise<boolean> => {
   if (tab.id) {
     const message: GetIsStylebotOpen = {
       name: 'GetIsStylebotOpen',
     };
 
-    chrome.tabs.sendMessage(tab.id, message, (response: boolean) =>
-      callback(response)
-    );
+    try {
+      return await chrome.tabs.sendMessage(tab.id, message);
+    } catch (e) {
+      return false;
+    }
   }
+
+  return false;
 };
 
 export const toggleStylebot = (tab: chrome.tabs.Tab): void => {
@@ -54,7 +47,9 @@ export const toggleStylebot = (tab: chrome.tabs.Tab): void => {
       name: 'ToggleStylebot',
     };
 
-    chrome.tabs.sendMessage(tab.id, message);
+    chrome.tabs.sendMessage(tab.id, message).catch(() => {
+      // Content script not available on this tab
+    });
     window.close();
   }
 };

@@ -1,0 +1,105 @@
+@import '../../scss/dark-palette';
+
+html,
+body {
+  background: $dark-base !important;
+  color: $dark-text !important;
+  margin: 0;
+}
+
+.popup {
+  background: $dark-base;
+}
+
+/* List items */
+.list-group {
+  .list-group-item {
+    background-color: $dark-base !important;
+    border-color: $dark-border !important;
+    color: $dark-text !important;
+
+    &:hover,
+    &:focus {
+      background-color: $dark-surface-1 !important;
+    }
+  }
+}
+
+/* Stylebot toggle row */
+.open-stylebot {
+  svg path {
+    fill: $dark-text-dim !important;
+  }
+
+  &:hover svg path {
+    fill: $dark-text !important;
+  }
+}
+
+/* Switches */
+.custom-control-label {
+  color: $dark-text !important;
+
+  &::before {
+    background-color: $dark-surface-2 !important;
+    border-color: $dark-overlay !important;
+  }
+}
+
+.custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+  background-color: $dark-accent !important;
+  border-color: $dark-accent !important;
+}
+
+/* Icons */
+.b-icon {
+  color: $dark-text-dim !important;
+}
+
+.list-group-item:hover .b-icon {
+  color: $dark-text !important;
+}
+
+/* Sync metadata */
+.sync-metadata {
+  color: $dark-text-muted !important;
+}
+
+/* Release notification dismiss */
+.dismiss-btn {
+  background: transparent !important;
+  border: none !important;
+  color: $dark-text-muted !important;
+
+  &:hover {
+    color: $dark-text !important;
+    background: $dark-surface-1 !important;
+  }
+}
+
+/* Links */
+a {
+  color: $dark-accent;
+
+  &:hover {
+    color: $dark-accent-hover;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: $dark-base;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $dark-surface-2;
+  border-radius: 3px;
+
+  &:hover {
+    background: $dark-overlay;
+  }
+}

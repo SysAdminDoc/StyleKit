@@ -38,7 +38,9 @@ export default Vue.extend({
             name: 'ToggleReadabilityForTab',
           };
 
-          chrome.tabs.sendMessage(tab.id, message);
+          chrome.tabs.sendMessage(tab.id, message).catch(() => {
+            // Content script not available on this tab
+          });
         }
       });
     },

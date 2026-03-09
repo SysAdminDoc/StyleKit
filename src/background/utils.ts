@@ -15,7 +15,7 @@ class BackgroundPageUtils {
    * Check if a given string is a regular expression (starts with ^)
    */
   private static isRegex(str: string) {
-    return str.indexOf('^') == 0;
+    return str.indexOf('^') === 0;
   }
 
   /***
@@ -90,7 +90,7 @@ class BackgroundPageUtils {
   /* Check if the page url matches with the stylebot pattern */
   private static matchesWildcard(pageUrl: string, pattern: string) {
     try {
-      const hasComma = ~pattern.indexOf(',');
+      const hasComma = pattern.includes(',');
 
       pattern = pattern
         /* Removes white spaces */

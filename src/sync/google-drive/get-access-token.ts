@@ -42,46 +42,33 @@ const validate = async (redirectURL?: string): Promise<AccessToken> => {
     method: 'GET',
   });
 
-  const checkResponse = (response: Response) => {
-    return new Promise<AccessToken>((resolve, reject) => {
-      if (response.status != 200) {
-        reject('Token validation error');
-        return;
-      }
-
-      response.json().then((json: { aud: string }) => {
-        if (json.aud && json.aud === CLIENT_ID) {
-          resolve(accessToken);
-        } else {
-          reject('Token validation error');
-        }
-      });
-    });
-  };
-
   const response = await fetch(validationRequest);
-  return checkResponse(response);
+  if (response.status !== 200) {
+    throw 'Token validation error';
+  }
+
+  const json: { aud: string } = await response.json();
+  if (json.aud && json.aud === CLIENT_ID) {
+    return accessToken;
+  }
+
+  throw 'Token validation error';
 };
 
-const authorize = (): Promise<string | undefined> => {
-  return new Promise(resolve => {
-    console.debug('Extension redirectURL:', chrome.identity.getRedirectURL());
-    const redirectURL = chrome.identity.getRedirectURL();
-    const scopes = ['https://www.googleapis.com/auth/drive.file'];
+const authorize = async (): Promise<string | undefined> => {
+  console.debug('Extension redirectURL:', chrome.identity.getRedirectURL());
+  const redirectURL = chrome.identity.getRedirectURL();
+  const scopes = ['https://www.googleapis.com/auth/drive.file'];
 
-    let authURL = 'https://accounts.google.com/o/oauth2/auth';
-    authURL += `?client_id=${CLIENT_ID}`;
-    authURL += `&response_type=token`;
-    authURL += `&redirect_uri=${encodeURIComponent(redirectURL)}`;
-    authURL += `&scope=${encodeURIComponent(scopes.join(' '))}`;
+  let authURL = 'https://accounts.google.com/o/oauth2/auth';
+  authURL += `?client_id=${CLIENT_ID}`;
+  authURL += `&response_type=token`;
+  authURL += `&redirect_uri=${encodeURIComponent(redirectURL)}`;
+  authURL += `&scope=${encodeURIComponent(scopes.join(' '))}`;
 
-    return chrome.identity.launchWebAuthFlow(
-      {
-        interactive: true,
-        url: authURL,
-      },
-      responseURL => resolve(responseURL)
-    );
+  return chrome.identity.launchWebAuthFlow({
+    interactive: true,
+    url: authURL,
   });
 };
 

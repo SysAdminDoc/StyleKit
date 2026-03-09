@@ -104,7 +104,7 @@ export default Vue.extend({
   height: 53px !important;
   outline: none !important;
   font-size: 21px !important;
-  border-color: #ccc !important;
+  border-color: #45475a !important;
   line-height: 29px !important;
 
   &:hover,
@@ -118,7 +118,7 @@ export default Vue.extend({
   }
 
   path {
-    fill: #555;
+    fill: #a6adc8;
   }
 
   &:hover:not(:disabled),

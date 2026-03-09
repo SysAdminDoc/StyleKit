@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Stylebot",
-  "version": "3.1.4",
-  "author": "Ankit Ahuja",
+  "name": "StyleKit",
+  "version": "4.0.0",
+  "author": "SysAdminDoc",
   "description": "__MSG_extension_description__",
   "default_locale": "en",
   "background": {
@@ -34,7 +34,7 @@
       "24": "img/icon24.png",
       "32": "img/icon32.png"
     },
-    "default_title": "Stylebot",
+    "default_title": "StyleKit",
     "default_popup": "popup/index.html"
   },
   "icons": {
@@ -52,7 +52,8 @@
   "host_permissions": [
     "https://drive.google.com/*",
     "https://www.googleapis.com/*",
-    "https://fonts.googleapis.com/*"
+    "https://fonts.googleapis.com/*",
+    "https://api.github.com/*"
   ],
   "web_accessible_resources": [
     {

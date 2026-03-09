@@ -130,24 +130,26 @@ class OverlayTip {
     Object.assign(this.tip.style, {
       display: 'flex',
       flexFlow: 'row nowrap',
-      backgroundColor: '#333740',
-      borderRadius: '2px',
+      backgroundColor: '#181825',
+      border: '1px solid #313244',
+      borderRadius: '6px',
       fontFamily:
         '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
       fontWeight: 'bold',
-      padding: '3px 5px',
+      padding: '4px 8px',
       pointerEvents: 'none',
       position: 'fixed',
       fontSize: '12px',
       whiteSpace: 'nowrap',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
     });
 
     this.nameSpan = doc.createElement('span');
     this.tip.appendChild(this.nameSpan);
 
     Object.assign(this.nameSpan.style, {
-      color: '#ee78e6',
-      borderRight: '1px solid #aaaaaa',
+      color: '#cba6f7',
+      borderRight: '1px solid #45475a',
       paddingRight: '0.5rem',
       marginRight: '0.5rem',
     });
@@ -156,7 +158,7 @@ class OverlayTip {
     this.tip.appendChild(this.dimSpan);
 
     Object.assign(this.dimSpan.style, {
-      color: '#d7d7d7',
+      color: '#a6adc8',
     });
 
     this.tip.style.zIndex = '10000000';
@@ -309,7 +311,7 @@ function findTipPos(
 
   let top;
   if (dims.top + dims.height + tipHeight <= bounds.top + bounds.height) {
-    if (dims.top + dims.height < bounds.top + 0) {
+    if (dims.top + dims.height < bounds.top) {
       top = bounds.top + margin;
     } else {
       top = dims.top + dims.height + margin;
@@ -360,8 +362,8 @@ function boxWrap(dims: Dimensions, what: string, node: HTMLElement) {
 }
 
 const overlayStyles = {
-  background: 'rgba(120, 170, 210, 0.7)',
-  padding: 'rgba(77, 200, 0, 0.3)',
-  margin: 'rgba(255, 155, 0, 0.3)',
-  border: 'rgba(255, 200, 50, 0.3)',
+  background: 'rgba(137, 180, 250, 0.25)',
+  padding: 'rgba(166, 227, 161, 0.2)',
+  margin: 'rgba(250, 179, 135, 0.2)',
+  border: 'rgba(249, 226, 175, 0.2)',
 };

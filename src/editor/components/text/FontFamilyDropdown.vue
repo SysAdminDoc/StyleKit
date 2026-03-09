@@ -13,14 +13,32 @@
           {{ t('default') }}
         </b-dropdown-item>
 
+        <template v-if="fonts.length > 0">
+          <b-dropdown-header>Your Fonts</b-dropdown-header>
+
+          <b-dropdown-item
+            v-for="font in fonts"
+            :key="font"
+            :style="{ fontFamily: font }"
+            @click="$emit('select', font)"
+          >
+            {{ font }}
+          </b-dropdown-item>
+        </template>
+
+        <b-dropdown-divider />
+        <b-dropdown-header>Common Fonts</b-dropdown-header>
+
         <b-dropdown-item
-          v-for="font in fonts"
-          :key="font"
+          v-for="font in systemFonts"
+          :key="'sys-' + font"
+          :style="{ fontFamily: font }"
           @click="$emit('select', font)"
         >
           {{ font }}
         </b-dropdown-item>
 
+        <b-dropdown-divider />
         <b-dropdown-item @click="editFonts">
           {{ t('fonts_edit_list') }}
         </b-dropdown-item>
@@ -63,6 +81,27 @@ export default Vue.extend({
     },
   },
 
+  data() {
+    return {
+      systemFonts: [
+        'Arial',
+        'Georgia',
+        'Helvetica',
+        'Times New Roman',
+        'Verdana',
+        'Courier New',
+        'Trebuchet MS',
+        'Tahoma',
+        'Segoe UI',
+        'system-ui',
+        'sans-serif',
+        'serif',
+        'monospace',
+        'cursive',
+      ],
+    };
+  },
+
   computed: {
     text: {
       get(): string {
@@ -88,6 +127,19 @@ export default Vue.extend({
   .dropdown-toggle {
     border-top-left-radius: 3.2px !important;
     border-bottom-left-radius: 3.2px !important;
+  }
+
+  .dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .dropdown-header {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c7086;
+    padding: 4px 16px 2px;
   }
 }
 </style>
