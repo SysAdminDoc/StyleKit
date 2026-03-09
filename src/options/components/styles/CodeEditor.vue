@@ -63,7 +63,7 @@ export default Vue.extend({
         return;
       }
 
-      contentWindow.postMessage(message, chrome.runtime.getURL('*'));
+      contentWindow.postMessage(message, '*');
     },
 
     handleIframeCssUpdate(css: string): void {
