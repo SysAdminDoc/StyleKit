@@ -5,8 +5,10 @@
         v-for="style in styles"
         :key="style.url"
         :url="style.url"
+        :tab="tab"
         :disable-toggle="isOpen"
         :initial-enabled="style.enabled"
+        @deleted="onStyleDeleted"
       />
 
       <readability :initial-readability="readability" />
@@ -82,6 +84,12 @@ export default Vue.extend({
     this.styles = styles.filter(style => style.css);
     this.readability = !!defaultStyle && defaultStyle.readability;
     this.googleDriveSyncEnabled = await getGoogleDriveSyncEnabled();
+  },
+
+  methods: {
+    onStyleDeleted(url: string): void {
+      this.styles = this.styles.filter(s => s.url !== url);
+    },
   },
 });
 </script>
