@@ -1,0 +1,476 @@
+@import '../../scss/dark-palette';
+
+.stylebot-dark {
+  &.stylebot {
+    color: $dark-text;
+    background: $dark-base;
+    border-color: $dark-border !important;
+  }
+
+  .stylebot-body {
+    background: $dark-base;
+  }
+
+  /* Header & footer */
+  .header,
+  .footer {
+    background: $dark-surface;
+  }
+
+  .url {
+    color: $dark-text-muted;
+  }
+
+  /* Header/footer icons & action buttons */
+  .b-icon {
+    color: $dark-text-dim !important;
+  }
+
+  .stylebot-window-action .b-icon {
+    color: $dark-subtext !important;
+
+    &:hover {
+      color: $dark-text !important;
+    }
+  }
+
+  .stylebot-window-action .btn:hover .b-icon,
+  .stylebot-window-action .btn-group:hover .b-icon {
+    color: $dark-text !important;
+  }
+
+  .close-action .b-icon {
+    color: $dark-red-dim !important;
+
+    &:hover {
+      color: $dark-red !important;
+    }
+  }
+
+  .close-action .btn:hover .b-icon {
+    color: $dark-red !important;
+  }
+
+  /* Inspector button */
+  .stylebot-inspector {
+    border-color: $dark-surface-2 !important;
+
+    path {
+      fill: $dark-text-dim;
+    }
+
+    &:hover:not(:disabled) path {
+      fill: $dark-text;
+    }
+
+    &.active path {
+      fill: #fff;
+    }
+  }
+
+  /* More action check icons */
+  .more-action-check-icon .b-icon {
+    color: $dark-accent !important;
+  }
+
+  /* Form controls */
+  .form-control {
+    color: $dark-text;
+    background-color: $dark-surface-1;
+    border-color: $dark-border;
+
+    &:focus {
+      color: $dark-text;
+      background-color: $dark-surface-2;
+      border-color: $dark-accent;
+      box-shadow: 0 0 0 0.2rem rgba($dark-accent, 0.2);
+    }
+
+    &:disabled {
+      background-color: $dark-surface;
+      color: $dark-text-muted;
+    }
+
+    &::placeholder {
+      color: $dark-text-muted;
+    }
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background-color: $dark-accent;
+    border-color: $dark-accent;
+    color: $dark-bg;
+
+    &:hover,
+    &:focus {
+      background-color: $dark-accent-hover;
+      border-color: $dark-accent-hover;
+    }
+  }
+
+  .btn-secondary {
+    background-color: $dark-surface-1;
+    border-color: $dark-surface-2;
+    color: $dark-text;
+
+    &:hover,
+    &:focus {
+      background-color: $dark-surface-2;
+      border-color: $dark-overlay;
+    }
+  }
+
+  .btn-outline-secondary {
+    color: $dark-text-dim;
+    border-color: $dark-surface-2;
+
+    &:hover,
+    &:focus {
+      color: $dark-text;
+      background-color: $dark-surface-1;
+      border-color: $dark-overlay;
+    }
+  }
+
+  .btn-outline-danger {
+    color: $dark-red;
+    border-color: $dark-red;
+
+    &:hover {
+      background-color: $dark-red;
+      color: $dark-bg;
+    }
+  }
+
+  /* Input group addon */
+  .input-group-text {
+    color: $dark-text-dim;
+    background-color: $dark-surface-1;
+    border-color: $dark-border;
+  }
+
+  /* Switches */
+  .custom-control-label {
+    color: $dark-text;
+
+    &::before {
+      background-color: $dark-surface-2;
+      border-color: $dark-overlay;
+    }
+  }
+
+  .custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+    background-color: $dark-accent;
+    border-color: $dark-accent;
+  }
+
+  /* Property labels */
+  .css-property {
+    color: $dark-text-dim;
+  }
+
+  /* Tabs */
+  .nav-tabs {
+    border-color: $dark-border;
+
+    .nav-link {
+      color: $dark-text-muted;
+
+      &.active {
+        color: $dark-text;
+        background-color: $dark-base;
+        border-color: $dark-border $dark-border $dark-base;
+      }
+
+      &:hover {
+        border-color: $dark-surface-1 $dark-surface-1 $dark-border;
+        color: $dark-text;
+      }
+    }
+  }
+
+  /* Basic editor collapse sections */
+  .section {
+    border-top-color: $dark-border;
+  }
+
+  .collapse-btn {
+    color: $dark-text !important;
+
+    &:hover {
+      color: $dark-accent !important;
+    }
+  }
+
+  /* Magic editor */
+  .magic-section {
+    border-top-color: $dark-border;
+  }
+
+  .magic-title {
+    color: $dark-text;
+  }
+
+  .text-muted {
+    color: $dark-text-muted !important;
+  }
+
+  .lead {
+    color: $dark-text-dim;
+  }
+
+  /* Card (accordion) */
+  .card {
+    background-color: $dark-surface;
+    border-color: $dark-border;
+  }
+
+  .card-header {
+    background-color: $dark-surface-1;
+    border-color: $dark-border;
+
+    button {
+      color: $dark-text;
+    }
+  }
+
+  /* Dropdown menus */
+  .dropdown-menu {
+    background-color: $dark-surface;
+    border-color: $dark-border;
+  }
+
+  .dropdown-item {
+    color: $dark-text;
+
+    &:hover,
+    &:focus {
+      background-color: $dark-accent;
+      color: $dark-bg;
+    }
+  }
+
+  .dropdown-divider {
+    border-color: $dark-border;
+  }
+
+  /* Undo/redo & toolbar buttons */
+  .undo-redo-btn,
+  .copy-btn,
+  .diff-btn {
+    color: $dark-text-dim;
+
+    &:hover {
+      color: $dark-text;
+    }
+
+    &:disabled {
+      color: $dark-surface-2;
+    }
+  }
+
+  .footer {
+    border-top: 1px solid $dark-border;
+  }
+
+  /* Box model */
+  .box-label {
+    color: $dark-text-muted;
+  }
+
+  .box-margin {
+    background: $dark-surface;
+    border-color: $dark-border;
+
+    &.highlighted {
+      background: rgba($dark-peach, 0.2);
+
+      &.disabled {
+        background: $dark-surface-1;
+      }
+    }
+  }
+
+  .box-border {
+    background: $dark-surface;
+    border-color: $dark-surface-2;
+
+    &.highlighted {
+      border-color: $dark-surface;
+      background: rgba($dark-yellow, 0.15);
+
+      &.disabled {
+        background: $dark-surface-1;
+      }
+    }
+  }
+
+  .box-padding {
+    background: $dark-surface;
+    border-color: $dark-overlay;
+
+    &.highlighted {
+      background: rgba($dark-green, 0.15);
+
+      &.disabled {
+        background: $dark-surface-1;
+      }
+    }
+  }
+
+  .box-element {
+    background: $dark-base;
+    border-color: $dark-overlay;
+
+    &.highlighted {
+      background: rgba($dark-accent, 0.25);
+
+      &.disabled {
+        background: $dark-surface-1;
+      }
+    }
+  }
+
+  .box-element-x {
+    color: $dark-text-dim;
+  }
+
+  .box-model-length {
+    color: $dark-text !important;
+
+    &:hover:not(:disabled) {
+      background: rgba($dark-surface-2, 0.8) !important;
+    }
+
+    &:focus {
+      border-color: $dark-overlay !important;
+      background: $dark-surface-1 !important;
+    }
+  }
+
+  /* Color picker */
+  .color-picker-toggle {
+    border: 1px solid $dark-border;
+  }
+
+  .basic-color-palette,
+  .material-color-palette {
+    background: $dark-surface;
+    border-color: $dark-border;
+  }
+
+  .vue-swatches__container {
+    background: $dark-surface !important;
+  }
+
+  /* Range input (grayscale slider) */
+  input[type='range'] {
+    &::-webkit-slider-runnable-track {
+      background: $dark-surface-2;
+    }
+
+    &::-webkit-slider-thumb {
+      background: $dark-accent;
+    }
+  }
+
+  /* Help dialog */
+  .stylebot-help-dialog {
+    background-color: $dark-base;
+
+    .title {
+      color: $dark-text;
+    }
+
+    .close-btn {
+      color: $dark-text-muted;
+
+      &:hover {
+        color: $dark-text;
+      }
+    }
+
+    .customize {
+      color: $dark-accent;
+
+      &:hover {
+        color: $dark-accent-hover;
+      }
+    }
+  }
+
+  table {
+    color: $dark-text;
+  }
+
+  th {
+    color: $dark-subtext;
+    border-color: $dark-border !important;
+  }
+
+  td {
+    color: $dark-text-dim;
+    border-color: $dark-border !important;
+  }
+
+  .stylebot-key {
+    color: $dark-text-muted;
+    font-family: monospace;
+  }
+
+  /* Delete style dialog */
+  .delete-style-dialog-content {
+    background-color: $dark-base;
+
+    .title {
+      color: $dark-text;
+    }
+
+    .description {
+      color: $dark-text-muted !important;
+    }
+  }
+
+  /* Computed CSS panel */
+  .stylebot-computed-css {
+    background: $dark-surface;
+    color: $dark-text;
+
+    .list-group-item {
+      background: $dark-surface;
+      border-color: $dark-border;
+      color: $dark-text-dim;
+    }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: $dark-base;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: $dark-surface-2;
+    border-radius: 4px;
+
+    &:hover {
+      background: $dark-overlay;
+    }
+  }
+
+  /* Resize handle */
+  &.vdr {
+    .handle {
+      background: $dark-accent !important;
+    }
+
+    &.stylebot-resizing,
+    &.stylebot-resizing-active {
+      border-color: $dark-accent !important;
+    }
+  }
+}

@@ -39,7 +39,7 @@ import { setNotification } from '@stylebot/utils';
 chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   if (reason === 'install') {
     chrome.tabs.create({
-      url: 'https://stylebot.dev/help',
+      url: 'options/index.html',
     });
 
     setNotification('release/3.1', true);
@@ -60,7 +60,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, _, tab) => {
     };
 
     if (!tab.url?.includes('chrome-extension://')) {
-      chrome.tabs.sendMessage(tabId, message);
+      chrome.tabs.sendMessage(tabId, message).catch(() => {});
     }
   }
 });
@@ -72,9 +72,8 @@ chrome.tabs.onActivated.addListener(async activeInfo => {
   const option = await getOption('contextMenu');
 
   if (option) {
-    chrome.tabs.get(activeInfo.tabId, tab => {
-      ContextMenu.update(tab);
-    });
+    const tab = await chrome.tabs.get(activeInfo.tabId);
+    ContextMenu.update(tab);
   }
 });
 

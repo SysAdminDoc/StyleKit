@@ -1,6 +1,6 @@
 <template>
   <vue-draggable-resizable
-    :class="`stylebot ${layout.dockLocation}`"
+    :class="`stylebot ${layout.dockLocation} stylebot-dark`"
     class-name-resizing="stylebot-resizing"
     class-name-active="stylebot-resizing-active"
     drag-handle=".stylebot-null"
@@ -49,6 +49,10 @@ export default Vue.extend({
       return this.$store.state.options.layout;
     },
 
+    darkMode(): boolean {
+      return this.$store.state.options.darkMode;
+    },
+
     visible(): boolean {
       return this.$store.state.visible;
     },
@@ -71,7 +75,8 @@ export default Vue.extend({
 
     x(): number {
       if (this.dockedRight) {
-        return this.windowWidth - this.width - 15;
+        const clientWidth = document.documentElement.clientWidth;
+        return clientWidth - this.width;
       }
 
       return 0;

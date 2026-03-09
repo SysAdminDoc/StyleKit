@@ -1,17 +1,17 @@
 {
-  "name": "stylebot",
-  "version": "3.1.4",
-  "description": "Change the appearance of the web instantly",
-  "homepage": "https://github.com/ankit/stylebot#readme",
+  "name": "stylekit",
+  "version": "4.0.0",
+  "description": "Customize any website's appearance instantly",
+  "homepage": "https://github.com/SysAdminDoc/StyleKit#readme",
   "bugs": {
-    "url": "https://github.com/ankit/stylebot/issues"
+    "url": "https://github.com/SysAdminDoc/StyleKit/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ankit/stylebot.git"
+    "url": "git+https://github.com/SysAdminDoc/StyleKit.git"
   },
   "license": "MIT",
-  "author": "Ankit Ahuja",
+  "author": "SysAdminDoc",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --hide-modules",
     "build:firefox": "cross-env NODE_ENV=production BROWSER=firefox webpack --hide-modules",
@@ -59,6 +59,7 @@
     "@babel/core": "^7.10.1",
     "@babel/plugin-proposal-optional-chaining": "^7.10.1",
     "@babel/preset-env": "^7.10.1",
+    "@mozilla/readability": "^0.4.4",
     "@types/chrome": "^0.0.193",
     "@types/dedent": "^0.7.0",
     "@types/jest": "^26.0.4",
@@ -103,7 +104,6 @@
     "prettier": "^2.0.5",
     "prettier-eslint": "^11.0.0",
     "progress-bar-webpack-plugin": "^2.1.0",
-    "readability": "mozilla/readability#master",
     "requirejs": "^2.3.6",
     "sass": "^1.26.9",
     "sass-loader": "^8.0.2",

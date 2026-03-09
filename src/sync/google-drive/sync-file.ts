@@ -12,8 +12,8 @@ const GOOGLE_DRIVE_FILE_FIELDS = [
   'webContentLink',
 ].join(',');
 
-const SYNC_FOLDER_NAME = 'stylebot';
-const SYNC_FILE_NAME = 'stylebot_v3_backup.json';
+const SYNC_FOLDER_NAME = 'stylekit';
+const SYNC_FILE_NAME = 'stylekit_v4_backup.json';
 
 const getAuthorizationHeaders = (accessToken: AccessToken) =>
   new Headers({

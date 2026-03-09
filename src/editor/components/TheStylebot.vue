@@ -11,7 +11,13 @@
       <the-code-editor v-else-if="mode === 'code' && !resizing" />
     </div>
 
-    <the-footer />
+    <the-toast />
+    <the-footer @show-diff="showDiff = true" />
+
+    <the-css-diff-view
+      :visible="showDiff"
+      @close="showDiff = false"
+    />
   </the-stylebot-resizer>
 </template>
 
@@ -24,6 +30,8 @@ import TheCodeEditor from './TheCodeEditor.vue';
 import TheBasicEditor from './TheBasicEditor.vue';
 import TheMagicEditor from './TheMagicEditor.vue';
 import TheStylebotResizer from './TheStylebotResizer.vue';
+import TheCssDiffView from './TheCssDiffView.vue';
+import TheToast from './TheToast.vue';
 
 import { StylebotEditingMode } from '@stylebot/types';
 
@@ -37,6 +45,14 @@ export default Vue.extend({
     TheMagicEditor,
     TheCodeEditor,
     TheStylebotResizer,
+    TheCssDiffView,
+    TheToast,
+  },
+
+  data() {
+    return {
+      showDiff: false,
+    };
   },
 
   computed: {
@@ -59,13 +75,16 @@ export default Vue.extend({
 .stylebot {
   top: 0;
   padding: 0;
-  color: #000;
+  color: #cdd6f4;
   line-height: 20px;
-  background: #fff;
+  background: #1e1e2e;
+  display: flex;
+  flex-direction: column;
 }
 
 .stylebot-body {
   overflow: auto;
-  height: calc(100% - 125px);
+  flex: 1;
+  min-height: 0;
 }
 </style>

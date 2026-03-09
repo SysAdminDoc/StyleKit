@@ -1,5 +1,17 @@
 <template>
   <div>
+    <b-alert
+      v-model="showSyncError"
+      variant="danger"
+      dismissible
+      class="mb-2"
+    >
+      {{ syncError }}
+      <a href="#" class="alert-link ml-2" @click.prevent="syncWithGoogleDrive">
+        Retry
+      </a>
+    </b-alert>
+
     <b-row no-gutters class="description mb-1">
       <div v-if="googleDriveSyncLastModifiedTime && !syncInProgress">
         {{
@@ -87,9 +99,13 @@ export default Vue.extend({
 
   data(): {
     syncInProgress: boolean;
+    syncError: string;
+    showSyncError: boolean;
   } {
     return {
       syncInProgress: false,
+      syncError: '',
+      showSyncError: false,
     };
   },
 
@@ -135,7 +151,15 @@ export default Vue.extend({
   methods: {
     async syncWithGoogleDrive() {
       this.syncInProgress = true;
-      await this.$store.dispatch('syncWithGoogleDrive');
+      this.showSyncError = false;
+
+      const error = await this.$store.dispatch('syncWithGoogleDrive');
+
+      if (error) {
+        this.syncError = error;
+        this.showSyncError = true;
+      }
+
       this.syncInProgress = false;
     },
   },
@@ -144,7 +168,6 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .description {
-  color: #555;
   font-size: 15px;
 }
 </style>

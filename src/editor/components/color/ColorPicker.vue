@@ -14,6 +14,7 @@
         </material-color-palette>
       </div>
 
+      <color-presets @select="onPresetSelect" />
       <color-picker-toggle v-model="value" @click="onOpen" />
       <color-text-input v-model="value" class="ml-2" />
     </b-col>
@@ -29,6 +30,7 @@ import ColorPickerToggle from './ColorPickerToggle.vue';
 import BasicColorPalette from './BasicColorPalette.vue';
 import MaterialColorPalette from './MaterialColorPalette.vue';
 import ColorPaletteFooter from './ColorPaletteFooter.vue';
+import ColorPresets from './ColorPresets.vue';
 
 export default Vue.extend({
   name: 'ColorPicker',
@@ -39,6 +41,7 @@ export default Vue.extend({
     BasicColorPalette,
     MaterialColorPalette,
     ColorPaletteFooter,
+    ColorPresets,
   },
 
   props: {
@@ -111,6 +114,11 @@ export default Vue.extend({
       setTimeout(() => {
         document.removeEventListener('click', this.onDocumentClick);
       }, 0);
+    },
+
+    onPresetSelect(color: string): void {
+      this.value = color;
+      this.$emit('input', color);
     },
 
     onDocumentClick(e: MouseEvent): void {

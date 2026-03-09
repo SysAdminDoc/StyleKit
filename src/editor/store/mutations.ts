@@ -35,6 +35,7 @@ export default {
 
   setInspecting(state: State, inspecting: boolean): void {
     state.inspecting = inspecting;
+    chrome.storage.session.set({ 'stylekit-inspecting': inspecting });
   },
 
   setResizing(state: State, resizing: boolean): void {
@@ -91,5 +92,22 @@ export default {
 
   setContextMenuSelector(state: State, value: string): void {
     state.contextMenuSelector = value;
+  },
+
+  pushCssHistory(state: State, css: string): void {
+    // Truncate any forward history when a new change is made
+    state.cssHistory = state.cssHistory.slice(0, state.cssHistoryIndex + 1);
+    state.cssHistory.push(css);
+
+    // Limit history to 50 entries
+    if (state.cssHistory.length > 50) {
+      state.cssHistory.shift();
+    } else {
+      state.cssHistoryIndex++;
+    }
+  },
+
+  setCssHistoryIndex(state: State, index: number): void {
+    state.cssHistoryIndex = index;
   },
 };

@@ -24,11 +24,7 @@ export const getAllOptions = async (): Promise<StylebotOptions> => {
     name: 'GetAllOptions',
   };
 
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage(message, (response: GetAllOptionsResponse) => {
-      resolve(response);
-    });
-  });
+  return chrome.runtime.sendMessage(message);
 };
 
 export const setOption = (
@@ -54,14 +50,7 @@ export const getStylesForPage = async (
     important,
   };
 
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage(
-      message,
-      (response: GetStylesForPageResponse) => {
-        resolve(response);
-      }
-    );
-  });
+  return chrome.runtime.sendMessage(message);
 };
 
 export const openOptionsPage = (): void => {
@@ -128,11 +117,7 @@ export const getCommands = async (): Promise<GetCommandsResponse> => {
     name: 'GetCommands',
   };
 
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage(message, (response: GetCommandsResponse) => {
-      resolve(response);
-    });
-  });
+  return chrome.runtime.sendMessage(message);
 };
 
 export const getReadabilitySettings = async (): Promise<
@@ -142,14 +127,7 @@ export const getReadabilitySettings = async (): Promise<
     name: 'GetReadabilitySettings',
   };
 
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage(
-      message,
-      (response: GetReadabilitySettingsResponse) => {
-        resolve(response);
-      }
-    );
-  });
+  return chrome.runtime.sendMessage(message);
 };
 
 export const setReadabilitySettings = (value: ReadabilitySettings): void => {

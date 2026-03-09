@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1e2e"/>
+      <stop offset="100%" stop-color="#181825"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#89b4fa"/>
+      <stop offset="100%" stop-color="#74c7ec"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect x="4" y="4" width="120" height="120" rx="24" ry="24" fill="url(#bg)" stroke="#313244" stroke-width="2"/>
+  <!-- Left curly brace -->
+  <path d="M38 36 C38 36 30 36 30 44 L30 56 C30 64 22 64 22 64 C22 64 30 64 30 72 L30 84 C30 92 38 92 38 92"
+        fill="none" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Right curly brace -->
+  <path d="M90 36 C90 36 98 36 98 44 L98 56 C98 64 106 64 106 64 C106 64 98 64 98 72 L98 84 C98 92 90 92 90 92"
+        fill="none" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Paint stroke / brush accent across center -->
+  <path d="M44 58 Q56 48 64 54 Q72 60 80 50"
+        fill="none" stroke="#f5c2e7" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+  <!-- Paint dot -->
+  <circle cx="84" cy="48" r="5" fill="#f5c2e7" opacity="0.9"/>
+  <!-- Colon/semicolons inside braces -->
+  <circle cx="58" cy="72" r="3.5" fill="#a6adc8"/>
+  <rect x="56" y="78" width="5" height="3" rx="1.5" fill="#a6adc8"/>
+  <circle cx="72" cy="72" r="3.5" fill="#a6adc8"/>
+  <rect x="70" y="78" width="5" height="3" rx="1.5" fill="#a6adc8"/>
+</svg>

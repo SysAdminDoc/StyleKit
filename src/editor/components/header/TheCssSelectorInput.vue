@@ -3,6 +3,7 @@
     :disabled="disabled"
     :value="activeSelector"
     size="sm"
+    autocomplete="off"
     class="css-selector-input"
     :placeholder="t('enter_css_selector')"
     @blur="blur"

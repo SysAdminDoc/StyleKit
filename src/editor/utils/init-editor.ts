@@ -67,6 +67,11 @@ const initEditor = (store: Store<State>): void => {
 
   const stylebotAppHost = document.createElement('div');
   stylebotAppHost.id = 'stylebot';
+  stylebotAppHost.style.setProperty('display', 'block', 'important');
+  stylebotAppHost.style.setProperty('visibility', 'visible', 'important');
+  stylebotAppHost.style.setProperty('opacity', '1', 'important');
+  // Prevent :empty selectors from hiding this element
+  stylebotAppHost.appendChild(document.createComment('stylebot'));
   document.body.appendChild(stylebotAppHost);
 
   const shadowRoot = stylebotAppHost.attachShadow({ mode: 'open' });
@@ -74,6 +79,23 @@ const initEditor = (store: Store<State>): void => {
 
   stylebotApp.id = 'stylebot-app';
   shadowRoot.appendChild(stylebotApp);
+
+  // Prevent page keyboard shortcuts from firing when typing in Stylebot inputs
+  const stopKeyboardPropagation = (e: Event): void => {
+    const target = e.target as HTMLElement;
+    if (
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable)
+    ) {
+      e.stopPropagation();
+    }
+  };
+
+  stylebotAppHost.addEventListener('keydown', stopKeyboardPropagation);
+  stylebotAppHost.addEventListener('keyup', stopKeyboardPropagation);
+  stylebotAppHost.addEventListener('keypress', stopKeyboardPropagation);
 
   injectCss(shadowRoot);
 

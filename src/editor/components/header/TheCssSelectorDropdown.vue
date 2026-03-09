@@ -6,6 +6,24 @@
       <template #append>
         <dropdown-hack-to-support-shadow-dom>
           <b-dropdown
+            size="sm"
+            :disabled="!activeSelector"
+            variant="outline-secondary"
+            class="pseudo-selector-dropdown"
+            :text="activePseudo || ':'"
+          >
+            <b-dropdown-item
+              v-for="pseudo in pseudoOptions"
+              :key="pseudo"
+              @click="applyPseudo(pseudo)"
+            >
+              {{ pseudo }}
+            </b-dropdown-item>
+          </b-dropdown>
+        </dropdown-hack-to-support-shadow-dom>
+
+        <dropdown-hack-to-support-shadow-dom>
+          <b-dropdown
             right
             size="sm"
             :disabled="disabled"
@@ -23,6 +41,8 @@
         </dropdown-hack-to-support-shadow-dom>
       </template>
     </b-input-group>
+    <the-selector-builder />
+    <the-ancestor-breadcrumb />
   </div>
 </template>
 
@@ -31,6 +51,8 @@ import Vue from 'vue';
 import { StylebotEditingMode } from '@stylebot/types';
 
 import TheCssSelectorInput from './TheCssSelectorInput.vue';
+import TheSelectorBuilder from './TheSelectorBuilder.vue';
+import TheAncestorBreadcrumb from './TheAncestorBreadcrumb.vue';
 import TheCssSelectorDropdownItem from './TheCssSelectorDropdownItem.vue';
 import DropdownHackToSupportShadowDom from './../DropdownHackToSupportShadowDom.vue';
 
@@ -39,8 +61,29 @@ export default Vue.extend({
 
   components: {
     TheCssSelectorInput,
+    TheSelectorBuilder,
+    TheAncestorBreadcrumb,
     TheCssSelectorDropdownItem,
     DropdownHackToSupportShadowDom,
+  },
+
+  data(): {
+    pseudoOptions: Array<string>;
+  } {
+    return {
+      pseudoOptions: [
+        '(none)',
+        ':hover',
+        ':focus',
+        ':active',
+        ':visited',
+        ':first-child',
+        ':last-child',
+        '::before',
+        '::after',
+        '::placeholder',
+      ],
+    };
   },
 
   computed: {
@@ -55,11 +98,36 @@ export default Vue.extend({
     disabled(): boolean {
       return this.mode !== 'basic';
     },
+
+    activeSelector(): string {
+      return this.$store.state.activeSelector;
+    },
+
+    activePseudo(): string {
+      if (!this.activeSelector) return '';
+      const match = this.activeSelector.match(/(:{1,2}[\w-]+)$/);
+      return match ? match[1] : '';
+    },
   },
 
   methods: {
     stopInspecting(): void {
       this.$store.commit('setInspecting', false);
+    },
+
+    applyPseudo(pseudo: string): void {
+      let selector = this.activeSelector;
+      if (!selector) return;
+
+      // Remove existing pseudo suffix
+      selector = selector.replace(/(:{1,2}[\w-]+)$/, '');
+
+      // Add new pseudo (unless clearing)
+      if (pseudo !== '(none)') {
+        selector += pseudo;
+      }
+
+      this.$store.commit('setActiveSelector', selector);
     },
   },
 });
@@ -69,6 +137,14 @@ export default Vue.extend({
 .css-selector-input-group {
   .dropdown-toggle {
     line-height: 21px !important;
+  }
+}
+
+.pseudo-selector-dropdown {
+  .dropdown-toggle {
+    font-size: 12px !important;
+    padding: 0 6px !important;
+    min-width: 32px;
   }
 }
 </style>

@@ -30,6 +30,10 @@ export type GetIsStylebotOpen = {
   name: 'GetIsStylebotOpen';
 };
 
+export type HideElementFromContextMenu = {
+  name: 'HideElementFromContextMenu';
+};
+
 export type UpdateReader = {
   name: 'UpdateReader';
   value: ReadabilitySettings;
@@ -43,6 +47,7 @@ type TabMessage =
   | ApplyStylesToTab
   | TabUpdated
   | GetIsStylebotOpen
+  | HideElementFromContextMenu
   | UpdateReader;
 
 export default TabMessage;

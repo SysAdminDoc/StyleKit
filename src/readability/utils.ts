@@ -1,4 +1,4 @@
-import Readability from 'readability';
+import { Readability } from '@mozilla/readability';
 import { ReadabilityArticle } from '@stylebot/types';
 
 export const getDomainUrlAndSource = (): { url: string; source: string } => {
@@ -29,7 +29,7 @@ export const shouldRunOnUrl = (): boolean => {
     return false;
   }
 
-  if (blockedHosts.some(blockedHost => document.domain.endsWith(blockedHost))) {
+  if (blockedHosts.some(blockedHost => window.location.hostname.endsWith(blockedHost))) {
     return false;
   }
 

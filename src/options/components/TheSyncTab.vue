@@ -14,6 +14,21 @@
 
     <the-google-drive-sync />
 
+    <b-row no-gutters class="mt-5 mb-1">
+      <h2>GitHub Gist Backup</h2>
+    </b-row>
+
+    <b-row no-gutters class="description mb-3">
+      Backup and restore styles to a private GitHub Gist.
+      Requires a Personal Access Token with gist scope.
+    </b-row>
+
+    <b-row no-gutters class="mb-4">
+      <b-col>
+        <the-gist-backup />
+      </b-col>
+    </b-row>
+
     <b-row no-gutters class="mt-5">
       <h2>{{ t('backup') }}</h2>
     </b-row>
@@ -26,6 +41,10 @@
       <b-col>
         <app-button class="mr-4" variant="primary" @click="exportJson">
           {{ t('export') }}
+        </app-button>
+
+        <app-button class="mr-4" @click="exportCss">
+          {{ t('export_css') }}
         </app-button>
 
         <app-button @click="importJson">
@@ -41,15 +60,21 @@ import Vue from 'vue';
 
 import AppButton from './AppButton.vue';
 import TheGoogleDriveSync from './sync/TheGoogleDriveSync.vue';
+import TheGistBackup from './sync/TheGistBackup.vue';
 
-import { importStylesWithFilePicker, exportAsJSONFile } from '../utils';
+import {
+  importStylesWithFilePicker,
+  exportAsJSONFile,
+  exportAsCSSFile,
+} from '../utils';
 
 export default Vue.extend({
-  name: 'TheBackupTab',
+  name: 'TheSyncTab',
 
   components: {
     AppButton,
     TheGoogleDriveSync,
+    TheGistBackup,
   },
 
   data(): {
@@ -67,6 +92,10 @@ export default Vue.extend({
   methods: {
     exportJson(): void {
       exportAsJSONFile(this.$store.state.styles);
+    },
+
+    exportCss(): void {
+      exportAsCSSFile(this.$store.state.styles);
     },
 
     async importJson(): Promise<void> {
@@ -88,7 +117,6 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .description {
-  color: #888;
   font-size: 14px;
 }
 </style>

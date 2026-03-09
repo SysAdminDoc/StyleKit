@@ -33,6 +33,14 @@ const initChromeListener = (store: Store<State>): void => {
         if (!state.visible) {
           toggleStylebot(store, false);
         }
+      } else if (message.name === 'HideElementFromContextMenu') {
+        if (state.contextMenuSelector) {
+          commit('setActiveSelector', state.contextMenuSelector);
+          dispatch('applyDeclaration', {
+            property: 'display',
+            value: 'none',
+          });
+        }
       } else if (message.name === 'GetIsStylebotOpen') {
         sendResponse(state.visible);
       } else if (message.name === 'TabUpdated') {

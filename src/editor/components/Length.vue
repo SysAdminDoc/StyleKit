@@ -3,6 +3,7 @@
     <b-form-input
       v-model="length"
       size="sm"
+      autocomplete="off"
       :disabled="disabled"
       @focus="focus"
       @keydown="keydown"
@@ -128,7 +129,8 @@ export default Vue.extend({
 
 <style lang="scss">
 .length-input-group {
-  width: 65px !important;
+  width: 100% !important;
+  max-width: 140px;
 
   .dropdown-toggle {
     line-height: 21px !important;

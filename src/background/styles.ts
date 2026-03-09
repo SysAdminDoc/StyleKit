@@ -36,38 +36,31 @@ export const updateIcon = (
 
 export const applyStylesToAllTabs = async (): Promise<void> => {
   const allStyles = await getAll();
+  const tabs = await chrome.tabs.query({});
 
-  chrome.tabs.query({}, tabs => {
-    tabs.forEach(tab => {
-      if (tab && tab.url && tab.id) {
-        const { styles, defaultStyle } = getStylesForPage(tab.url, allStyles);
+  tabs.forEach(tab => {
+    if (tab && tab.url && tab.id) {
+      const { styles, defaultStyle } = getStylesForPage(tab.url, allStyles);
 
-        const message: ApplyStylesToTab = {
-          name: 'ApplyStylesToTab',
-          defaultStyle,
-          styles,
-        };
+      const message: ApplyStylesToTab = {
+        name: 'ApplyStylesToTab',
+        defaultStyle,
+        styles,
+      };
 
-        chrome.tabs.sendMessage(tab.id, message);
+      chrome.tabs.sendMessage(tab.id, message).catch(() => {});
 
-        if (tab.active) {
-          updateIcon(tab, styles, defaultStyle);
-        }
+      if (tab.active) {
+        updateIcon(tab, styles, defaultStyle);
       }
-    });
+    }
   });
 };
 
-export const getAll = (): Promise<StyleMap> =>
-  new Promise(resolve => {
-    chrome.storage.local.get('styles', items => {
-      if (items['styles']) {
-        resolve(items['styles']);
-      } else {
-        resolve({});
-      }
-    });
-  });
+export const getAll = async (): Promise<StyleMap> => {
+  const items = await chrome.storage.local.get('styles');
+  return items['styles'] || {};
+};
 
 export const get = async (url: string): Promise<StyleWithoutUrl> => {
   const styles = await getAll();
@@ -206,8 +199,18 @@ export const move = async (src: string, dest: string): Promise<void> => {
 export const getImportCss = (url: string): Promise<string> => {
   return new Promise(resolve => {
     fetch(url)
-      .then(response => response.text())
+      .then(response => {
+        if (!response.ok) {
+          resolve('');
+          return;
+        }
+        return response.text();
+      })
       .then(css => {
+        if (!css) {
+          resolve('');
+          return;
+        }
         postcss.parse(css);
         resolve(css);
       })
