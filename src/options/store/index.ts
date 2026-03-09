@@ -180,10 +180,18 @@ export default new Vuex.Store<State>({
       }
     },
 
-    async syncWithGoogleDrive({ dispatch }) {
-      await runGoogleDriveSync();
-      await dispatch('getGoogleDriveSyncMetadata');
-      await dispatch('getAllStyles');
+    async syncWithGoogleDrive({ dispatch }): Promise<string | null> {
+      try {
+        await runGoogleDriveSync();
+        await dispatch('getGoogleDriveSyncMetadata');
+        await dispatch('getAllStyles');
+        return null;
+      } catch (e) {
+        const message =
+          e instanceof Error ? e.message : typeof e === 'string' ? e : 'Sync failed';
+        console.error('Google Drive sync error:', e);
+        return message;
+      }
     },
   },
 });

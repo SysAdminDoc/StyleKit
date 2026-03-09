@@ -2,6 +2,7 @@
   <b-form-input
     v-model="length"
     size="sm"
+    autocomplete="off"
     :disabled="disabled"
     class="box-model-length"
     placeholder="-"

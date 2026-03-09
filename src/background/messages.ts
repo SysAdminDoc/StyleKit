@@ -132,7 +132,7 @@ export const OpenOptionsPage = (): void => {
 };
 
 export const OpenDonatePage = (): void => {
-  chrome.tabs.create({ url: 'https://ko-fi.com/stylebot' });
+  chrome.tabs.create({ url: 'https://github.com/SysAdminDoc/StyleKit' });
 };
 
 export const SetOption = (message: SetOptionType): void => {

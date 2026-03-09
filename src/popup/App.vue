@@ -67,21 +67,21 @@ export default Vue.extend({
     };
   },
 
-  created() {
-    getCurrentTab(async tab => {
-      this.tab = tab;
+  async created() {
+    const tab = await getCurrentTab();
+    if (!tab) return;
 
-      getIsStylebotOpen(this.tab, isOpen => {
-        this.isOpen = isOpen;
-      });
+    this.tab = tab;
 
-      getStyles(this.tab, ({ styles, defaultStyle }) => {
-        this.styles = styles.filter(style => style.css);
-        this.readability = !!defaultStyle && defaultStyle.readability;
-      });
+    const [isOpen, { styles, defaultStyle }] = await Promise.all([
+      getIsStylebotOpen(this.tab),
+      getStyles(this.tab),
+    ]);
 
-      this.googleDriveSyncEnabled = await getGoogleDriveSyncEnabled();
-    });
+    this.isOpen = isOpen;
+    this.styles = styles.filter(style => style.css);
+    this.readability = !!defaultStyle && defaultStyle.readability;
+    this.googleDriveSyncEnabled = await getGoogleDriveSyncEnabled();
   },
 });
 </script>
@@ -89,6 +89,7 @@ export default Vue.extend({
 <style lang="scss">
 @import '~bootstrap';
 @import '~bootstrap-vue';
+@import './scss/dark-mode';
 
 body,
 span {

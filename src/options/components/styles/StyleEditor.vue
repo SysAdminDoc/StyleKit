@@ -10,6 +10,21 @@
           autofocus
           style="max-width: 600px;"
         />
+        <div class="url-pattern-help" style="max-width: 600px;">
+          <span
+            class="url-pattern-toggle"
+            @click="showPatternHelp = !showPatternHelp"
+          >
+            {{ showPatternHelp ? 'Hide' : 'URL pattern help' }}
+          </span>
+          <div v-if="showPatternHelp" class="url-pattern-hints">
+            <div><code>example.com</code> - matches domain and subdomains</div>
+            <div><code>*.example.com/path/*</code> - wildcard matching</div>
+            <div><code>^https://example\.com/user/\d+</code> - regex (prefix with ^)</div>
+            <div><code>site1.com, site2.com</code> - multiple URLs (comma-separated)</div>
+            <div><code>*</code> - matches all pages</div>
+          </div>
+        </div>
       </div>
 
       <div class="style-editor-code mx-3">
@@ -63,10 +78,12 @@ export default Vue.extend({
   data(): {
     url: string;
     css: string;
+    showPatternHelp: boolean;
   } {
     return {
       url: this.initialUrl,
       css: this.initialCss,
+      showPatternHelp: false,
     };
   },
 });
@@ -74,7 +91,11 @@ export default Vue.extend({
 
 <style lang="scss">
 .style-editor {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 100000;
 }
 
@@ -84,28 +105,58 @@ export default Vue.extend({
   width: 100%;
   height: 100%;
   position: fixed;
-  background: #00000091;
+  z-index: 100000;
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .style-editor-modal {
-  background: #fff;
   height: 80%;
   width: 80%;
   padding: 20px;
   position: fixed;
   top: 10%;
   left: 10%;
+  z-index: 100001;
 }
 
 .style-editor-code {
   height: 75%;
-  border: 1px solid #eee;
-  border-right-width: 2px;
 }
 
 .style-editor-footer {
   button {
     float: right;
+  }
+}
+
+.url-pattern-help {
+  margin-top: 6px;
+}
+
+.url-pattern-toggle {
+  font-size: 11px;
+  color: #89b4fa;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    color: #b4d0fb;
+  }
+}
+
+.url-pattern-hints {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #a6adc8;
+  line-height: 1.8;
+
+  code {
+    font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    color: #cba6f7;
+    background: rgba(203, 166, 247, 0.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11px;
   }
 }
 </style>
