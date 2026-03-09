@@ -72,7 +72,7 @@ export default Vue.extend({
         selector: this.activeSelector,
       };
 
-      contentWindow.postMessage(message, chrome.runtime.getURL('*'));
+      contentWindow.postMessage(message, '*');
     },
 
     handleMessage(message: {
