@@ -67,6 +67,9 @@ export default {
     if (!options.fonts) {
       options.fonts = defaultOptions.fonts;
     }
+    if (options.darkMode === undefined) {
+      options.darkMode = defaultOptions.darkMode;
+    }
 
     commit('setOptions', options);
 
@@ -94,10 +97,10 @@ export default {
     commit('setSelectors', root);
   },
 
-  openStylebot(
+  async openStylebot(
     { state, commit }: { state: State; commit: Commit },
     { inspect = false, store }: { inspect: boolean; store: Store<State> }
-  ): void {
+  ): Promise<void> {
     initEditor(store);
 
     if (!state.enabled) {
@@ -106,13 +109,21 @@ export default {
 
     commit('setVisible', true);
 
-    if (state.options.mode === 'basic' && inspect) {
-      commit('setInspecting', true);
+    if (state.options.mode === 'basic') {
+      if (inspect) {
+        commit('setInspecting', true);
+      } else {
+        const result = await chrome.storage.session.get('stylekit-inspecting');
+        if (result['stylekit-inspecting']) {
+          commit('setInspecting', true);
+        }
+      }
     }
   },
 
   closeStylebot({ commit }: { commit: Commit }): void {
     commit('setVisible', false);
+    chrome.storage.session.set({ 'stylekit-inspecting': false });
   },
 
   setMode(
@@ -147,9 +158,17 @@ export default {
     commit('setOptions', { ...state.options, basicModeSections });
   },
 
+  setDarkMode(
+    { state, commit }: { state: State; commit: Commit },
+    darkMode: boolean
+  ): void {
+    setOption('darkMode', darkMode);
+    commit('setOptions', { ...state.options, darkMode });
+  },
+
   applyCss(
     { commit, state }: { commit: Commit; state: State },
-    { css }: { css: string }
+    { css, skipHistory }: { css: string; skipHistory?: boolean }
   ): void {
     try {
       const root = postcss.parse(css);
@@ -158,11 +177,35 @@ export default {
       commit('setCss', css);
       commit('setSelectors', root);
 
+      if (!skipHistory) {
+        commit('pushCssHistory', css);
+      }
+
       // when saving, cleanup any empty rules
       const cleanCss = removeEmptyRules(css);
       setStyle(state.url, cleanCss, state.readability);
     } catch (e) {
       //
+    }
+  },
+
+  undo({ state, dispatch }: { state: State; dispatch: Dispatch }): void {
+    if (state.cssHistoryIndex > 0) {
+      const newIndex = state.cssHistoryIndex - 1;
+      const css = state.cssHistory[newIndex];
+
+      state.cssHistoryIndex = newIndex;
+      dispatch('applyCss', { css, skipHistory: true });
+    }
+  },
+
+  redo({ state, dispatch }: { state: State; dispatch: Dispatch }): void {
+    if (state.cssHistoryIndex < state.cssHistory.length - 1) {
+      const newIndex = state.cssHistoryIndex + 1;
+      const css = state.cssHistory[newIndex];
+
+      state.cssHistoryIndex = newIndex;
+      dispatch('applyCss', { css, skipHistory: true });
     }
   },
 

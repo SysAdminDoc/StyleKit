@@ -1,11 +1,15 @@
 import { t } from '@stylebot/i18n';
-import { OpenStylebotFromContextMenu } from '@stylebot/types';
+import {
+  OpenStylebotFromContextMenu,
+  HideElementFromContextMenu,
+} from '@stylebot/types';
 
 import BackgroundPageUtils from './utils';
 
 const CONTEXT_MENU_ID = 'stylebot-contextmenu';
 const VIEW_OPTIONS_MENU_ITEM_ID = 'view-options';
 const STYLE_ELEMENT_MENU_ITEM_ID = 'style-element';
+const HIDE_ELEMENT_MENU_ITEM_ID = 'hide-element';
 
 const ContextMenu = {
   init(): void {
@@ -13,7 +17,7 @@ const ContextMenu = {
 
     chrome.contextMenus.create({
       id: CONTEXT_MENU_ID,
-      title: 'Stylebot',
+      title: 'StyleKit',
       contexts: ['all'],
     });
 
@@ -22,6 +26,13 @@ const ContextMenu = {
       title: t('style_element'),
       parentId: CONTEXT_MENU_ID,
       id: STYLE_ELEMENT_MENU_ITEM_ID,
+    });
+
+    chrome.contextMenus.create({
+      contexts: ['all'],
+      title: t('hide_element_menu'),
+      parentId: CONTEXT_MENU_ID,
+      id: HIDE_ELEMENT_MENU_ITEM_ID,
     });
 
     chrome.contextMenus.create({
@@ -66,7 +77,18 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
           name: 'OpenStylebotFromContextMenu',
         };
 
-        chrome.tabs.sendMessage(tab.id, message);
+        chrome.tabs.sendMessage(tab.id, message).catch(() => {});
+      }
+
+      break;
+
+    case HIDE_ELEMENT_MENU_ITEM_ID:
+      if (tab?.id) {
+        const message: HideElementFromContextMenu = {
+          name: 'HideElementFromContextMenu',
+        };
+
+        chrome.tabs.sendMessage(tab.id, message).catch(() => {});
       }
 
       break;

@@ -1,5 +1,5 @@
 <template>
-  <b-col cols="8" class="css-property-value">
+  <b-col cols="9" class="css-property-value">
     <slot />
   </b-col>
 </template>

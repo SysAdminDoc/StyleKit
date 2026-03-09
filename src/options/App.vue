@@ -62,6 +62,7 @@ export default Vue.extend({
 <style lang="scss">
 @import '~bootstrap';
 @import '~bootstrap-vue';
+@import './scss/dark-mode';
 
 .main {
   height: calc(100% - 50px);

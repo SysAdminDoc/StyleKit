@@ -3,6 +3,7 @@
     <the-stylebot v-if="visible" />
     <the-keyboard-shortcuts />
     <the-help-dialog v-if="help" />
+    <the-onboarding v-if="visible" />
   </div>
 </template>
 
@@ -13,6 +14,7 @@ import { StylebotCommands } from '@stylebot/types';
 import TheStylebot from './TheStylebot.vue';
 import TheHelpDialog from './shortcuts/TheHelpDialog.vue';
 import TheKeyboardShortcuts from './shortcuts/TheKeyboardShortcuts.vue';
+import TheOnboarding from './TheOnboarding.vue';
 
 export default Vue.extend({
   name: 'App',
@@ -21,6 +23,7 @@ export default Vue.extend({
     TheStylebot,
     TheHelpDialog,
     TheKeyboardShortcuts,
+    TheOnboarding,
   },
 
   computed: {

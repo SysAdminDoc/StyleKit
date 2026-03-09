@@ -23,6 +23,10 @@ export const defaultOptions: StylebotOptions = {
     colors: true,
     layout: true,
     border: false,
+    variables: false,
+    computedStyles: false,
+    snippets: false,
+    mediaQueries: false,
   },
   layout: {
     width: 350,
@@ -30,6 +34,7 @@ export const defaultOptions: StylebotOptions = {
     dockLocation: 'right',
   },
   colorPalette: 'basic',
+  darkMode: false,
 };
 
 export const defaultCommands: StylebotCommands = {

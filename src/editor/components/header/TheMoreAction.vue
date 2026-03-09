@@ -35,6 +35,14 @@
         {{ t('adjust_page_layout') }} ({{ editorCommands.pageLayout }})
       </b-dropdown-item>
 
+      <b-dropdown-item @click="toggleDarkMode">
+        <span class="more-action-check-icon">
+          <b-icon v-if="darkMode" icon="check" font-scale="1.1" />
+        </span>
+
+        {{ t('dark_mode') }}
+      </b-dropdown-item>
+
       <b-dropdown-divider />
 
       <b-dropdown-item @click="keyboardShortcuts">
@@ -91,6 +99,10 @@ export default Vue.extend({
     adjustPageLayout(): boolean {
       return this.layout.adjustPageLayout;
     },
+
+    darkMode(): boolean {
+      return this.$store.state.options.darkMode;
+    },
   },
 
   methods: {
@@ -113,6 +125,10 @@ export default Vue.extend({
         ...this.layout,
         adjustPageLayout: !this.adjustPageLayout,
       });
+    },
+
+    toggleDarkMode(): void {
+      this.$store.dispatch('setDarkMode', !this.darkMode);
     },
 
     keyboardShortcuts(): void {

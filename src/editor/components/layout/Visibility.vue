@@ -11,6 +11,16 @@
       >
         {{ t('hide') }}
       </b-button>
+
+      <b-button
+        size="sm"
+        class="ml-2"
+        :disabled="disabled"
+        variant="outline-secondary"
+        @click="clearLayout"
+      >
+        Clear
+      </b-button>
     </css-property-value>
   </b-row>
 </template>
@@ -57,6 +67,33 @@ export default Vue.extend({
         property: 'display',
         value,
       });
+    },
+
+    clearLayout(): void {
+      const properties = [
+        'display',
+        'width',
+        'height',
+        'margin-top',
+        'margin-right',
+        'margin-bottom',
+        'margin-left',
+        'padding-top',
+        'padding-right',
+        'padding-bottom',
+        'padding-left',
+        'border-top-width',
+        'border-right-width',
+        'border-bottom-width',
+        'border-left-width',
+      ];
+
+      for (const property of properties) {
+        this.$store.dispatch('applyDeclaration', {
+          property,
+          value: '',
+        });
+      }
     },
   },
 });

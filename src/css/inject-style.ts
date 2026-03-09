@@ -29,12 +29,12 @@ export const injectCSSIntoDocument = async (
   document.documentElement.appendChild(style);
 };
 
-export const injectRootIntoDocument = (
+export const injectRootIntoDocument = async (
   root: postcss.Root,
   id: string
-): void => {
+): Promise<void> => {
   const css = appendImportantToDeclarations(root.toString());
-  injectCSSIntoDocument(css, id);
+  await injectCSSIntoDocument(css, id);
 };
 
 export const removeCSSFromDocument = (id: string): void => {

@@ -3,16 +3,12 @@
     <css-property>{{ t('font_family') }}</css-property>
 
     <css-property-value>
-      <b-row no-gutters>
-        <b-col cols="10">
-          <font-family-dropdown
-            :value="value"
-            :fonts="fonts"
-            :disabled="disabled"
-            @select="select"
-          />
-        </b-col>
-      </b-row>
+      <font-family-dropdown
+        :value="value"
+        :fonts="fonts"
+        :disabled="disabled"
+        @select="select"
+      />
     </css-property-value>
   </b-row>
 </template>

@@ -1,7 +1,7 @@
 <template>
   <div class="navigation">
     <div class="header mb-3">
-      stylebot
+      StyleKit
       <span class="light ml-1 d-md-inline-flex d-none">
         {{ t(`${currentTab}_options`) }}
       </span>
@@ -61,7 +61,6 @@ export default Vue.extend({
 
 .navigation {
   height: 100%;
-  border-right: 1px solid #eee;
 }
 
 .navigation-list {
@@ -76,7 +75,7 @@ export default Vue.extend({
   }
 
   &:hover:not(.active) {
-    background: #ddd;
+    background: rgba(255, 255, 255, 0.05);
   }
 }
 </style>

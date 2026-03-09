@@ -1,0 +1,413 @@
+@import '../../scss/dark-palette';
+
+// ─── Base ────────────────────────────────────────────────────
+html,
+body {
+  background: $dark-bg !important;
+  color: $dark-text !important;
+  margin: 0;
+}
+
+.container {
+  background: transparent;
+}
+
+.main {
+  background: $dark-base;
+  border-radius: 12px;
+  border: 1px solid $dark-border;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+// ─── Navigation Sidebar ─────────────────────────────────────
+.navigation {
+  border-right: 1px solid $dark-border !important;
+  background: $dark-surface;
+  padding-top: 8px;
+  min-height: 100%;
+
+  .header {
+    color: $dark-text;
+    padding: 16px 20px 8px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+
+    .light {
+      color: $dark-text-muted;
+      font-weight: 300;
+    }
+  }
+}
+
+.navigation-item {
+  background: transparent !important;
+  color: $dark-text-dim !important;
+  border: none !important;
+  border-radius: 8px !important;
+  margin: 2px 12px;
+  padding: 10px 16px !important;
+  font-size: 14px;
+  transition: all 0.15s ease;
+
+  &:hover:not(.active) {
+    background: $dark-surface-1 !important;
+    color: $dark-text !important;
+  }
+
+  &.active {
+    background: rgba($dark-accent, 0.15) !important;
+    color: $dark-accent !important;
+    border: none !important;
+    font-weight: 500;
+  }
+}
+
+.list-group {
+  border-radius: 0 !important;
+}
+
+.list-group-item {
+  background: transparent !important;
+  border-color: $dark-border !important;
+  color: $dark-text !important;
+}
+
+// ─── Footer ─────────────────────────────────────────────────
+.caption {
+  color: $dark-text-muted !important;
+  font-size: 12px;
+  padding: 0 20px;
+
+  a {
+    color: $dark-accent !important;
+    text-decoration: none;
+
+    &:hover {
+      color: $dark-accent-hover !important;
+    }
+  }
+}
+
+// ─── Typography ─────────────────────────────────────────────
+h2 {
+  color: $dark-text !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.3px;
+}
+
+h3 {
+  color: $dark-subtext !important;
+  font-weight: 500 !important;
+}
+
+label {
+  color: $dark-text !important;
+}
+
+// ─── Form Controls ──────────────────────────────────────────
+.form-control {
+  color: $dark-text !important;
+  background-color: $dark-surface-1 !important;
+  border: 1px solid $dark-border !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease;
+
+  &:focus {
+    color: $dark-text !important;
+    background-color: $dark-surface !important;
+    border-color: $dark-accent !important;
+    box-shadow: 0 0 0 3px rgba($dark-accent, 0.15) !important;
+  }
+
+  &::placeholder {
+    color: $dark-text-muted !important;
+  }
+}
+
+.search {
+  background-color: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid $dark-border !important;
+  border-radius: 0 !important;
+  padding-left: 0 !important;
+
+  &:focus {
+    border-bottom-color: $dark-accent !important;
+    box-shadow: 0 1px 0 0 $dark-accent !important;
+    background-color: transparent !important;
+  }
+}
+
+// ─── Buttons ────────────────────────────────────────────────
+.btn {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.15s ease !important;
+  letter-spacing: 0.01em;
+}
+
+.btn-primary {
+  background-color: $dark-accent !important;
+  border-color: $dark-accent !important;
+  color: $dark-bg !important;
+
+  &:hover,
+  &:focus {
+    background-color: $dark-accent-hover !important;
+    border-color: $dark-accent-hover !important;
+    box-shadow: 0 0 0 3px rgba($dark-accent, 0.2) !important;
+  }
+
+  &:disabled {
+    opacity: 0.4 !important;
+  }
+}
+
+.btn-secondary {
+  background-color: $dark-surface-1 !important;
+  border-color: $dark-surface-2 !important;
+  color: $dark-text !important;
+
+  &:hover,
+  &:focus {
+    background-color: $dark-surface-2 !important;
+    border-color: $dark-overlay !important;
+  }
+}
+
+.btn-danger {
+  background-color: transparent !important;
+  border-color: $dark-red !important;
+  color: $dark-red !important;
+
+  &:hover {
+    background-color: $dark-red !important;
+    color: $dark-bg !important;
+  }
+}
+
+.btn-outline-primary {
+  color: $dark-accent !important;
+  border-color: rgba($dark-accent, 0.4) !important;
+  background: transparent !important;
+
+  &:hover {
+    background-color: rgba($dark-accent, 0.1) !important;
+    border-color: $dark-accent !important;
+    color: $dark-accent !important;
+  }
+}
+
+.btn-outline-danger {
+  color: $dark-red !important;
+  border-color: rgba($dark-red, 0.4) !important;
+  background: transparent !important;
+
+  &:hover {
+    background-color: rgba($dark-red, 0.1) !important;
+    border-color: $dark-red !important;
+    color: $dark-red !important;
+  }
+}
+
+// ─── Switches / Checkboxes ──────────────────────────────────
+.custom-control-label {
+  color: $dark-text !important;
+
+  &::before {
+    background-color: $dark-surface-2 !important;
+    border-color: $dark-overlay !important;
+    border-radius: 12px;
+  }
+
+  &::after {
+    border-radius: 50%;
+  }
+}
+
+.custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+  background-color: $dark-accent !important;
+  border-color: $dark-accent !important;
+}
+
+.custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+  background-color: $dark-accent !important;
+  border-color: $dark-accent !important;
+}
+
+// ─── Keyboard Shortcuts ─────────────────────────────────────
+kbd {
+  background-color: $dark-surface-1 !important;
+  color: $dark-subtext !important;
+  border: 1px solid $dark-surface-2;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  font-size: 11px;
+}
+
+.help {
+  color: $dark-text-muted !important;
+}
+
+.shortcut {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+// ─── Style Rows ─────────────────────────────────────────────
+.style {
+  border-bottom-color: $dark-border !important;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba($dark-surface-1, 0.5);
+  }
+}
+
+.style-timestamp {
+  color: $dark-text-muted !important;
+}
+
+// ─── Style Editor Modal ─────────────────────────────────────
+.style-editor-overlay {
+  background: rgba(0, 0, 0, 0.7) !important;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.style-editor-modal {
+  background: $dark-base !important;
+  border: 1px solid $dark-border;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.style-editor-code {
+  border-color: $dark-border !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+// ─── Bootstrap Modals ───────────────────────────────────────
+.modal-content {
+  background-color: $dark-base !important;
+  border: 1px solid $dark-border !important;
+  border-radius: 12px !important;
+  color: $dark-text !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.modal-header {
+  border-bottom-color: $dark-border !important;
+  padding: 16px 20px !important;
+
+  .modal-title {
+    color: $dark-text !important;
+    font-weight: 600;
+  }
+
+  .close {
+    color: $dark-text-muted !important;
+    text-shadow: none !important;
+    opacity: 1;
+
+    &:hover {
+      color: $dark-text !important;
+    }
+  }
+}
+
+.modal-body {
+  color: $dark-text-dim !important;
+  padding: 20px !important;
+}
+
+.modal-footer {
+  border-top-color: $dark-border !important;
+  padding: 12px 20px !important;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+// ─── Alerts ─────────────────────────────────────────────────
+.alert {
+  border-radius: 8px !important;
+}
+
+.alert-success {
+  background-color: rgba($dark-green, 0.08) !important;
+  border-color: rgba($dark-green, 0.2) !important;
+  color: $dark-green !important;
+}
+
+.alert-danger {
+  background-color: rgba($dark-red, 0.08) !important;
+  border-color: rgba($dark-red, 0.2) !important;
+  color: $dark-red !important;
+
+  .alert-link {
+    color: $dark-red-dim !important;
+  }
+}
+
+// ─── Description / Muted Text ───────────────────────────────
+.description {
+  color: $dark-text-muted !important;
+}
+
+.description-link {
+  color: $dark-accent !important;
+
+  &:hover {
+    color: $dark-accent-hover !important;
+  }
+}
+
+// ─── Links ──────────────────────────────────────────────────
+a {
+  color: $dark-accent;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: $dark-accent-hover;
+  }
+}
+
+// ─── Icons ──────────────────────────────────────────────────
+.b-icon {
+  color: $dark-text-dim !important;
+}
+
+// ─── Sync Metadata ──────────────────────────────────────────
+.sync-metadata {
+  color: $dark-text-muted !important;
+}
+
+// ─── Scrollbar ──────────────────────────────────────────────
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $dark-surface-2;
+  border-radius: 4px;
+
+  &:hover {
+    background: $dark-overlay;
+  }
+}
+
+// ─── Selection ──────────────────────────────────────────────
+::selection {
+  background: rgba($dark-accent, 0.3);
+  color: $dark-text;
+}

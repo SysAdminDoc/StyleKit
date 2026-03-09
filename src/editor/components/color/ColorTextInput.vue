@@ -2,6 +2,7 @@
   <b-form-input
     v-model="value"
     size="sm"
+    autocomplete="off"
     class="color-text-input"
     :debounce="150"
     :disabled="disabled"
@@ -46,7 +47,8 @@ export default Vue.extend({
 .color-text-input {
   &.form-control {
     float: left;
-    width: 100px;
+    width: 100%;
+    max-width: 140px;
   }
 }
 </style>

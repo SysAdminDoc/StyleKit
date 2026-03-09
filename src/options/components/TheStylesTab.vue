@@ -9,6 +9,15 @@
       @cancel="addStyleDialog = false"
     />
 
+    <style-import-from-url
+      v-if="importDialog"
+      @import="
+        saveStyle({ url: $event.url, css: $event.css });
+        importDialog = false;
+      "
+      @cancel="importDialog = false"
+    />
+
     <b-row no-gutters class="mt-5">
       <b-col cols="12">
         <b-row>
@@ -19,6 +28,10 @@
               @click="addStyleDialog = true"
             >
               {{ t('add_new_style') }}
+            </app-button>
+
+            <app-button @click="importDialog = true">
+              Import from URL
             </app-button>
 
             <app-button @click="enableAll">
@@ -60,6 +73,13 @@
         />
       </b-col>
     </b-row>
+
+    <undo-toast
+      :visible="toast.visible"
+      :message="toast.message"
+      @undo="undoDelete"
+      @expire="commitDelete"
+    />
   </div>
 </template>
 
@@ -67,11 +87,13 @@
 import Vue from 'vue';
 import { compareAsc } from 'date-fns';
 
-import { Style } from '@stylebot/types';
+import { Style, StyleMap } from '@stylebot/types';
 
 import AppButton from './AppButton.vue';
+import UndoToast from './UndoToast.vue';
 import StyleComponent from './styles/Style.vue';
 import StyleEditor from './styles/StyleEditor.vue';
+import StyleImportFromUrl from './styles/StyleImportFromUrl.vue';
 import TheDeleteAllStylesButton from './styles/TheDeleteAllStylesButton.vue';
 
 export default Vue.extend({
@@ -79,7 +101,9 @@ export default Vue.extend({
 
   components: {
     AppButton,
+    UndoToast,
     StyleEditor,
+    StyleImportFromUrl,
     StyleComponent,
     TheDeleteAllStylesButton,
   },
@@ -87,10 +111,22 @@ export default Vue.extend({
   data(): {
     urlFilter: string;
     addStyleDialog: boolean;
+    importDialog: boolean;
+    toast: {
+      visible: boolean;
+      message: string;
+    };
+    savedStyles: StyleMap | null;
   } {
     return {
       urlFilter: '',
       addStyleDialog: false,
+      importDialog: false,
+      toast: {
+        visible: false,
+        message: '',
+      },
+      savedStyles: null,
     };
   },
 
@@ -125,7 +161,11 @@ export default Vue.extend({
     },
 
     deleteStyle(style: Style): void {
+      this.savedStyles = JSON.parse(
+        JSON.stringify(this.$store.state.styles)
+      );
       this.$store.dispatch('deleteStyle', style.url);
+      this.showToast(`Deleted style for ${style.url}`);
     },
 
     toggleStyle(style: Style): void {
@@ -145,7 +185,11 @@ export default Vue.extend({
     },
 
     deleteAll(): void {
+      this.savedStyles = JSON.parse(
+        JSON.stringify(this.$store.state.styles)
+      );
       this.$store.dispatch('deleteAllStyles');
+      this.showToast('Deleted all styles');
     },
 
     saveStyle({
@@ -159,6 +203,27 @@ export default Vue.extend({
     }): void {
       this.$store.dispatch('saveStyle', { initialUrl, url, css });
     },
+
+    showToast(message: string): void {
+      this.toast.visible = false;
+      this.$nextTick(() => {
+        this.toast.message = message;
+        this.toast.visible = true;
+      });
+    },
+
+    undoDelete(): void {
+      if (this.savedStyles) {
+        this.$store.dispatch('setAllStyles', this.savedStyles);
+        this.savedStyles = null;
+      }
+      this.toast.visible = false;
+    },
+
+    commitDelete(): void {
+      this.savedStyles = null;
+      this.toast.visible = false;
+    },
   },
 });
 </script>
@@ -166,7 +231,6 @@ export default Vue.extend({
 <style lang="scss" scoped>
 .search {
   border: none;
-  border-bottom: 1px solid #aaa;
   border-radius: 0;
   outline: none;
 

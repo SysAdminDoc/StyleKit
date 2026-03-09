@@ -1,32 +1,13 @@
 <template>
-  <div class="stylebot-code-editor-iframe">
-    <iframe :src="src" />
-  </div>
+  <code-editor-iframe-shared :height-offset="10" />
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
+import CodeEditorIframeShared from '../../../shared/components/CodeEditorIframe.vue';
 
 export default Vue.extend({
   name: 'CodeEditorIframe',
-
-  data(): { src: string } {
-    return {
-      src: chrome.runtime.getURL('monaco-editor/iframe/index.html'),
-    };
-  },
+  components: { CodeEditorIframeShared },
 });
 </script>
-
-<style lang="scss">
-.stylebot-code-editor-iframe {
-  height: calc(100% - 10px);
-
-  iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    position: relative;
-  }
-}
-</style>

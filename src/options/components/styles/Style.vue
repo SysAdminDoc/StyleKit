@@ -12,7 +12,7 @@
       @cancel="edit = false"
     />
 
-    <b-col cols="7">
+    <b-col cols="7" class="style-url-col">
       <b-form-checkbox v-model="enabled" @change="$emit('toggle')">
         {{ url }}
       </b-form-checkbox>
@@ -105,11 +105,23 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .style {
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.style-url-col {
+  overflow: hidden;
+
+  .custom-control-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    max-width: 100%;
+  }
 }
 
 .style-timestamp {
-  color: #555;
+  opacity: 0.5;
   font-size: 12px;
   font-style: italic;
   margin-left: 24px;

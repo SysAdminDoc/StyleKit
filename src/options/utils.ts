@@ -19,11 +19,7 @@ export const getAllStyles = async (): Promise<GetAllStylesResponse> => {
     name: 'GetAllStyles',
   };
 
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage(message, (response: GetAllStylesResponse) => {
-      resolve(response);
-    });
-  });
+  return chrome.runtime.sendMessage(message);
 };
 
 export const getAllOptions = async (): Promise<StylebotOptions> => {
@@ -31,11 +27,7 @@ export const getAllOptions = async (): Promise<StylebotOptions> => {
     name: 'GetAllOptions',
   };
 
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage(message, (response: GetAllOptionsResponse) => {
-      resolve(response);
-    });
-  });
+  return chrome.runtime.sendMessage(message);
 };
 
 export const setAllStyles = (styles: StyleMap): void => {
@@ -67,11 +59,7 @@ export const getCommands = async (): Promise<GetCommandsResponse> => {
     name: 'GetCommands',
   };
 
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage(message, (response: GetCommandsResponse) => {
-      resolve(response);
-    });
-  });
+  return chrome.runtime.sendMessage(message);
 };
 
 export const setCommands = (commands: StylebotCommands): void => {
@@ -88,11 +76,7 @@ export const runGoogleDriveSync = async (): Promise<void> => {
     name: 'RunGoogleDriveSync',
   };
 
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage(message, () => {
-      resolve();
-    });
-  });
+  return chrome.runtime.sendMessage(message);
 };
 
 export const importStylesWithFilePicker = (): Promise<StyleMap> => {
@@ -139,7 +123,26 @@ export const exportAsJSONFile = (styles: StyleMap): void => {
   const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(json);
   const downloadAnchorNode = document.createElement('a');
   downloadAnchorNode.setAttribute('href', dataStr);
-  downloadAnchorNode.setAttribute('download', 'stylebot_backup.json');
+  downloadAnchorNode.setAttribute('download', 'stylekit_backup.json');
+  document.body.appendChild(downloadAnchorNode);
+  downloadAnchorNode.click();
+  downloadAnchorNode.remove();
+};
+
+export const exportAsCSSFile = (styles: StyleMap): void => {
+  const parts: string[] = [];
+
+  Object.entries(styles).forEach(([url, style]) => {
+    if (style.css && style.css.trim()) {
+      parts.push(`/* ${url} */\n${style.css}`);
+    }
+  });
+
+  const css = parts.join('\n\n');
+  const dataStr = 'data:text/css;charset=utf-8,' + encodeURIComponent(css);
+  const downloadAnchorNode = document.createElement('a');
+  downloadAnchorNode.setAttribute('href', dataStr);
+  downloadAnchorNode.setAttribute('download', 'stylekit_export.css');
   document.body.appendChild(downloadAnchorNode);
   downloadAnchorNode.click();
   downloadAnchorNode.remove();

@@ -46,6 +46,9 @@ export type State = {
   commands: StylebotCommands | null;
   editorCommands: StylebotEditorCommands;
   readabilitySettings: ReadabilitySettings;
+
+  cssHistory: Array<string>;
+  cssHistoryIndex: number;
 };
 
 export default new Vuex.Store<State>({
@@ -69,6 +72,9 @@ export default new Vuex.Store<State>({
     options: defaultOptions,
     editorCommands: defaultEditorCommands,
     readabilitySettings: defaultReadabilitySettings,
+
+    cssHistory: [''],
+    cssHistoryIndex: 0,
   },
 
   getters,
