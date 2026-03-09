@@ -72,7 +72,6 @@ kbd {
 }
 
 .help {
-  color: #555;
   font-size: 12px;
 }
 </style>

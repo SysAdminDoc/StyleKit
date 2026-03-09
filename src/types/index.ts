@@ -8,6 +8,10 @@ export type StylebotBasicModeSections = {
   colors: boolean;
   layout: boolean;
   border: boolean;
+  variables: boolean;
+  computedStyles: boolean;
+  snippets: boolean;
+  mediaQueries: boolean;
 };
 
 export type StylebotLayout = {
@@ -26,6 +30,7 @@ export type StylebotOptions = {
   mode: StylebotEditingMode;
   basicModeSections: StylebotBasicModeSections;
   colorPalette: StylebotColorPalette;
+  darkMode: boolean;
 };
 
 export type Style = {

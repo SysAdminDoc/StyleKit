@@ -4,6 +4,7 @@
       <b-col cols="12">
         <b-btn class="collapse-btn px-3 py-2" @click="text = !text">
           {{ t('text_properties') }}
+          <span class="section-hint">Font, size, spacing, alignment</span>
         </b-btn>
       </b-col>
 
@@ -18,6 +19,7 @@
       <b-col cols="12">
         <b-btn class="collapse-btn px-3 py-2" @click="colors = !colors">
           {{ t('color_properties') }}
+          <span class="section-hint">Text color, background, shadows</span>
         </b-btn>
       </b-col>
 
@@ -32,6 +34,7 @@
       <b-col cols="12">
         <b-btn class="collapse-btn px-3 py-2" @click="layout = !layout">
           {{ t('layout_properties') }}
+          <span class="section-hint">Hide, resize, margins, padding</span>
         </b-btn>
       </b-col>
 
@@ -46,12 +49,88 @@
       <b-col cols="12">
         <b-btn class="collapse-btn px-3 py-2" @click="border = !border">
           {{ t('border_properties') }}
+          <span class="section-hint">Lines, thickness, rounded corners</span>
         </b-btn>
       </b-col>
 
       <b-collapse v-model="border" class="collapse-content">
         <b-col cols="12" class="px-3 pt-2">
-          <the-border-properties class="pb-5 pt-2" />
+          <the-border-properties class="pb-4 pt-2" />
+        </b-col>
+      </b-collapse>
+    </b-row>
+
+    <b-row class="section" no-gutters>
+      <b-col cols="12">
+        <b-btn class="collapse-btn px-3 py-2" @click="variables = !variables">
+          Variables
+          <span class="section-hint">CSS custom properties</span>
+        </b-btn>
+      </b-col>
+
+      <b-collapse v-model="variables" class="collapse-content">
+        <b-col cols="12" class="px-3 pt-2">
+          <the-css-variables class="pb-4 pt-2" />
+        </b-col>
+      </b-collapse>
+    </b-row>
+
+    <b-row class="section" no-gutters>
+      <b-col cols="12">
+        <b-btn class="collapse-btn px-3 py-2" @click="computedStyles = !computedStyles">
+          Computed Styles
+          <span class="section-hint">Current element styles</span>
+        </b-btn>
+      </b-col>
+
+      <b-collapse v-model="computedStyles" class="collapse-content">
+        <b-col cols="12" class="px-3 pt-2">
+          <the-computed-styles class="pb-4 pt-2" />
+        </b-col>
+      </b-collapse>
+    </b-row>
+
+    <b-row class="section" no-gutters>
+      <b-col cols="12">
+        <b-btn class="collapse-btn px-3 py-2" @click="snippets = !snippets">
+          Snippets
+          <span class="section-hint">Ready-made styles and effects</span>
+        </b-btn>
+      </b-col>
+
+      <b-collapse v-model="snippets" class="collapse-content">
+        <b-col cols="12" class="px-3 pt-2">
+          <the-snippet-library class="pb-4 pt-2" />
+        </b-col>
+      </b-collapse>
+    </b-row>
+
+    <b-row class="section" no-gutters>
+      <b-col cols="12">
+        <b-btn class="collapse-btn px-3 py-2" @click="recipes = !recipes">
+          Site Recipes
+          <span class="section-hint">One-click tweaks for popular sites</span>
+        </b-btn>
+      </b-col>
+
+      <b-collapse v-model="recipes" class="collapse-content">
+        <b-col cols="12" class="px-3 pt-2">
+          <the-site-recipes class="pb-4 pt-2" />
+        </b-col>
+      </b-collapse>
+    </b-row>
+
+    <b-row class="section" no-gutters>
+      <b-col cols="12">
+        <b-btn class="collapse-btn px-3 py-2" @click="mediaQueries = !mediaQueries">
+          Media Queries
+          <span class="section-hint">Responsive screen-size rules</span>
+        </b-btn>
+      </b-col>
+
+      <b-collapse v-model="mediaQueries" class="collapse-content">
+        <b-col cols="12" class="px-3 pt-2">
+          <the-media-query-wrapper class="pb-4 pt-2" />
         </b-col>
       </b-collapse>
     </b-row>
@@ -66,6 +145,11 @@ import TheTextProperties from './TheTextProperties.vue';
 import TheColorProperties from './TheColorProperties.vue';
 import TheLayoutProperties from './TheLayoutProperties.vue';
 import TheBorderProperties from './TheBorderProperties.vue';
+import TheCssVariables from './TheCssVariables.vue';
+import TheComputedStyles from './TheComputedStyles.vue';
+import TheSnippetLibrary from './TheSnippetLibrary.vue';
+import TheSiteRecipes from './TheSiteRecipes.vue';
+import TheMediaQueryWrapper from './TheMediaQueryWrapper.vue';
 
 export default Vue.extend({
   name: 'TheBasicEditor',
@@ -75,6 +159,17 @@ export default Vue.extend({
     TheColorProperties,
     TheLayoutProperties,
     TheBorderProperties,
+    TheCssVariables,
+    TheComputedStyles,
+    TheSnippetLibrary,
+    TheSiteRecipes,
+    TheMediaQueryWrapper,
+  },
+
+  data() {
+    return {
+      recipes: false,
+    };
   },
 
   computed: {
@@ -110,6 +205,38 @@ export default Vue.extend({
         this.set('border', value);
       },
     },
+    variables: {
+      get(): boolean {
+        return this.$store.state.options.basicModeSections.variables;
+      },
+      set(value: boolean) {
+        this.set('variables', value);
+      },
+    },
+    computedStyles: {
+      get(): boolean {
+        return this.$store.state.options.basicModeSections.computedStyles;
+      },
+      set(value: boolean) {
+        this.set('computedStyles', value);
+      },
+    },
+    snippets: {
+      get(): boolean {
+        return this.$store.state.options.basicModeSections.snippets;
+      },
+      set(value: boolean) {
+        this.set('snippets', value);
+      },
+    },
+    mediaQueries: {
+      get(): boolean {
+        return this.$store.state.options.basicModeSections.mediaQueries;
+      },
+      set(value: boolean) {
+        this.set('mediaQueries', value);
+      },
+    },
   },
 
   methods: {
@@ -127,7 +254,7 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .section {
-  border-top: 1px solid #ddd;
+  border-top: 1px solid #45475a;
 
   &:first-of-type {
     border: none;
@@ -139,17 +266,29 @@ export default Vue.extend({
   background: none !important;
   border-radius: 0 !important;
   border: none !important;
-  color: #333 !important;
+  color: #cdd6f4 !important;
   padding: 0 !important;
   width: 100% !important;
   font-size: 14px !important;
   font-weight: 500 !important;
   text-align: left !important;
 
+  &:hover {
+    color: #89b4fa !important;
+  }
+
   &:focus {
     border: none !important;
     box-shadow: none !important;
   }
+}
+
+.section-hint {
+  display: block;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #6c7086 !important;
+  margin-top: 1px;
 }
 
 .collapse-content {

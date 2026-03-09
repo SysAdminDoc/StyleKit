@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import CustomLight from './themes/CustomLight';
+import CustomDark from './themes/CustomDark';
 import { IframeMessage, ParentUpdateCssMessage } from '@stylebot/monaco-editor';
 
 declare global {
@@ -9,7 +10,7 @@ declare global {
   }
 }
 
-class MonacEditorIframe {
+class MonacoEditorIframe {
   // todo: import monaco types
   editor?: any;
 
@@ -36,11 +37,20 @@ class MonacEditorIframe {
 
   defineThemes(): void {
     window.monaco.editor.defineTheme('custom-light', CustomLight);
+    window.monaco.editor.defineTheme('custom-dark', CustomDark);
   }
 
   initEditor(): void {
     const container = this.getContainer();
     const editorOptions = this.getEditorOptions();
+
+    // Disable CSS validation to avoid false errors for modern CSS features
+    // like :has(), CSS nesting, and -webkit- prefixed properties (#817, #763, #794)
+    if (window.monaco.languages?.css?.cssDefaults) {
+      window.monaco.languages.css.cssDefaults.setOptions({
+        validate: false,
+      });
+    }
 
     this.editor = window.monaco.editor.create(container, editorOptions);
     this.editor.onDidChangeModelContent(() => {
@@ -65,7 +75,7 @@ class MonacEditorIframe {
     return {
       value: '',
       tabSize: 2,
-      theme: 'custom-light',
+      theme: 'custom-dark',
       wordWrap: 'bounded',
       wordWrapColumn,
       scrollBeyondLastLine: false,
@@ -133,4 +143,4 @@ class MonacEditorIframe {
   }
 }
 
-export default MonacEditorIframe;
+export default MonacoEditorIframe;

@@ -3,7 +3,7 @@
     <div class="stylebot-help-dialog p-4">
       <b-row>
         <b-col cols="11">
-          <h1 class="title mb-4">Stylebot {{ t('keyboard_shortcuts') }}</h1>
+          <h1 class="title mb-4">StyleKit {{ t('keyboard_shortcuts') }}</h1>
         </b-col>
 
         <b-col cols="1" style="text-align: right">

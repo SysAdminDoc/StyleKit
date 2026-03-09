@@ -43,6 +43,6 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .app-btn {
-  border-radius: 2px;
+  border-radius: 8px;
 }
 </style>

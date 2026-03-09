@@ -44,7 +44,6 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .description {
-  color: #888;
   font-size: 14px;
 }
 
