@@ -79,7 +79,10 @@ export default Vue.extend({
   position: absolute;
   top: 3px;
   left: 7px;
-  color: #333;
+  color: #585b70;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .box-top {

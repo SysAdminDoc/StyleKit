@@ -2,135 +2,180 @@
   <div class="stylebot-basic-editor">
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn px-3 py-2" @click="layout = !layout">
-          {{ t('layout_properties') }}
-          <span class="section-hint">Hide, resize, margins, padding</span>
+        <b-btn class="collapse-btn" @click="layout = !layout">
+          <div class="section-header-inner">
+            <b-icon icon="bounding-box" class="section-icon" />
+            <div class="section-header-text">
+              <span class="section-title">{{ t('layout_properties') }}</span>
+              <span class="section-hint">Hide, resize, margins, padding</span>
+            </div>
+            <b-icon :icon="layout ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+          </div>
         </b-btn>
       </b-col>
-
       <b-collapse v-model="layout" class="collapse-content">
-        <b-col cols="12" class="px-3 pt-2">
-          <the-layout-properties class="pb-4 pt-2" />
+        <b-col cols="12" class="px-2 pt-1">
+          <the-layout-properties class="pb-2" />
         </b-col>
       </b-collapse>
     </b-row>
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn px-3 py-2" @click="text = !text">
-          {{ t('text_properties') }}
-          <span class="section-hint">Font, size, spacing, alignment</span>
+        <b-btn class="collapse-btn" @click="text = !text">
+          <div class="section-header-inner">
+            <b-icon icon="fonts" class="section-icon" />
+            <div class="section-header-text">
+              <span class="section-title">{{ t('text_properties') }}</span>
+              <span class="section-hint">Font, size, spacing, alignment</span>
+            </div>
+            <b-icon :icon="text ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+          </div>
         </b-btn>
       </b-col>
-
       <b-collapse v-model="text" class="collapse-content">
-        <b-col cols="12" class="px-3 pt-2">
-          <the-text-properties class="pb-4 pt-2" />
+        <b-col cols="12" class="px-2 pt-1">
+          <the-text-properties class="pb-2" />
         </b-col>
       </b-collapse>
     </b-row>
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn px-3 py-2" @click="colors = !colors">
-          {{ t('color_properties') }}
-          <span class="section-hint">Text color, background, shadows</span>
+        <b-btn class="collapse-btn" @click="colors = !colors">
+          <div class="section-header-inner">
+            <b-icon icon="droplet" class="section-icon" />
+            <div class="section-header-text">
+              <span class="section-title">{{ t('color_properties') }}</span>
+              <span class="section-hint">Text color, background, shadows</span>
+            </div>
+            <b-icon :icon="colors ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+          </div>
         </b-btn>
       </b-col>
-
       <b-collapse v-model="colors" class="collapse-content">
-        <b-col cols="12" class="px-3 pt-2">
-          <the-color-properties class="pb-4 pt-2" />
+        <b-col cols="12" class="px-2 pt-1">
+          <the-color-properties class="pb-2" />
         </b-col>
       </b-collapse>
     </b-row>
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn px-3 py-2" @click="border = !border">
-          {{ t('border_properties') }}
-          <span class="section-hint">Lines, thickness, rounded corners</span>
+        <b-btn class="collapse-btn" @click="border = !border">
+          <div class="section-header-inner">
+            <b-icon icon="square" class="section-icon" />
+            <div class="section-header-text">
+              <span class="section-title">{{ t('border_properties') }}</span>
+              <span class="section-hint">Lines, thickness, rounded corners</span>
+            </div>
+            <b-icon :icon="border ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+          </div>
         </b-btn>
       </b-col>
-
       <b-collapse v-model="border" class="collapse-content">
-        <b-col cols="12" class="px-3 pt-2">
-          <the-border-properties class="pb-4 pt-2" />
+        <b-col cols="12" class="px-2 pt-1">
+          <the-border-properties class="pb-2" />
         </b-col>
       </b-collapse>
     </b-row>
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn px-3 py-2" @click="snippets = !snippets">
-          Snippets
-          <span class="section-hint">Ready-made styles and effects</span>
+        <b-btn class="collapse-btn" @click="snippets = !snippets">
+          <div class="section-header-inner">
+            <b-icon icon="lightning" class="section-icon" />
+            <div class="section-header-text">
+              <span class="section-title">Snippets</span>
+              <span class="section-hint">Ready-made styles and effects</span>
+            </div>
+            <b-icon :icon="snippets ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+          </div>
         </b-btn>
       </b-col>
-
       <b-collapse v-model="snippets" class="collapse-content">
-        <b-col cols="12" class="px-3 pt-2">
-          <the-snippet-library class="pb-4 pt-2" />
+        <b-col cols="12" class="px-2 pt-1">
+          <the-snippet-library class="pb-2" />
         </b-col>
       </b-collapse>
     </b-row>
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn px-3 py-2" @click="variables = !variables">
-          Variables
-          <span class="section-hint">CSS custom properties</span>
+        <b-btn class="collapse-btn" @click="variables = !variables">
+          <div class="section-header-inner">
+            <b-icon icon="braces" class="section-icon" />
+            <div class="section-header-text">
+              <span class="section-title">Variables</span>
+              <span class="section-hint">CSS custom properties</span>
+            </div>
+            <b-icon :icon="variables ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+          </div>
         </b-btn>
       </b-col>
-
       <b-collapse v-model="variables" class="collapse-content">
-        <b-col cols="12" class="px-3 pt-2">
-          <the-css-variables class="pb-4 pt-2" />
+        <b-col cols="12" class="px-2 pt-1">
+          <the-css-variables class="pb-2" />
         </b-col>
       </b-collapse>
     </b-row>
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn px-3 py-2" @click="computedStyles = !computedStyles">
-          Computed Styles
-          <span class="section-hint">Current element styles</span>
+        <b-btn class="collapse-btn" @click="computedStyles = !computedStyles">
+          <div class="section-header-inner">
+            <b-icon icon="eye" class="section-icon" />
+            <div class="section-header-text">
+              <span class="section-title">Computed Styles</span>
+              <span class="section-hint">Current element styles</span>
+            </div>
+            <b-icon :icon="computedStyles ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+          </div>
         </b-btn>
       </b-col>
-
       <b-collapse v-model="computedStyles" class="collapse-content">
-        <b-col cols="12" class="px-3 pt-2">
-          <the-computed-styles class="pb-4 pt-2" />
+        <b-col cols="12" class="px-2 pt-1">
+          <the-computed-styles class="pb-2" />
         </b-col>
       </b-collapse>
     </b-row>
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn px-3 py-2" @click="recipes = !recipes">
-          Site Recipes
-          <span class="section-hint">One-click tweaks for popular sites</span>
+        <b-btn class="collapse-btn" @click="recipes = !recipes">
+          <div class="section-header-inner">
+            <b-icon icon="star" class="section-icon" />
+            <div class="section-header-text">
+              <span class="section-title">Site Recipes</span>
+              <span class="section-hint">One-click tweaks for popular sites</span>
+            </div>
+            <b-icon :icon="recipes ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+          </div>
         </b-btn>
       </b-col>
-
       <b-collapse v-model="recipes" class="collapse-content">
-        <b-col cols="12" class="px-3 pt-2">
-          <the-site-recipes class="pb-4 pt-2" />
+        <b-col cols="12" class="px-2 pt-1">
+          <the-site-recipes class="pb-2" />
         </b-col>
       </b-collapse>
     </b-row>
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn px-3 py-2" @click="mediaQueries = !mediaQueries">
-          Media Queries
-          <span class="section-hint">Responsive screen-size rules</span>
+        <b-btn class="collapse-btn" @click="mediaQueries = !mediaQueries">
+          <div class="section-header-inner">
+            <b-icon icon="aspect-ratio" class="section-icon" />
+            <div class="section-header-text">
+              <span class="section-title">Media Queries</span>
+              <span class="section-hint">Responsive screen-size rules</span>
+            </div>
+            <b-icon :icon="mediaQueries ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+          </div>
         </b-btn>
       </b-col>
-
       <b-collapse v-model="mediaQueries" class="collapse-content">
-        <b-col cols="12" class="px-3 pt-2">
-          <the-media-query-wrapper class="pb-4 pt-2" />
+        <b-col cols="12" class="px-2 pt-1">
+          <the-media-query-wrapper class="pb-2" />
         </b-col>
       </b-collapse>
     </b-row>
@@ -254,11 +299,10 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .section {
-  border-top: 1px solid #45475a;
+  border-top: 1px solid #313244;
 
   &:first-of-type {
     border: none;
-    margin-top: 0;
   }
 }
 
@@ -266,15 +310,20 @@ export default Vue.extend({
   background: none !important;
   border-radius: 0 !important;
   border: none !important;
-  color: #cdd6f4 !important;
-  padding: 0 !important;
+  padding: 7px 10px !important;
   width: 100% !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
   text-align: left !important;
 
   &:hover {
-    color: #89b4fa !important;
+    background: rgba(137, 180, 250, 0.06) !important;
+
+    .section-title {
+      color: #89b4fa !important;
+    }
+
+    .section-icon {
+      color: #89b4fa;
+    }
   }
 
   &:focus {
@@ -283,12 +332,49 @@ export default Vue.extend({
   }
 }
 
+.section-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.section-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: #6c7086;
+  transition: color 0.15s;
+}
+
+.section-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.section-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #cdd6f4;
+  line-height: 1.3;
+  transition: color 0.15s;
+}
+
 .section-hint {
   display: block;
-  font-size: 11px !important;
-  font-weight: 400 !important;
-  color: #6c7086 !important;
+  font-size: 10px;
+  font-weight: 400;
+  color: #585b70;
+  line-height: 1.3;
   margin-top: 1px;
+}
+
+.section-chevron {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  color: #45475a;
 }
 
 .collapse-content {

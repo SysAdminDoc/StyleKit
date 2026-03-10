@@ -1,9 +1,9 @@
 <template>
   <div>
     <border-style />
-    <border-color class="mt-3" />
-    <border-width class="mt-3" />
-    <border-radius class="mt-3" />
+    <border-color class="mt-2" />
+    <border-width class="mt-2" />
+    <border-radius class="mt-2" />
   </div>
 </template>
 

@@ -1,14 +1,14 @@
 <template>
   <div>
-    <font-family class="mt-3" />
-    <font-size class="mt-3" />
-    <line-height class="mt-3" />
-    <font-style class="mt-3" />
-    <text-decoration class="mt-3" />
-    <text-transform class="mt-3" />
-    <text-align class="mt-3" />
-    <letter-spacing class="mt-3" />
-    <word-spacing class="mt-3" />
+    <font-family />
+    <font-size class="mt-2" />
+    <line-height class="mt-2" />
+    <font-style class="mt-2" />
+    <text-decoration class="mt-2" />
+    <text-transform class="mt-2" />
+    <text-align class="mt-2" />
+    <letter-spacing class="mt-2" />
+    <word-spacing class="mt-2" />
   </div>
 </template>
 
