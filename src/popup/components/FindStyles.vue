@@ -465,6 +465,15 @@ export default Vue.extend({
           readability: false,
         } as SetStyle);
 
+        // Instantly inject into the live tab without requiring a refresh
+        if (this.tab?.id) {
+          chrome.tabs.sendMessage(this.tab.id, {
+            name: 'PreviewStyle',
+            id: `usw-installed-${this.domain}`,
+            css: mergedCss,
+          }).catch(() => { /* fire-and-forget */ });
+        }
+
         this.$emit('style-installed', this.domain);
       } catch (e) {
         console.error('Install style error:', e);
@@ -493,6 +502,22 @@ export default Vue.extend({
         css: mergedCss,
         readability: false,
       } as SetStyle);
+
+      // Instantly update or remove the injected style in the live tab
+      if (this.tab?.id) {
+        if (mergedCss) {
+          chrome.tabs.sendMessage(this.tab.id, {
+            name: 'PreviewStyle',
+            id: `usw-installed-${domain}`,
+            css: mergedCss,
+          }).catch(() => { /* fire-and-forget */ });
+        } else {
+          chrome.tabs.sendMessage(this.tab.id, {
+            name: 'RemovePreviewStyle',
+            id: `usw-installed-${domain}`,
+          }).catch(() => { /* fire-and-forget */ });
+        }
+      }
 
       if (this.previewingId === id) {
         this.removePreview();
