@@ -51,6 +51,18 @@ const initChromeListener = (store: Store<State>): void => {
         toggleReadability({ state, dispatch });
       } else if (message.name === 'ApplyStylesToTab') {
         applyStyles({ dispatch }, message.defaultStyle, message.styles);
+      } else if ((message as any).name === 'PreviewStyle') {
+        const id = `stylekit-preview-${(message as any).id}`;
+        let el = document.getElementById(id) as HTMLStyleElement | null;
+        if (!el) {
+          el = document.createElement('style');
+          el.id = id;
+          document.documentElement.appendChild(el);
+        }
+        el.textContent = (message as any).css;
+      } else if ((message as any).name === 'RemovePreviewStyle') {
+        const el = document.getElementById(`stylekit-preview-${(message as any).id}`);
+        if (el) el.remove();
       }
     }
   );
