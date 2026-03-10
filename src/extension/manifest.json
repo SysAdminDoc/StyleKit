@@ -47,18 +47,23 @@
     "storage",
     "identity",
     "contextMenus",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "scripting"
   ],
   "host_permissions": [
     "https://drive.google.com/*",
     "https://www.googleapis.com/*",
     "https://fonts.googleapis.com/*",
-    "https://api.github.com/*"
+    "https://api.github.com/*",
+    "https://userstyles.world/*",
+    "https://cdn.jsdelivr.net/*"
   ],
   "web_accessible_resources": [
     {
       "resources": [
         "monaco-editor/*",
+        "monaco-editor/iframe/*",
+        "monaco-editor/iframe/node_modules/*",
         "editor/index.css",
         "readability/index.css"
       ],

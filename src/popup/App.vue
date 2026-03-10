@@ -15,6 +15,8 @@
 
       <toggle-stylebot :is-open="isOpen" :tab="tab" />
 
+      <find-styles :tab="tab" />
+
       <sync-stylebot v-if="googleDriveSyncEnabled" />
 
       <view-options />
@@ -32,6 +34,7 @@ import ViewOptions from './components/ViewOptions.vue';
 import Readability from './components/Readability.vue';
 import SyncStylebot from './components/SyncStylebot.vue';
 import ToggleStylebot from './components/ToggleStylebot.vue';
+import FindStyles from './components/FindStyles.vue';
 import ReleaseNotification from './components/notifications/ReleaseNotification.vue';
 
 import { getStyles, getCurrentTab, getIsStylebotOpen } from './utils';
@@ -46,6 +49,7 @@ export default Vue.extend({
     ViewOptions,
     StyleComponent,
     ToggleStylebot,
+    FindStyles,
     Readability,
     SyncStylebot,
     ReleaseNotification,
