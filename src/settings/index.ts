@@ -29,8 +29,8 @@ export const defaultOptions: StylebotOptions = {
     mediaQueries: false,
   },
   layout: {
-    width: 350,
-    adjustPageLayout: false,
+    width: 420,
+    adjustPageLayout: true,
     dockLocation: 'right',
   },
   colorPalette: 'basic',
