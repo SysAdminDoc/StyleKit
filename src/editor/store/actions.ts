@@ -117,15 +117,15 @@ export default {
     }
 
     commit('setVisible', true);
+    // Always open on the basic (visual) editor, never restore code/magic mode
+    commit('setOptions', { ...state.options, mode: 'basic' });
 
-    if (state.options.mode === 'basic') {
-      if (inspect) {
+    if (inspect) {
+      commit('setInspecting', true);
+    } else {
+      const result = await chrome.storage.session.get('stylekit-inspecting');
+      if (result['stylekit-inspecting']) {
         commit('setInspecting', true);
-      } else {
-        const result = await chrome.storage.session.get('stylekit-inspecting');
-        if (result['stylekit-inspecting']) {
-          commit('setInspecting', true);
-        }
       }
     }
   },
