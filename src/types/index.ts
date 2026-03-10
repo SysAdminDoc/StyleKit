@@ -32,6 +32,7 @@ export type StylebotOptions = {
   colorPalette: StylebotColorPalette;
   darkMode: boolean;
   showReadability: boolean;
+  autoLoadStyles: boolean;
 };
 
 export type Style = {
