@@ -17,6 +17,16 @@ export default Vue.extend({
     CodeEditorIframe,
   },
 
+  data(): {
+    iframeReady: boolean;
+    retryTimer: number | null;
+  } {
+    return {
+      iframeReady: false,
+      retryTimer: null,
+    };
+  },
+
   computed: {
     css(): string {
       return this.$store.state.css;
@@ -56,8 +66,21 @@ export default Vue.extend({
     this.$store.dispatch('applyCss', { css });
   },
 
+  mounted() {
+    // Fallback: iframe onload + retry loop ensures CSS is delivered even if
+    // postMessage between content-script isolated world and extension iframe
+    // is unreliable in certain Chrome versions.
+    const iframe = this.$el.querySelector('iframe');
+    if (iframe) {
+      iframe.addEventListener('load', () => {
+        this.startRetryingSendCss();
+      });
+    }
+  },
+
   beforeDestroy() {
     window.removeEventListener('message', this.handleMessage);
+    this.stopRetrying();
   },
 
   methods: {
@@ -75,6 +98,36 @@ export default Vue.extend({
       contentWindow.postMessage(message, '*');
     },
 
+    startRetryingSendCss(): void {
+      if (this.iframeReady) {
+        return;
+      }
+
+      let attempts = 0;
+      const maxAttempts = 50;
+
+      this.retryTimer = window.setInterval(() => {
+        attempts++;
+
+        if (this.iframeReady || attempts >= maxAttempts) {
+          this.stopRetrying();
+          return;
+        }
+
+        const contentWindow = this.getIframeContentWindow();
+        if (contentWindow) {
+          this.updateIframeCss(contentWindow);
+        }
+      }, 100);
+    },
+
+    stopRetrying(): void {
+      if (this.retryTimer !== null) {
+        window.clearInterval(this.retryTimer);
+        this.retryTimer = null;
+      }
+    },
+
     handleMessage(message: {
       source: Window | MessagePort | ServiceWorker | null;
       data: IframeMessage;
@@ -85,12 +138,16 @@ export default Vue.extend({
           break;
 
         case 'stylebotMonacoIframeCssUpdated':
+          this.iframeReady = true;
+          this.stopRetrying();
           this.handleIframeCssUpdate(message.data.css);
           break;
       }
     },
 
     handleIframeLoaded(): void {
+      this.iframeReady = true;
+      this.stopRetrying();
       this.handleActiveSelectorChange(this.activeSelector);
     },
 

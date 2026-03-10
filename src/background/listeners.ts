@@ -77,6 +77,19 @@ chrome.tabs.onActivated.addListener(async activeInfo => {
   }
 });
 
+// Messages that call sendResponse asynchronously — port must stay open
+const ASYNC_MESSAGES = new Set([
+  'GetCommands',
+  'GetOption',
+  'GetAllOptions',
+  'GetAllStyles',
+  'GetStylesForPage',
+  'GetStylesForIframe',
+  'GetReadabilitySettings',
+  'GetImportCss',
+  'RunGoogleDriveSync',
+]);
+
 chrome.runtime.onMessage.addListener(
   (
     message: BackgroundPageMessage,
@@ -152,6 +165,6 @@ chrome.runtime.onMessage.addListener(
         break;
     }
 
-    return true;
+    return ASYNC_MESSAGES.has(message.name);
   }
 );

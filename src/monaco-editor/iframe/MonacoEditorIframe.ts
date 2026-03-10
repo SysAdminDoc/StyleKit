@@ -46,10 +46,18 @@ class MonacoEditorIframe {
 
     // Disable CSS validation to avoid false errors for modern CSS features
     // like :has(), CSS nesting, and -webkit- prefixed properties (#817, #763, #794)
-    if (window.monaco.languages?.css?.cssDefaults) {
-      window.monaco.languages.css.cssDefaults.setOptions({
-        validate: false,
-      });
+    try {
+      if (window.monaco.languages?.css?.cssDefaults?.setOptions) {
+        window.monaco.languages.css.cssDefaults.setOptions({
+          validate: false,
+        });
+      } else if (window.monaco.languages?.css?.cssDefaults?.setDiagnosticsOptions) {
+        window.monaco.languages.css.cssDefaults.setDiagnosticsOptions({
+          validate: false,
+        });
+      }
+    } catch (e) {
+      // Monaco version may not support CSS validation options
     }
 
     this.editor = window.monaco.editor.create(container, editorOptions);

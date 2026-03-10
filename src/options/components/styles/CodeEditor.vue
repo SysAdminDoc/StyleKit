@@ -23,17 +23,76 @@ export default Vue.extend({
     },
   },
 
+  data(): {
+    iframeReady: boolean;
+    retryTimer: number | null;
+  } {
+    return {
+      iframeReady: false,
+      retryTimer: null,
+    };
+  },
+
   created() {
     window.addEventListener('message', this.handleMessage);
   },
 
+  mounted() {
+    const iframe = this.$el.querySelector('iframe');
+    if (iframe) {
+      iframe.addEventListener('load', () => {
+        this.startRetryingSendCss();
+      });
+    }
+  },
+
   beforeDestroy() {
     window.removeEventListener('message', this.handleMessage);
+    this.stopRetrying();
   },
 
   methods: {
     getIframeContentWindow(): Window | null | undefined {
       return this.$el.querySelector('iframe')?.contentWindow;
+    },
+
+    sendCssToIframe(): void {
+      const message: ParentUpdateCssMessage = {
+        css: this.css,
+        type: 'stylebotCssUpdate',
+      };
+
+      const contentWindow = this.getIframeContentWindow();
+      if (contentWindow) {
+        contentWindow.postMessage(message, '*');
+      }
+    },
+
+    startRetryingSendCss(): void {
+      if (this.iframeReady) {
+        return;
+      }
+
+      let attempts = 0;
+      const maxAttempts = 50;
+
+      this.retryTimer = window.setInterval(() => {
+        attempts++;
+
+        if (this.iframeReady || attempts >= maxAttempts) {
+          this.stopRetrying();
+          return;
+        }
+
+        this.sendCssToIframe();
+      }, 100);
+    },
+
+    stopRetrying(): void {
+      if (this.retryTimer !== null) {
+        window.clearInterval(this.retryTimer);
+        this.retryTimer = null;
+      }
     },
 
     handleMessage(message: {
@@ -46,24 +105,17 @@ export default Vue.extend({
           break;
 
         case 'stylebotMonacoIframeCssUpdated':
+          this.iframeReady = true;
+          this.stopRetrying();
           this.handleIframeCssUpdate(message.data.css);
           break;
       }
     },
 
     handleIframeLoaded(): void {
-      const message: ParentUpdateCssMessage = {
-        css: this.css,
-        type: 'stylebotCssUpdate',
-      };
-
-      const contentWindow = this.getIframeContentWindow();
-
-      if (!contentWindow) {
-        return;
-      }
-
-      contentWindow.postMessage(message, '*');
+      this.iframeReady = true;
+      this.stopRetrying();
+      this.sendCssToIframe();
     },
 
     handleIframeCssUpdate(css: string): void {
