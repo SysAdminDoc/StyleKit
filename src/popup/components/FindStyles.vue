@@ -29,6 +29,13 @@
 
 
 
+    <b-list-group-item v-if="!autoLoadStyles" button class="find-styles-btn" @click="toggleSearch">
+      <b-icon icon="search" />
+      <span class="pl-2">{{ t('find_styles') }}</span>
+      <span v-if="allResults.length > 0" class="find-styles-badge">
+        {{ allResults.length }}
+      </span>
+    </b-list-group-item>
     <div v-if="showSearch" class="find-styles-panel">
       <!-- Loading -->
       <div v-if="loading" class="find-styles-status">
@@ -178,9 +185,10 @@ export default Vue.extend({
     thumbnails: Record<number, string>;
     domain: string;
     hoverTimer: ReturnType<typeof setTimeout> | null;
+    autoLoadStyles: boolean;
   } {
     return {
-      showSearch: true,
+      showSearch: false,
       loading: false,
       error: false,
       allResults: [],
@@ -193,6 +201,7 @@ export default Vue.extend({
       thumbnails: {},
       domain: '',
       hoverTimer: null,
+      autoLoadStyles: false,
     };
   },
 
@@ -222,7 +231,15 @@ export default Vue.extend({
   async mounted(): Promise<void> {
     this.domain = this.getDomain();
     await this.loadInstalledMap();
-    this.search();
+
+    const optResult = await chrome.storage.local.get('options');
+    const opts = (optResult['options'] as Record<string, unknown>) || {};
+    this.autoLoadStyles = !!opts.autoLoadStyles;
+
+    if (this.autoLoadStyles) {
+      this.showSearch = true;
+      this.search();
+    }
   },
 
   beforeDestroy(): void {
