@@ -111,6 +111,7 @@ export type RunGoogleDriveSync = {
 export type GetThumbnail = {
   name: 'GetThumbnail';
   url: string;
+  styleId?: number;
 };
 
 type BackgroundPageMessage =

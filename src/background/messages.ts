@@ -1,3 +1,5 @@
+import { getCachedThumb, setCachedThumb } from './preloader';
+
 import {
   set,
   disable,
@@ -182,8 +184,14 @@ export const GetThumbnail = async (
   message: GetThumbnailType,
   sendResponse: (response: GetThumbnailResponse) => void
 ): Promise<void> => {
+  // Return from cache if available
+  if (message.styleId !== undefined) {
+    const cached = await getCachedThumb(message.styleId);
+    if (cached) { sendResponse(cached); return; }
+  }
+
   try {
-    const res = await fetch(message.url);
+    const res = await fetch(message.url, { referrerPolicy: 'no-referrer' });
     if (!res.ok) { sendResponse(''); return; }
     const buffer = await res.arrayBuffer();
     const uint8 = new Uint8Array(buffer);
@@ -193,7 +201,11 @@ export const GetThumbnail = async (
       binary += String.fromCharCode(...(Array.from(uint8.subarray(i, i + CHUNK))));
     }
     const contentType = res.headers.get('content-type') || 'image/png';
-    sendResponse(`data:${contentType};base64,${btoa(binary)}`);
+    const dataUrl = `data:${contentType};base64,${btoa(binary)}`;
+    if (message.styleId !== undefined) {
+      setCachedThumb(message.styleId, dataUrl);
+    }
+    sendResponse(dataUrl);
   } catch {
     sendResponse('');
   }
