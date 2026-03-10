@@ -2,6 +2,9 @@
 @import '../../node_modules/vue-draggable-resizable/dist/VueDraggableResizable.css';
 
 .stylebot-app {
+  all: initial;
+  display: block;
+
   @import 'scss/theme.scss';
 
   @import '~bootstrap';
