@@ -117,13 +117,11 @@ span {
 
 body {
   width: 360px;
-  height: 580px;
   overflow: hidden;
 }
 
 .popup {
   width: 100%;
-  height: 100%;
   overflow-y: auto;
 
   &::-webkit-scrollbar {
