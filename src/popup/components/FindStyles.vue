@@ -228,25 +228,24 @@ export default Vue.extend({
       }
     },
 
-    async loadThumbnails(): Promise<void> {
+    loadThumbnails(): void {
       const BATCH = 5;
       const ids = this.results.map(s => s.i);
-      for (let i = 0; i < ids.length; i += BATCH) {
-        await Promise.all(
-          ids.slice(i, i + BATCH).map(async id => {
-            try {
-              const res = await fetch(
-                `https://userstyles.world/api/style/preview/${id}.png`
-              );
-              if (!res.ok) return;
-              const blob = await res.blob();
-              this.$set(this.thumbnails, id, URL.createObjectURL(blob));
-            } catch {
-              // ignore — thumbnail stays blank
+      const fetchBatch = (offset: number) => {
+        if (offset >= ids.length) return;
+        const batch = ids.slice(offset, offset + BATCH);
+        let done = 0;
+        batch.forEach(id => {
+          chrome.runtime.sendMessage(
+            { name: 'GetThumbnail', url: `https://userstyles.world/api/style/preview/${id}.png` },
+            (dataUrl: string) => {
+              if (dataUrl) this.$set(this.thumbnails, id, dataUrl);
+              if (++done === batch.length) fetchBatch(offset + BATCH);
             }
-          })
-        );
-      }
+          );
+        });
+      };
+      fetchBatch(0);
     },
 
     setBusy(id: number, busy: boolean): void {
