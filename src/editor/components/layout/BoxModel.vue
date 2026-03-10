@@ -186,41 +186,43 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .box-margin {
-  background: #fff;
-  border: 1px solid #eee;
+  background: rgba(250, 179, 135, 0.05);
+  border: 1px solid rgba(250, 179, 135, 0.2);
 
   &.highlighted {
-    background: rgba(255, 155, 0, 0.3);
+    background: rgba(250, 179, 135, 0.14);
+    border-color: rgba(250, 179, 135, 0.4);
 
     &.disabled {
-      background: #eee;
+      background: #181825;
     }
   }
 }
 
 .box-border {
-  background: #fff;
-  border: 1px solid #ccc;
+  background: rgba(249, 226, 175, 0.05);
+  border: 1px solid rgba(249, 226, 175, 0.2);
 
   &.highlighted {
-    border: 1px solid #fff;
-    background: rgba(255, 200, 50, 0.3);
+    background: rgba(249, 226, 175, 0.14);
+    border-color: rgba(249, 226, 175, 0.4);
 
     &.disabled {
-      background: #eee;
+      background: #181825;
     }
   }
 }
 
 .box-padding {
-  border: 1px dashed #aaa;
-  background: #fff;
+  background: rgba(166, 227, 161, 0.05);
+  border: 1px dashed rgba(166, 227, 161, 0.25);
 
   &.highlighted {
-    background: rgba(77, 200, 0, 0.3);
+    background: rgba(166, 227, 161, 0.14);
+    border-color: rgba(166, 227, 161, 0.5);
 
     &.disabled {
-      background: #eee;
+      background: #181825;
     }
   }
 }
@@ -229,14 +231,15 @@ export default Vue.extend({
   height: 24px;
   margin: 0 auto;
   position: relative;
-  background: #fff;
-  border: 1px solid #888;
+  background: rgba(137, 180, 250, 0.08);
+  border: 1px solid rgba(137, 180, 250, 0.25);
 
   &.highlighted {
-    background: rgba(120, 170, 210, 0.7);
+    background: rgba(137, 180, 250, 0.2);
+    border-color: rgba(137, 180, 250, 0.5);
 
     &.disabled {
-      background: #eee;
+      background: #181825;
     }
   }
 }
@@ -254,7 +257,7 @@ export default Vue.extend({
 }
 
 .box-element-x {
-  color: #333;
+  color: #585b70;
   position: absolute;
   top: 2px;
   left: calc(50% - 4px);

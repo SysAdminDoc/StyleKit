@@ -1,9 +1,9 @@
 <template>
   <div>
     <color />
-    <background-color class="mt-3" />
-    <opacity class="mt-3" />
-    <box-shadow class="mt-3" />
+    <background-color class="mt-2" />
+    <opacity class="mt-2" />
+    <box-shadow class="mt-2" />
   </div>
 </template>
 
