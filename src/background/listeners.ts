@@ -20,6 +20,7 @@ import {
   GetReadabilitySettings,
   SetReadabilitySettings,
   GetImportCss,
+  GetThumbnail,
   RunGoogleDriveSync,
 } from './messages';
 
@@ -87,6 +88,7 @@ const ASYNC_MESSAGES = new Set([
   'GetStylesForIframe',
   'GetReadabilitySettings',
   'GetImportCss',
+  'GetThumbnail',
   'RunGoogleDriveSync',
 ]);
 
@@ -158,6 +160,10 @@ chrome.runtime.onMessage.addListener(
 
       case 'GetImportCss':
         GetImportCss(message, sendResponse);
+        break;
+
+      case 'GetThumbnail':
+        GetThumbnail(message, sendResponse);
         break;
 
       case 'RunGoogleDriveSync':
