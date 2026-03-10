@@ -334,7 +334,22 @@ export default Vue.extend({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           index = (json.data || []).map((e: any) => ({ ...e, source: 'usw' as const }));
         }
-this.loadThumbnails();
+
+        const dom = this.domain.toLowerCase().replace(/^www\./, '');
+        this.allResults = index
+          .filter((entry: UserstyleEntry) => {
+            const cat = (entry.c || '').toLowerCase().replace(/^www\./, '');
+            if (!cat) return false;
+            if (cat === dom) return true;
+            if (dom.endsWith('.' + cat) || cat.endsWith('.' + dom)) return true;
+            const domCore = dom.replace(/\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/, '');
+            const catCore = cat.replace(/\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/, '');
+            if (domCore === catCore) return true;
+            return domCore.split('.').some((part: string) => part === catCore || part === cat);
+          })
+          .slice(0, 150);
+
+        this.loadThumbnails();
       } catch (e) {
         console.error('Find styles error:', e);
         this.error = true;
