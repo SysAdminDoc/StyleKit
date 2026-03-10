@@ -43,8 +43,8 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .color-presets {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(8, 20px);
   gap: 3px;
   margin-bottom: 6px;
 }
