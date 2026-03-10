@@ -41,7 +41,6 @@
         </dropdown-hack-to-support-shadow-dom>
       </template>
     </b-input-group>
-    <the-selector-builder />
   </div>
 </template>
 
@@ -50,7 +49,6 @@ import Vue from 'vue';
 import { StylebotEditingMode } from '@stylebot/types';
 
 import TheCssSelectorInput from './TheCssSelectorInput.vue';
-import TheSelectorBuilder from './TheSelectorBuilder.vue';
 import TheCssSelectorDropdownItem from './TheCssSelectorDropdownItem.vue';
 import DropdownHackToSupportShadowDom from './../DropdownHackToSupportShadowDom.vue';
 
@@ -59,7 +57,6 @@ export default Vue.extend({
 
   components: {
     TheCssSelectorInput,
-    TheSelectorBuilder,
     TheCssSelectorDropdownItem,
     DropdownHackToSupportShadowDom,
   },
