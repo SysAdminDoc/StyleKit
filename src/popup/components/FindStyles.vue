@@ -63,10 +63,9 @@
             v-for="style in results"
             :key="style.i"
             class="find-style-item"
-            :class="{
-              'is-installed': installedIds.has(style.i),
-              'is-previewing': previewingId === style.i,
-            }"
+            :class="{ 'is-previewing': previewingId === style.i }"
+            @mouseenter="hoverPreview(style)"
+            @mouseleave="hoverLeave"
           >
             <!-- Thumbnail -->
             <div class="find-style-thumb-wrap">
@@ -91,9 +90,6 @@
                     target="_blank"
                     :title="style.n"
                   >{{ truncate(style.n, 34) }}</a>
-                  <span v-if="installedIds.has(style.i)" class="find-style-installed-chip">
-                    installed
-                  </span>
                 </div>
                 <div class="find-style-meta">
                   <span class="find-style-author">{{ style.an }}</span>
@@ -104,49 +100,14 @@
               </div>
 
               <div class="find-style-actions">
-                <!-- Preview toggle -->
                 <button
-                  class="find-style-btn preview-btn"
-                  :class="{ active: previewingId === style.i }"
-                  :disabled="busyIds.has(style.i)"
-                  :title="previewingId === style.i ? 'Stop preview' : 'Preview'"
-                  @click="togglePreview(style)"
-                >
-                  <span v-if="busyIds.has(style.i) && previewingId !== style.i" class="find-style-spinner-sm"></span>
-                  <template v-else-if="previewingId === style.i">&#x25A0;</template>
-                  <template v-else>&#x25B6;</template>
-                </button>
-
-                <!-- Install -->
-                <button
-                  v-if="!installedIds.has(style.i)"
                   class="find-style-btn install-btn"
                   :disabled="busyIds.has(style.i)"
                   title="Install style"
                   @click="installStyle(style)"
                 >
                   <span v-if="installingIds.has(style.i)" class="find-style-spinner-sm"></span>
-                  <template v-else>+</template>
-                </button>
-
-                <!-- Edit -->
-                <button
-                  v-if="installedIds.has(style.i)"
-                  class="find-style-btn edit-btn"
-                  title="Edit CSS"
-                  @click="editStyle()"
-                >
-                  &#x270E;
-                </button>
-
-                <!-- Delete -->
-                <button
-                  v-if="installedIds.has(style.i)"
-                  class="find-style-btn delete-btn"
-                  title="Uninstall"
-                  @click="deleteStyle(style)"
-                >
-                  &#x2715;
+                  <template v-else>Install</template>
                 </button>
               </div>
             </div>
@@ -206,6 +167,7 @@ export default Vue.extend({
     previewCssCache: Map<number, string>;
     thumbnails: Record<number, string>;
     domain: string;
+    hoverTimer: ReturnType<typeof setTimeout> | null;
   } {
     return {
       showSearch: false,
@@ -220,19 +182,15 @@ export default Vue.extend({
       previewCssCache: new Map(),
       thumbnails: {},
       domain: '',
+      hoverTimer: null,
     };
   },
 
   computed: {
     results(): UserstyleEntry[] {
       const q = this.nameFilter.toLowerCase().trim();
-      // Sort: installed first, then by weekly installs
-      const sorted = [...this.allResults].sort((a, b) => {
-        const aInst = this.installedIds.has(a.i) ? 1 : 0;
-        const bInst = this.installedIds.has(b.i) ? 1 : 0;
-        if (bInst !== aInst) return bInst - aInst;
-        return b.w - a.w || b.t - a.t;
-      });
+      const uninstalled = this.allResults.filter(s => !this.installedIds.has(s.i));
+      const sorted = [...uninstalled].sort((a, b) => b.w - a.w || b.t - a.t);
       if (!q) return sorted;
       return sorted.filter(s => s.n.toLowerCase().includes(q));
     },
@@ -254,6 +212,13 @@ export default Vue.extend({
   async mounted(): Promise<void> {
     this.domain = this.getDomain();
     await this.loadInstalledMap();
+  },
+
+  beforeDestroy(): void {
+    if (this.hoverTimer !== null) {
+      clearTimeout(this.hoverTimer);
+    }
+    this.removePreview();
   },
 
   methods: {
@@ -407,6 +372,41 @@ export default Vue.extend({
         .catch(() => { /* fire-and-forget */ });
     },
 
+    hoverPreview(style: UserstyleEntry): void {
+      if (this.hoverTimer !== null) {
+        clearTimeout(this.hoverTimer);
+        this.hoverTimer = null;
+      }
+      this.hoverTimer = setTimeout(async () => {
+        this.hoverTimer = null;
+        if (!this.tab?.id) return;
+        if (this.previewingId === style.i) return;
+        if (this.previewingId !== null) {
+          this.removePreview();
+          this.previewingId = null;
+        }
+        try {
+          const css = await this.fetchCss(style);
+          if (!css) return;
+          chrome.tabs
+            .sendMessage(this.tab.id, { name: 'PreviewStyle', id: String(style.i), css })
+            .catch(() => { /* fire-and-forget */ });
+          this.previewingId = style.i;
+        } catch (e) {
+          console.error('Hover preview error:', e);
+        }
+      }, 350);
+    },
+
+    hoverLeave(): void {
+      if (this.hoverTimer !== null) {
+        clearTimeout(this.hoverTimer);
+        this.hoverTimer = null;
+      }
+      this.removePreview();
+      this.previewingId = null;
+    },
+
     async togglePreview(style: UserstyleEntry): Promise<void> {
       if (!this.tab?.id) return;
 
@@ -476,6 +476,10 @@ export default Vue.extend({
           }).catch(() => { /* fire-and-forget */ });
         }
 
+        // Clear hover preview — installed style is now injected permanently
+        if (this.previewingId === style.i) {
+          this.previewingId = null;
+        }
         this.$emit('style-installed', this.domain);
       } catch (e) {
         console.error('Install style error:', e);
@@ -728,12 +732,6 @@ export default Vue.extend({
     background: #26273a;
   }
 
-  &.is-installed {
-    .find-style-name {
-      color: #a6e3a1;
-    }
-  }
-
   &.is-previewing {
     background: rgba(137, 180, 250, 0.06);
     border-left: 2px solid #89b4fa;
@@ -821,19 +819,6 @@ export default Vue.extend({
   }
 }
 
-.find-style-installed-chip {
-  flex-shrink: 0;
-  font-size: 9px;
-  font-weight: 600;
-  color: #a6e3a1;
-  background: rgba(166, 227, 161, 0.12);
-  border: 1px solid rgba(166, 227, 161, 0.3);
-  border-radius: 3px;
-  padding: 0 4px;
-  line-height: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
 
 .find-style-meta {
   display: flex;
@@ -882,29 +867,19 @@ export default Vue.extend({
     opacity: 0.35;
   }
 
-  &.preview-btn {
-    color: #585b70;
-    font-size: 9px;
-
-    &:hover:not(:disabled) {
-      color: #89b4fa;
-      background: rgba(137, 180, 250, 0.1);
-    }
-
-    &.active {
-      color: #89b4fa;
-      background: rgba(137, 180, 250, 0.15);
-    }
-  }
-
   &.install-btn {
+    width: auto;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 600;
     color: #a6e3a1;
-    font-size: 18px;
-    font-weight: 300;
+    background: rgba(166, 227, 161, 0.08);
+    border: 1px solid rgba(166, 227, 161, 0.2);
+    border-radius: 4px;
 
     &:hover:not(:disabled) {
-      color: #a6e3a1;
-      background: rgba(166, 227, 161, 0.12);
+      background: rgba(166, 227, 161, 0.18);
+      border-color: rgba(166, 227, 161, 0.4);
     }
   }
 
