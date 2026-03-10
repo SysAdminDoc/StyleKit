@@ -1,7 +1,7 @@
 <template>
   <div>
     <the-more-action class="stylebot-window-action more-action" />
-    <the-resize-action class="stylebot-window-action resize-action" />
+    <the-dock-toggle class="stylebot-window-action dock-action" />
     <the-close-action class="stylebot-window-action close-action" />
   </div>
 </template>
@@ -10,18 +10,16 @@
 import Vue from 'vue';
 
 import TheMoreAction from './TheMoreAction.vue';
-// import TheDockAction from './TheDockAction.vue';
+import TheDockToggle from './TheDockToggle.vue';
 import TheCloseAction from './TheCloseAction.vue';
-import TheResizeAction from './TheResizeAction.vue';
 
 export default Vue.extend({
   name: 'TheWindowActions',
 
   components: {
     TheMoreAction,
-    // TheDockAction,
+    TheDockToggle,
     TheCloseAction,
-    TheResizeAction,
   },
 });
 </script>
@@ -46,14 +44,14 @@ export default Vue.extend({
   }
 
   &.more-action .btn-group {
-    right: 60px !important;
+    right: 48px !important;
 
     .btn .b-icon {
       font-size: 14px !important;
     }
   }
 
-  &.resize-action {
+  &.dock-action {
     right: 24px !important;
 
     &.btn .b-icon {

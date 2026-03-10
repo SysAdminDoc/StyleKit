@@ -7,7 +7,6 @@
       @click="setMode('basic')"
     >
       <b-icon icon="image" aria-hidden="true" />
-      <span class="pl-1">{{ t('basic_mode') }}</span>
     </b-button>
 
     <b-button
@@ -17,7 +16,6 @@
       @click="setMode('code')"
     >
       <b-icon icon="code" aria-hidden="true" />
-      <span class="pl-1">{{ t('code_mode') }}</span>
     </b-button>
 
     <b-button
@@ -27,7 +25,6 @@
       @click="setMode('magic')"
     >
       <b-icon icon="star" aria-hidden="true" />
-      <span class="pl-1">{{ t('magic_mode') }}</span>
     </b-button>
   </b-button-group>
 </template>
