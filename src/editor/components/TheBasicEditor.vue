@@ -139,7 +139,6 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { Declaration } from 'postcss';
 import { StylebotBasicModeSections } from '@stylebot/types';
 
 import TheTextProperties from './TheTextProperties.vue';
@@ -151,24 +150,6 @@ import TheComputedStyles from './TheComputedStyles.vue';
 import TheSnippetLibrary from './TheSnippetLibrary.vue';
 import TheSiteRecipes from './TheSiteRecipes.vue';
 import TheMediaQueryWrapper from './TheMediaQueryWrapper.vue';
-
-const SECTION_PROPERTIES: Partial<Record<keyof StylebotBasicModeSections, string[]>> = {
-  layout: [
-    'display', 'visibility', 'width', 'height', 'min-width', 'max-width',
-    'min-height', 'max-height', 'margin-top', 'margin-right', 'margin-bottom',
-    'margin-left', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-  ],
-  text: [
-    'font-family', 'font-size', 'font-weight', 'font-style', 'font-variant',
-    'text-decoration', 'text-transform', 'text-align', 'letter-spacing',
-    'word-spacing', 'line-height',
-  ],
-  colors: ['color', 'background-color', 'background', 'opacity', 'box-shadow'],
-  border: [
-    'border-style', 'border-color', 'border-width', 'border-radius',
-    'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width',
-  ],
-};
 
 export default Vue.extend({
   name: 'TheBasicEditor',
@@ -192,10 +173,6 @@ export default Vue.extend({
   },
 
   computed: {
-    activeSelector(): string {
-      return this.$store.state.activeSelector;
-    },
-
     text: {
       get(): boolean {
         return this.$store.state.options.basicModeSections.text;
@@ -262,16 +239,6 @@ export default Vue.extend({
     },
   },
 
-  watch: {
-    activeSelector(val: string) {
-      this.autoExpandSections(val);
-    },
-  },
-
-  mounted() {
-    this.autoExpandSections(this.activeSelector);
-  },
-
   methods: {
     set(name: keyof StylebotBasicModeSections, value: boolean) {
       const sections = this.$store.state.options.basicModeSections;
@@ -280,33 +247,6 @@ export default Vue.extend({
         ...sections,
         [name]: value,
       });
-    },
-
-    autoExpandSections(selector: string): void {
-      const sections = this.$store.state.options.basicModeSections;
-      const rule = this.$store.getters.activeRule;
-      const updates: Partial<StylebotBasicModeSections> = {};
-
-      (Object.keys(SECTION_PROPERTIES) as Array<keyof typeof SECTION_PROPERTIES>).forEach(section => {
-        let hasValue = false;
-        if (rule && selector) {
-          const props = SECTION_PROPERTIES[section] || [];
-          rule.clone().walkDecls((decl: Declaration) => {
-            if (props.includes(decl.prop)) hasValue = true;
-          });
-        }
-        updates[section] = hasValue;
-      });
-
-      this.$store.dispatch('setBasicModeSections', {
-        ...sections,
-        ...updates,
-        variables: false,
-        computedStyles: false,
-        snippets: false,
-        mediaQueries: false,
-      });
-      this.recipes = false;
     },
   },
 });

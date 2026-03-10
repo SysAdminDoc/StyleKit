@@ -19,8 +19,8 @@ export const defaultOptions: StylebotOptions = {
     'Inconsolata',
   ],
   basicModeSections: {
-    text: true,
-    colors: true,
+    text: false,
+    colors: false,
     layout: true,
     border: false,
     variables: false,
