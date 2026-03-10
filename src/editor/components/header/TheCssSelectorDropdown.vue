@@ -42,7 +42,6 @@
       </template>
     </b-input-group>
     <the-selector-builder />
-    <the-ancestor-breadcrumb />
   </div>
 </template>
 
@@ -52,7 +51,6 @@ import { StylebotEditingMode } from '@stylebot/types';
 
 import TheCssSelectorInput from './TheCssSelectorInput.vue';
 import TheSelectorBuilder from './TheSelectorBuilder.vue';
-import TheAncestorBreadcrumb from './TheAncestorBreadcrumb.vue';
 import TheCssSelectorDropdownItem from './TheCssSelectorDropdownItem.vue';
 import DropdownHackToSupportShadowDom from './../DropdownHackToSupportShadowDom.vue';
 
@@ -62,7 +60,6 @@ export default Vue.extend({
   components: {
     TheCssSelectorInput,
     TheSelectorBuilder,
-    TheAncestorBreadcrumb,
     TheCssSelectorDropdownItem,
     DropdownHackToSupportShadowDom,
   },
