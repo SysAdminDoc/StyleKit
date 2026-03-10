@@ -29,65 +29,73 @@
             'is-previewing': previewingId === style.i,
           }"
         >
-          <div class="find-style-info">
-            <a
-              class="find-style-name"
-              :href="getStyleUrl(style)"
-              target="_blank"
-              :title="style.n"
-            >
-              {{ truncate(style.n, 40) }}
-            </a>
-            <div class="find-style-meta">
-              <span class="find-style-author">{{ style.an }}</span>
-              <span v-if="style.w" class="find-style-installs">
-                {{ formatNumber(style.w) }}/wk
-              </span>
+          <img
+            class="find-style-thumb"
+            :src="`https://userstyles.world/api/style/preview/${style.i}.png`"
+            loading="lazy"
+            alt=""
+          />
+          <div class="find-style-body">
+            <div class="find-style-info">
+              <a
+                class="find-style-name"
+                :href="getStyleUrl(style)"
+                target="_blank"
+                :title="style.n"
+              >
+                {{ truncate(style.n, 36) }}
+              </a>
+              <div class="find-style-meta">
+                <span class="find-style-author">{{ style.an }}</span>
+                <span v-if="style.w" class="find-style-installs">
+                  {{ formatNumber(style.w) }}/wk
+                </span>
+              </div>
             </div>
-          </div>
-          <div class="find-style-actions">
-            <!-- Preview -->
-            <button
-              class="find-style-btn preview-btn"
-              :class="{ active: previewingId === style.i }"
-              :disabled="busyIds.has(style.i)"
-              :title="previewingId === style.i ? t('stop_preview') : t('preview')"
-              @click="togglePreview(style)"
-            >
-              &#x25B6;
-            </button>
+            <div class="find-style-actions">
+              <!-- Preview -->
+              <button
+                class="find-style-btn preview-btn"
+                :class="{ active: previewingId === style.i }"
+                :disabled="busyIds.has(style.i)"
+                :title="previewingId === style.i ? t('stop_preview') : t('preview')"
+                @click="togglePreview(style)"
+              >
+                &#x25B6;
+              </button>
 
-            <!-- Install -->
-            <button
-              v-if="!installedIds.has(style.i)"
-              class="find-style-btn install-btn"
-              :disabled="busyIds.has(style.i)"
-              :title="t('install')"
-              @click="installStyle(style)"
-            >
-              <span v-if="installingIds.has(style.i)" class="find-style-spinner-sm"></span>
-              <template v-else>+</template>
-            </button>
+              <!-- Install -->
+              <button
+                v-if="!installedIds.has(style.i)"
+                class="find-style-btn install-btn"
+                :disabled="busyIds.has(style.i)"
+                :title="t('install')"
+                @click="installStyle(style)"
+              >
+                <span v-if="installingIds.has(style.i)" class="find-style-spinner-sm"></span>
+                <template v-else>+</template>
+              </button>
 
-            <!-- Edit (only shown when installed) -->
-            <button
-              v-if="installedIds.has(style.i)"
-              class="find-style-btn edit-btn"
-              :title="t('edit_style')"
-              @click="editStyle(style)"
-            >
-              &#x270E;
-            </button>
+              <!-- Edit (only shown when installed) -->
+              <button
+                v-if="installedIds.has(style.i)"
+                class="find-style-btn edit-btn"
+                :title="t('edit_style')"
+                @click="editStyle(style)"
+              >
+                &#x270E;
+              </button>
 
-            <!-- Delete (only shown when installed) -->
-            <button
-              v-if="installedIds.has(style.i)"
-              class="find-style-btn delete-btn"
-              :title="t('delete_style')"
-              @click="deleteStyle(style)"
-            >
-              &#x2715;
-            </button>
+              <!-- Delete (only shown when installed) -->
+              <button
+                v-if="installedIds.has(style.i)"
+                class="find-style-btn delete-btn"
+                :title="t('delete_style')"
+                @click="deleteStyle(style)"
+              >
+                &#x2715;
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -137,7 +145,6 @@ export default Vue.extend({
     installedIds: Set<number>;
     busyIds: Set<number>;
     previewingId: number | null;
-    previewCssText: string;
     previewCssCache: Map<number, string>;
     domain: string;
   } {
@@ -150,7 +157,6 @@ export default Vue.extend({
       installedIds: new Set(),
       busyIds: new Set(),
       previewingId: null,
-      previewCssText: '',
       previewCssCache: new Map(),
       domain: '',
     };
@@ -245,17 +251,12 @@ export default Vue.extend({
       return css;
     },
 
-    async removePreview(): Promise<void> {
-      if (!this.tab?.id || !this.previewCssText) return;
-      try {
-        await chrome.scripting.removeCSS({
-          target: { tabId: this.tab.id },
-          css: this.previewCssText,
-        });
-      } catch (e) {
-        console.error('removeCSS error:', e);
-      }
-      this.previewCssText = '';
+    removePreview(): void {
+      if (!this.tab?.id || this.previewingId === null) return;
+      chrome.tabs.sendMessage(this.tab.id, {
+        name: 'RemovePreviewStyle',
+        id: String(this.previewingId),
+      }).catch(() => {});
     },
 
     async togglePreview(style: UserstyleEntry): Promise<void> {
@@ -263,14 +264,14 @@ export default Vue.extend({
 
       // Toggle off if already previewing this style
       if (this.previewingId === style.i) {
-        await this.removePreview();
+        this.removePreview();
         this.previewingId = null;
         return;
       }
 
       // Remove any existing preview
       if (this.previewingId !== null) {
-        await this.removePreview();
+        this.removePreview();
         this.previewingId = null;
       }
 
@@ -281,11 +282,11 @@ export default Vue.extend({
           console.error('Preview: no CSS returned');
           return;
         }
-        await chrome.scripting.insertCSS({
-          target: { tabId: this.tab.id },
+        chrome.tabs.sendMessage(this.tab.id, {
+          name: 'PreviewStyle',
+          id: String(style.i),
           css,
-        });
-        this.previewCssText = css;
+        }).catch(() => {});
         this.previewingId = style.i;
       } catch (e) {
         console.error('Preview error:', e);
@@ -363,6 +364,7 @@ export default Vue.extend({
         this.previewingId = null;
       }
 
+
       this.$emit('style-deleted', this.domain);
     },
 
@@ -423,9 +425,7 @@ export default Vue.extend({
 
 .find-style-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
+  align-items: stretch;
   border-bottom: 1px solid #313244;
   transition: background 0.15s;
 
@@ -446,8 +446,29 @@ export default Vue.extend({
   &.is-previewing {
     background: rgba(137, 180, 250, 0.08);
     border-left: 2px solid #89b4fa;
-    padding-left: 8px;
+
+    .find-style-thumb {
+      margin-left: -2px;
+    }
   }
+}
+
+.find-style-thumb {
+  width: 72px;
+  height: 54px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #181825;
+  border-right: 1px solid #313244;
+}
+
+.find-style-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 6px 10px;
 }
 
 .find-style-info {
