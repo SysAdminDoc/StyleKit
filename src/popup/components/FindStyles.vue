@@ -31,8 +31,7 @@
         >
           <img
             class="find-style-thumb"
-            :src="`https://userstyles.world/api/style/preview/${style.i}.png`"
-            loading="lazy"
+            :src="thumbnails[style.i] || ''"
             alt=""
           />
           <div class="find-style-body">
@@ -146,6 +145,7 @@ export default Vue.extend({
     busyIds: Set<number>;
     previewingId: number | null;
     previewCssCache: Map<number, string>;
+    thumbnails: Record<number, string>;
     domain: string;
   } {
     return {
@@ -158,6 +158,7 @@ export default Vue.extend({
       busyIds: new Set(),
       previewingId: null,
       previewCssCache: new Map(),
+      thumbnails: {},
       domain: '',
     };
   },
@@ -217,11 +218,34 @@ export default Vue.extend({
               b.w - a.w || b.t - a.t
           )
           .slice(0, 100);
+
+        this.loadThumbnails();
       } catch (e) {
         console.error('Find styles error:', e);
         this.error = true;
       } finally {
         this.loading = false;
+      }
+    },
+
+    async loadThumbnails(): Promise<void> {
+      const BATCH = 5;
+      const ids = this.results.map(s => s.i);
+      for (let i = 0; i < ids.length; i += BATCH) {
+        await Promise.all(
+          ids.slice(i, i + BATCH).map(async id => {
+            try {
+              const res = await fetch(
+                `https://userstyles.world/api/style/preview/${id}.png`
+              );
+              if (!res.ok) return;
+              const blob = await res.blob();
+              this.$set(this.thumbnails, id, URL.createObjectURL(blob));
+            } catch {
+              // ignore — thumbnail stays blank
+            }
+          })
+        );
       }
     },
 
