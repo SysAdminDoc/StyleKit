@@ -109,8 +109,29 @@ span {
   font-size: 15px;
 }
 
+body {
+  width: 360px;
+  height: 580px;
+  overflow: hidden;
+}
+
 .popup {
-  width: 280px;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #45475a;
+    border-radius: 3px;
+  }
 }
 
 .list-group {
