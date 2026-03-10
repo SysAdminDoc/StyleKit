@@ -108,6 +108,11 @@ export type RunGoogleDriveSync = {
   name: 'RunGoogleDriveSync';
 };
 
+export type GetThumbnail = {
+  name: 'GetThumbnail';
+  url: string;
+};
+
 type BackgroundPageMessage =
   | SetStyle
   | EnableStyle
@@ -128,6 +133,7 @@ type BackgroundPageMessage =
   | GetReadabilitySettings
   | SetReadabilitySettings
   | GetImportCss
-  | RunGoogleDriveSync;
+  | RunGoogleDriveSync
+  | GetThumbnail;
 
 export default BackgroundPageMessage;

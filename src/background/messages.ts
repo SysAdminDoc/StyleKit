@@ -32,6 +32,7 @@ import {
   SetReadability as SetReadabilityType,
   SetReadabilitySettings as SetReadabilitySettingsType,
   GetImportCss as GetImportCssType,
+  GetThumbnail as GetThumbnailType,
   RunGoogleDriveSync as RunGoogleDriveSyncType,
   GetCommandsResponse,
   GetAllOptionsResponse,
@@ -40,6 +41,7 @@ import {
   GetStylesForPageResponse,
   GetReadabilitySettingsResponse,
   GetImportCssResponse,
+  GetThumbnailResponse,
   RunGoogleDriveSyncResponse,
 } from '@stylebot/types';
 import { runGoogleDriveSync } from '@stylebot/sync';
@@ -174,6 +176,27 @@ export const GetImportCss = async (
 ): Promise<void> => {
   const css = await getImportCss(message.url);
   sendResponse(css);
+};
+
+export const GetThumbnail = async (
+  message: GetThumbnailType,
+  sendResponse: (response: GetThumbnailResponse) => void
+): Promise<void> => {
+  try {
+    const res = await fetch(message.url);
+    if (!res.ok) { sendResponse(''); return; }
+    const buffer = await res.arrayBuffer();
+    const uint8 = new Uint8Array(buffer);
+    const CHUNK = 8192;
+    let binary = '';
+    for (let i = 0; i < uint8.length; i += CHUNK) {
+      binary += String.fromCharCode(...(Array.from(uint8.subarray(i, i + CHUNK))));
+    }
+    const contentType = res.headers.get('content-type') || 'image/png';
+    sendResponse(`data:${contentType};base64,${btoa(binary)}`);
+  } catch {
+    sendResponse('');
+  }
 };
 
 export const RunGoogleDriveSync = async (
