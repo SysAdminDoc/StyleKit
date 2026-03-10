@@ -3,112 +3,151 @@
     <b-list-group-item button class="find-styles-btn" @click="toggleSearch">
       <b-icon icon="search" />
       <span class="pl-2">{{ t('find_styles') }}</span>
+      <span v-if="allResults.length > 0" class="find-styles-badge">
+        {{ allResults.length }}
+      </span>
     </b-list-group-item>
 
     <div v-if="showSearch" class="find-styles-panel">
+      <!-- Loading -->
       <div v-if="loading" class="find-styles-status">
         <div class="find-styles-spinner"></div>
         <span>{{ t('loading_styles') }}</span>
       </div>
 
+      <!-- Error -->
       <div v-else-if="error" class="find-styles-status find-styles-error">
         {{ t('style_search_error') }}
       </div>
 
-      <div v-else-if="results.length === 0" class="find-styles-status">
-        {{ t('no_styles_found') }}
-      </div>
-
-      <div v-else class="find-styles-results">
-        <div
-          v-for="style in results"
-          :key="style.i"
-          class="find-style-item"
-          :class="{
-            'is-installed': installedIds.has(style.i),
-            'is-previewing': previewingId === style.i,
-          }"
-        >
-          <img
-            class="find-style-thumb"
-            :src="thumbnails[style.i] || ''"
-            alt=""
+      <template v-else>
+        <!-- Header -->
+        <div class="find-styles-header">
+          <div class="find-styles-domain-row">
+            <span class="find-styles-domain">{{ domain }}</span>
+            <span class="find-styles-count">
+              {{ results.length }}{{ nameFilter ? '' : '+' }} style{{ results.length !== 1 ? 's' : '' }}
+            </span>
+          </div>
+          <input
+            v-model="nameFilter"
+            class="find-styles-search"
+            type="text"
+            placeholder="Filter by name..."
           />
-          <div class="find-style-body">
-            <div class="find-style-info">
-              <a
-                class="find-style-name"
-                :href="getStyleUrl(style)"
-                target="_blank"
-                :title="style.n"
-              >
-                {{ truncate(style.n, 36) }}
-              </a>
-              <div class="find-style-meta">
-                <span class="find-style-author">{{ style.an }}</span>
-                <span v-if="style.w" class="find-style-installs">
-                  {{ formatNumber(style.w) }}/wk
-                </span>
+        </div>
+
+        <!-- No results -->
+        <div v-if="results.length === 0" class="find-styles-status">
+          {{ nameFilter ? 'No matching styles' : t('no_styles_found') }}
+        </div>
+
+        <!-- Style list -->
+        <div v-else class="find-styles-results">
+          <div
+            v-for="style in results"
+            :key="style.i"
+            class="find-style-item"
+            :class="{
+              'is-installed': installedIds.has(style.i),
+              'is-previewing': previewingId === style.i,
+            }"
+          >
+            <!-- Thumbnail -->
+            <div class="find-style-thumb-wrap">
+              <img
+                v-if="thumbnails[style.i]"
+                class="find-style-thumb"
+                :src="thumbnails[style.i]"
+                alt=""
+              />
+              <div v-else class="find-style-thumb-placeholder">
+                <div class="find-style-thumb-spin"></div>
               </div>
             </div>
-            <div class="find-style-actions">
-              <!-- Preview -->
-              <button
-                class="find-style-btn preview-btn"
-                :class="{ active: previewingId === style.i }"
-                :disabled="busyIds.has(style.i)"
-                :title="previewingId === style.i ? t('stop_preview') : t('preview')"
-                @click="togglePreview(style)"
-              >
-                &#x25B6;
-              </button>
 
-              <!-- Install -->
-              <button
-                v-if="!installedIds.has(style.i)"
-                class="find-style-btn install-btn"
-                :disabled="busyIds.has(style.i)"
-                :title="t('install')"
-                @click="installStyle(style)"
-              >
-                <span v-if="installingIds.has(style.i)" class="find-style-spinner-sm"></span>
-                <template v-else>+</template>
-              </button>
+            <!-- Info + actions -->
+            <div class="find-style-body">
+              <div class="find-style-info">
+                <div class="find-style-name-row">
+                  <a
+                    class="find-style-name"
+                    :href="getStyleUrl(style)"
+                    target="_blank"
+                    :title="style.n"
+                  >{{ truncate(style.n, 34) }}</a>
+                  <span v-if="installedIds.has(style.i)" class="find-style-installed-chip">
+                    installed
+                  </span>
+                </div>
+                <div class="find-style-meta">
+                  <span class="find-style-author">{{ style.an }}</span>
+                  <span v-if="style.w" class="find-style-installs">
+                    {{ formatNumber(style.w) }}/wk
+                  </span>
+                </div>
+              </div>
 
-              <!-- Edit (only shown when installed) -->
-              <button
-                v-if="installedIds.has(style.i)"
-                class="find-style-btn edit-btn"
-                :title="t('edit_style')"
-                @click="editStyle(style)"
-              >
-                &#x270E;
-              </button>
+              <div class="find-style-actions">
+                <!-- Preview toggle -->
+                <button
+                  class="find-style-btn preview-btn"
+                  :class="{ active: previewingId === style.i }"
+                  :disabled="busyIds.has(style.i)"
+                  :title="previewingId === style.i ? 'Stop preview' : 'Preview'"
+                  @click="togglePreview(style)"
+                >
+                  <span v-if="busyIds.has(style.i) && previewingId !== style.i" class="find-style-spinner-sm"></span>
+                  <template v-else-if="previewingId === style.i">&#x25A0;</template>
+                  <template v-else>&#x25B6;</template>
+                </button>
 
-              <!-- Delete (only shown when installed) -->
-              <button
-                v-if="installedIds.has(style.i)"
-                class="find-style-btn delete-btn"
-                :title="t('delete_style')"
-                @click="deleteStyle(style)"
-              >
-                &#x2715;
-              </button>
+                <!-- Install -->
+                <button
+                  v-if="!installedIds.has(style.i)"
+                  class="find-style-btn install-btn"
+                  :disabled="busyIds.has(style.i)"
+                  title="Install style"
+                  @click="installStyle(style)"
+                >
+                  <span v-if="installingIds.has(style.i)" class="find-style-spinner-sm"></span>
+                  <template v-else>+</template>
+                </button>
+
+                <!-- Edit -->
+                <button
+                  v-if="installedIds.has(style.i)"
+                  class="find-style-btn edit-btn"
+                  title="Edit CSS"
+                  @click="editStyle()"
+                >
+                  &#x270E;
+                </button>
+
+                <!-- Delete -->
+                <button
+                  v-if="installedIds.has(style.i)"
+                  class="find-style-btn delete-btn"
+                  title="Uninstall"
+                  @click="deleteStyle(style)"
+                >
+                  &#x2715;
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
-import {
-  SetStyle,
-  OpenStylebotInCodeMode,
-} from '@stylebot/types';
+import { SetStyle, OpenStylebotInCodeMode } from '@stylebot/types';
 import { convertUserCssToRaw } from '../../utils/usercss';
+
+const STORAGE_KEY = 'stylekit-usw-installs';
 
 interface UserstyleEntry {
   i: number;
@@ -125,6 +164,11 @@ interface UserstyleEntry {
   source: 'usw' | 'usoa';
 }
 
+interface InstalledEntry {
+  domain: string;
+  css: string;
+}
+
 export default Vue.extend({
   name: 'FindStyles',
 
@@ -139,9 +183,10 @@ export default Vue.extend({
     showSearch: boolean;
     loading: boolean;
     error: boolean;
-    results: UserstyleEntry[];
+    allResults: UserstyleEntry[];
+    nameFilter: string;
+    installedMap: Record<number, InstalledEntry>;
     installingIds: Set<number>;
-    installedIds: Set<number>;
     busyIds: Set<number>;
     previewingId: number | null;
     previewCssCache: Map<number, string>;
@@ -152,9 +197,10 @@ export default Vue.extend({
       showSearch: false,
       loading: false,
       error: false,
-      results: [],
+      allResults: [],
+      nameFilter: '',
+      installedMap: {},
       installingIds: new Set(),
-      installedIds: new Set(),
       busyIds: new Set(),
       previewingId: null,
       previewCssCache: new Map(),
@@ -163,10 +209,31 @@ export default Vue.extend({
     };
   },
 
+  computed: {
+    results(): UserstyleEntry[] {
+      const q = this.nameFilter.toLowerCase().trim();
+      // Sort: installed first, then by weekly installs
+      const sorted = [...this.allResults].sort((a, b) => {
+        const aInst = this.installedIds.has(a.i) ? 1 : 0;
+        const bInst = this.installedIds.has(b.i) ? 1 : 0;
+        if (bInst !== aInst) return bInst - aInst;
+        return b.w - a.w || b.t - a.t;
+      });
+      if (!q) return sorted;
+      return sorted.filter(s => s.n.toLowerCase().includes(q));
+    },
+
+    installedIds(): Set<number> {
+      return new Set(
+        Object.keys(this.installedMap).map(Number)
+      );
+    },
+  },
+
   methods: {
     toggleSearch(): void {
       this.showSearch = !this.showSearch;
-      if (this.showSearch && this.results.length === 0) {
+      if (this.showSearch && this.allResults.length === 0) {
         this.search();
       }
     },
@@ -180,6 +247,23 @@ export default Vue.extend({
       }
     },
 
+    async loadInstalledMap(): Promise<void> {
+      const result = await chrome.storage.local.get(STORAGE_KEY);
+      this.installedMap = (result[STORAGE_KEY] as Record<number, InstalledEntry>) || {};
+    },
+
+    async saveInstalledMap(map: Record<number, InstalledEntry>): Promise<void> {
+      await chrome.storage.local.set({ [STORAGE_KEY]: map });
+    },
+
+    getMergedCssForDomain(domain: string, map: Record<number, InstalledEntry>): string {
+      return Object.values(map)
+        .filter(e => e.domain === domain)
+        .map(e => e.css)
+        .join('\n\n')
+        .trim();
+    },
+
     async search(): Promise<void> {
       this.domain = this.getDomain();
       if (!this.domain) {
@@ -191,33 +275,31 @@ export default Vue.extend({
       this.error = false;
 
       try {
-        const res = await fetch(
-          'https://userstyles.world/api/index/uso-format'
-        );
+        // Load installed state from storage before showing results
+        await this.loadInstalledMap();
+
+        const res = await fetch('https://userstyles.world/api/index/uso-format');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         const index: UserstyleEntry[] = (json.data || []).map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (e: any) => ({ ...e, source: 'usw' as const })
         );
 
-        const domain = this.domain;
-        this.results = index
+        const dom = this.domain.toLowerCase().replace(/^www\./, '');
+        this.allResults = index
           .filter((entry: UserstyleEntry) => {
-            const cat = (entry.c || '').toLowerCase();
-            const dom = domain.toLowerCase();
+            const cat = (entry.c || '').toLowerCase().replace(/^www\./, '');
             if (!cat) return false;
             if (cat === dom) return true;
-            if (dom.includes(cat + '.') || dom.startsWith(cat)) return true;
-            const domParts = dom
-              .replace(/\.(com|org|net|io|co|edu|gov)(\.\w+)?$/, '')
-              .split('.');
-            return domParts.some((part: string) => part === cat);
+            if (dom.endsWith('.' + cat) || cat.endsWith('.' + dom)) return true;
+            // Match on significant domain part (strip TLD)
+            const domCore = dom.replace(/\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/, '');
+            const catCore = cat.replace(/\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/, '');
+            if (domCore === catCore) return true;
+            return domCore.split('.').some((part: string) => part === catCore || part === cat);
           })
-          .sort(
-            (a: UserstyleEntry, b: UserstyleEntry) =>
-              b.w - a.w || b.t - a.t
-          )
-          .slice(0, 100);
+          .slice(0, 150);
 
         this.loadThumbnails();
       } catch (e) {
@@ -229,15 +311,18 @@ export default Vue.extend({
     },
 
     loadThumbnails(): void {
-      const BATCH = 5;
-      const ids = this.results.map(s => s.i);
+      const BATCH = 4;
+      const ids = this.allResults.map(s => s.i);
       const fetchBatch = (offset: number) => {
         if (offset >= ids.length) return;
         const batch = ids.slice(offset, offset + BATCH);
         let done = 0;
         batch.forEach(id => {
           chrome.runtime.sendMessage(
-            { name: 'GetThumbnail', url: `https://userstyles.world/api/style/preview/${id}.png` },
+            {
+              name: 'GetThumbnail',
+              url: `https://userstyles.world/api/style/preview/${id}.png`,
+            },
             (dataUrl: string) => {
               if (dataUrl) this.$set(this.thumbnails, id, dataUrl);
               if (++done === batch.length) fetchBatch(offset + BATCH);
@@ -257,42 +342,40 @@ export default Vue.extend({
 
     async fetchCss(style: UserstyleEntry): Promise<string> {
       const cached = this.previewCssCache.get(style.i);
-      if (cached) return cached;
+      if (cached !== undefined) return cached;
 
-      const url = style.source === 'usw'
-        ? `https://userstyles.world/api/style/${style.i}.user.css`
-        : `https://cdn.jsdelivr.net/gh/uso-archive/data@flomaster/data/usercss/${style.i}.user.css`;
+      const url =
+        style.source === 'usw'
+          ? `https://userstyles.world/api/style/${style.i}.user.css`
+          : `https://cdn.jsdelivr.net/gh/uso-archive/data@flomaster/data/usercss/${style.i}.user.css`;
 
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const sourceCode = await res.text();
       const css = convertUserCssToRaw(sourceCode);
-
-      if (css) {
-        this.previewCssCache.set(style.i, css);
-      }
+      if (css) this.previewCssCache.set(style.i, css);
       return css;
     },
 
     removePreview(): void {
       if (!this.tab?.id || this.previewingId === null) return;
-      chrome.tabs.sendMessage(this.tab.id, {
-        name: 'RemovePreviewStyle',
-        id: String(this.previewingId),
-      }).catch(() => {});
+      chrome.tabs
+        .sendMessage(this.tab.id, {
+          name: 'RemovePreviewStyle',
+          id: String(this.previewingId),
+        })
+        .catch(() => { /* fire-and-forget */ });
     },
 
     async togglePreview(style: UserstyleEntry): Promise<void> {
       if (!this.tab?.id) return;
 
-      // Toggle off if already previewing this style
       if (this.previewingId === style.i) {
         this.removePreview();
         this.previewingId = null;
         return;
       }
 
-      // Remove any existing preview
       if (this.previewingId !== null) {
         this.removePreview();
         this.previewingId = null;
@@ -301,15 +384,10 @@ export default Vue.extend({
       this.setBusy(style.i, true);
       try {
         const css = await this.fetchCss(style);
-        if (!css) {
-          console.error('Preview: no CSS returned');
-          return;
-        }
-        chrome.tabs.sendMessage(this.tab.id, {
-          name: 'PreviewStyle',
-          id: String(style.i),
-          css,
-        }).catch(() => {});
+        if (!css) return;
+        chrome.tabs
+          .sendMessage(this.tab.id, { name: 'PreviewStyle', id: String(style.i), css })
+          .catch(() => { /* fire-and-forget */ });
         this.previewingId = style.i;
       } catch (e) {
         console.error('Preview error:', e);
@@ -319,32 +397,36 @@ export default Vue.extend({
     },
 
     async installStyle(style: UserstyleEntry): Promise<void> {
-      if (this.installingIds.has(style.i) || this.installedIds.has(style.i)) {
-        return;
-      }
+      if (this.installingIds.has(style.i) || this.installedIds.has(style.i)) return;
 
       this.installingIds = new Set([...this.installingIds, style.i]);
       this.setBusy(style.i, true);
 
       try {
+        // Use cached CSS from preview if available, otherwise fetch
         const css = await this.fetchCss(style);
-        if (!css || !css.trim()) {
-          console.error('Install: no CSS content found');
+        if (!css?.trim()) {
+          console.error('Install: no CSS returned');
           return;
         }
 
-        const message: SetStyle = {
-          name: 'SetStyle',
-          url: this.domain || '*',
-          css,
-          readability: false,
+        // Persist to our tracking map so install state survives popup close
+        const newMap: Record<number, InstalledEntry> = {
+          ...this.installedMap,
+          [style.i]: { domain: this.domain, css },
         };
-        chrome.runtime.sendMessage(message);
+        await this.saveInstalledMap(newMap);
+        this.installedMap = newMap;
 
-        this.installedIds = new Set([...this.installedIds, style.i]);
-        // Don't remove preview — SetStyle only saves to storage, it doesn't
-        // push the style to the live tab. Keep the preview CSS visible so the
-        // user sees the style until next page reload.
+        // Merge all installed styles for this domain into one SetStyle call
+        const mergedCss = this.getMergedCssForDomain(this.domain, newMap);
+        chrome.runtime.sendMessage({
+          name: 'SetStyle',
+          url: this.domain,
+          css: mergedCss,
+          readability: false,
+        } as SetStyle);
+
         this.$emit('style-installed', this.domain);
       } catch (e) {
         console.error('Install style error:', e);
@@ -356,39 +438,41 @@ export default Vue.extend({
       }
     },
 
-    editStyle(): void {
-      if (!this.tab?.id) return;
+    async deleteStyle(style: UserstyleEntry): Promise<void> {
+      const entry = this.installedMap[style.i];
+      if (!entry) return;
+      const domain = entry.domain;
 
-      const message: OpenStylebotInCodeMode = {
-        name: 'OpenStylebotInCodeMode',
-      };
+      // Remove this style from tracking map
+      const newMap: Record<number, InstalledEntry> = { ...this.installedMap };
+      delete newMap[style.i];
+      await this.saveInstalledMap(newMap);
+      this.installedMap = newMap;
 
-      chrome.tabs.sendMessage(this.tab.id, message).catch(() => {});
-      window.close();
-    },
-
-    deleteStyle(style: UserstyleEntry): void {
-      const message: SetStyle = {
+      // Recompute merged CSS for the domain (may be '' if no other styles remain)
+      const mergedCss = this.getMergedCssForDomain(domain, newMap);
+      chrome.runtime.sendMessage({
         name: 'SetStyle',
-        url: this.domain,
-        css: '',
+        url: domain,
+        css: mergedCss,
         readability: false,
-      };
+      } as SetStyle);
 
-      chrome.runtime.sendMessage(message);
-
-      const next = new Set(this.installedIds);
-      next.delete(style.i);
-      this.installedIds = next;
-
-      // Remove preview if active
+      // Stop preview for this style if active
       if (this.previewingId === style.i) {
         this.removePreview();
         this.previewingId = null;
       }
 
+      this.$emit('style-deleted', domain);
+    },
 
-      this.$emit('style-deleted', this.domain);
+    editStyle(): void {
+      if (!this.tab?.id) return;
+      chrome.tabs
+        .sendMessage(this.tab.id, { name: 'OpenStylebotInCodeMode' } as OpenStylebotInCodeMode)
+        .catch(() => { /* fire-and-forget */ });
+      window.close();
     },
 
     getStyleUrl(style: UserstyleEntry): string {
@@ -398,12 +482,12 @@ export default Vue.extend({
     },
 
     truncate(str: string, len: number): string {
-      return str.length > len ? str.slice(0, len) + '...' : str;
+      return str.length > len ? str.slice(0, len) + '…' : str;
     },
 
     formatNumber(num: number): string {
-      if (num > 1e6) return (num / 1e6).toFixed(1) + 'M';
-      if (num > 1e3) return (num / 1e3).toFixed(1) + 'k';
+      if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+      if (num >= 1e3) return (num / 1e3).toFixed(1) + 'k';
       return String(num);
     },
   },
@@ -411,6 +495,7 @@ export default Vue.extend({
 </script>
 
 <style lang="scss">
+/* ── Trigger button ─────────────────────────────────────────── */
 .find-styles-btn {
   .b-icon {
     width: 16px;
@@ -418,12 +503,78 @@ export default Vue.extend({
   }
 }
 
+.find-styles-badge {
+  margin-left: auto;
+  background: #313244;
+  color: #89b4fa;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  line-height: 16px;
+}
+
+/* ── Panel shell ────────────────────────────────────────────── */
 .find-styles-panel {
-  max-height: 320px;
+  max-height: 380px;
   overflow-y: auto;
   border-top: 1px solid #313244;
 }
 
+/* ── Header: domain + count + search ───────────────────────── */
+.find-styles-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #1e1e2e;
+  border-bottom: 1px solid #313244;
+  padding: 8px 10px 6px;
+}
+
+.find-styles-domain-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.find-styles-domain {
+  font-size: 11px;
+  font-weight: 600;
+  color: #cdd6f4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.find-styles-count {
+  font-size: 10px;
+  color: #6c7086;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.find-styles-search {
+  width: 100%;
+  background: #313244;
+  border: 1px solid #45475a;
+  border-radius: 4px;
+  color: #cdd6f4;
+  font-size: 11px;
+  padding: 4px 8px;
+  outline: none;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: #585b70;
+  }
+
+  &:focus {
+    border-color: #89b4fa;
+  }
+}
+
+/* ── Status messages ────────────────────────────────────────── */
 .find-styles-status {
   display: flex;
   align-items: center;
@@ -444,20 +595,26 @@ export default Vue.extend({
   border-top-color: #89b4fa;
   border-radius: 50%;
   animation: sk-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Results list ───────────────────────────────────────────── */
+.find-styles-results {
+  /* inherits panel scroll */
 }
 
 .find-style-item {
   display: flex;
   align-items: stretch;
   border-bottom: 1px solid #313244;
-  transition: background 0.15s;
-
-  &:hover {
-    background: #313244;
-  }
+  transition: background 0.12s;
 
   &:last-child {
     border-bottom: none;
+  }
+
+  &:hover {
+    background: #26273a;
   }
 
   &.is-installed {
@@ -467,24 +624,53 @@ export default Vue.extend({
   }
 
   &.is-previewing {
-    background: rgba(137, 180, 250, 0.08);
+    background: rgba(137, 180, 250, 0.06);
     border-left: 2px solid #89b4fa;
 
-    .find-style-thumb {
+    .find-style-thumb-wrap {
       margin-left: -2px;
     }
   }
 }
 
-.find-style-thumb {
-  width: 72px;
-  height: 54px;
-  object-fit: cover;
+/* ── Thumbnail ──────────────────────────────────────────────── */
+.find-style-thumb-wrap {
+  width: 80px;
+  height: 60px;
   flex-shrink: 0;
   background: #181825;
   border-right: 1px solid #313244;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
+.find-style-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.find-style-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.find-style-thumb-spin {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #313244;
+  border-top-color: #45475a;
+  border-radius: 50%;
+  animation: sk-spin 0.8s linear infinite;
+}
+
+/* ── Body: info + actions ───────────────────────────────────── */
 .find-style-body {
   flex: 1;
   min-width: 0;
@@ -492,16 +678,22 @@ export default Vue.extend({
   align-items: center;
   justify-content: space-between;
   padding: 6px 8px 6px 10px;
+  gap: 6px;
 }
 
 .find-style-info {
   flex: 1;
   min-width: 0;
-  margin-right: 6px;
+}
+
+.find-style-name-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
 }
 
 .find-style-name {
-  display: block;
   font-size: 12px;
   font-weight: 500;
   color: #cdd6f4;
@@ -509,32 +701,51 @@ export default Vue.extend({
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 
   &:hover {
     color: #89b4fa;
+    text-decoration: underline;
   }
+}
+
+.find-style-installed-chip {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 600;
+  color: #a6e3a1;
+  background: rgba(166, 227, 161, 0.12);
+  border: 1px solid rgba(166, 227, 161, 0.3);
+  border-radius: 3px;
+  padding: 0 4px;
+  line-height: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .find-style-meta {
   display: flex;
   gap: 6px;
-  margin-top: 1px;
+  margin-top: 2px;
   font-size: 10px;
-  color: #6c7086;
+  color: #585b70;
 }
 
 .find-style-author {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 80px;
+  max-width: 90px;
 }
 
 .find-style-installs {
   white-space: nowrap;
   flex-shrink: 0;
+  color: #6c7086;
 }
 
+/* ── Action buttons ─────────────────────────────────────────── */
 .find-style-actions {
   display: flex;
   gap: 2px;
@@ -542,27 +753,27 @@ export default Vue.extend({
 }
 
 .find-style-btn {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 3px;
+  border-radius: 4px;
   background: transparent;
   cursor: pointer;
   font-size: 12px;
   padding: 0;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.12s, background 0.12s;
 
   &:disabled {
     cursor: default;
-    opacity: 0.4;
+    opacity: 0.35;
   }
 
   &.preview-btn {
-    color: #6c7086;
-    font-size: 10px;
+    color: #585b70;
+    font-size: 9px;
 
     &:hover:not(:disabled) {
       color: #89b4fa;
@@ -577,16 +788,18 @@ export default Vue.extend({
 
   &.install-btn {
     color: #a6e3a1;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 18px;
+    font-weight: 300;
 
     &:hover:not(:disabled) {
-      background: rgba(166, 227, 161, 0.1);
+      color: #a6e3a1;
+      background: rgba(166, 227, 161, 0.12);
     }
   }
 
   &.edit-btn {
-    color: #6c7086;
+    color: #585b70;
+    font-size: 13px;
 
     &:hover {
       color: #cdd6f4;
@@ -595,7 +808,8 @@ export default Vue.extend({
   }
 
   &.delete-btn {
-    color: #6c7086;
+    color: #585b70;
+    font-size: 11px;
 
     &:hover {
       color: #f38ba8;
@@ -605,8 +819,8 @@ export default Vue.extend({
 }
 
 .find-style-spinner-sm {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border: 2px solid #313244;
   border-top-color: #89b4fa;
   border-radius: 50%;
@@ -614,8 +828,6 @@ export default Vue.extend({
 }
 
 @keyframes sk-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 </style>
