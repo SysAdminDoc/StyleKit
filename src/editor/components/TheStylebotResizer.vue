@@ -17,6 +17,11 @@
     @activated="onActivated"
     @resizestop="onResizeStop"
   >
+    <div
+      class="edge-drag-handle"
+      :class="dockedRight ? 'handle-on-left' : 'handle-on-right'"
+      @mousedown.prevent="onEdgeDragStart"
+    />
     <slot></slot>
   </vue-draggable-resizable>
 </template>
@@ -33,6 +38,9 @@ export default Vue.extend({
     return {
       windowWidth: window.innerWidth,
       windowHeight: window.innerHeight,
+      edgeDragging: false,
+      edgeDragStartX: 0,
+      edgeDragStartWidth: 0,
     };
   },
 
@@ -101,6 +109,8 @@ export default Vue.extend({
   destroyed() {
     this.adjustPageLayout();
     window.removeEventListener('resize', this.onWindowResize);
+    window.removeEventListener('mousemove', this.onEdgeDragMove);
+    window.removeEventListener('mouseup', this.onEdgeDragEnd);
   },
 
   methods: {
@@ -128,6 +138,33 @@ export default Vue.extend({
       });
     },
 
+    onEdgeDragStart(e: MouseEvent) {
+      this.edgeDragging = true;
+      this.edgeDragStartX = e.clientX;
+      this.edgeDragStartWidth = this.layout.width;
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'ew-resize';
+      window.addEventListener('mousemove', this.onEdgeDragMove);
+      window.addEventListener('mouseup', this.onEdgeDragEnd);
+    },
+
+    onEdgeDragMove(e: MouseEvent) {
+      if (!this.edgeDragging) return;
+      const delta = e.clientX - this.edgeDragStartX;
+      const newWidth = this.dockedRight
+        ? Math.max(300, this.edgeDragStartWidth - delta)
+        : Math.max(300, this.edgeDragStartWidth + delta);
+      this.$store.dispatch('setLayout', { ...this.layout, width: newWidth });
+    },
+
+    onEdgeDragEnd() {
+      this.edgeDragging = false;
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      window.removeEventListener('mousemove', this.onEdgeDragMove);
+      window.removeEventListener('mouseup', this.onEdgeDragEnd);
+    },
+
     adjustPageLayout() {
       // todo: this needs a lot of work to be more robust.
       if (this.layout.adjustPageLayout && this.visible) {
@@ -151,7 +188,7 @@ export default Vue.extend({
 .stylebot {
   &.vdr {
     position: fixed;
-    border: 1px solid #ccc;
+    border: 1px solid #313244;
 
     &.stylebot-resizing,
     &.stylebot-resizing-active {
@@ -159,23 +196,35 @@ export default Vue.extend({
     }
 
     .handle {
-      width: 20px;
-      height: 20px;
-      background: #0062cc;
-      border: none;
-    }
-
-    .handle-ml {
-      left: -20px;
-    }
-
-    .handle-mr {
-      right: -20px;
+      display: none;
     }
 
     &.left {
       left: 0;
     }
+  }
+}
+
+.edge-drag-handle {
+  position: absolute;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(137, 180, 250, 0.25);
+  }
+
+  &.handle-on-left {
+    left: 0;
+  }
+
+  &.handle-on-right {
+    right: 0;
   }
 }
 </style>
