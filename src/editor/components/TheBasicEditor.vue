@@ -268,6 +268,10 @@ export default Vue.extend({
     },
   },
 
+  mounted() {
+    this.autoExpandSections(this.activeSelector);
+  },
+
   methods: {
     set(name: keyof StylebotBasicModeSections, value: boolean) {
       const sections = this.$store.state.options.basicModeSections;
