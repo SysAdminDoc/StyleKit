@@ -273,7 +273,12 @@ export default Vue.extend({
 
     async loadInstalledMap(): Promise<void> {
       const result = await chrome.storage.local.get(STORAGE_KEY);
-      this.installedMap = (result[STORAGE_KEY] as Record<number, InstalledEntry>) || {};
+      const raw = (result[STORAGE_KEY] as Record<number, InstalledEntry>) || {};
+      // Migrate old entries that were saved before the 'name' field was added
+      Object.values(raw).forEach(entry => {
+        if (!entry.name) entry.name = 'Unnamed Style';
+      });
+      this.installedMap = raw;
     },
 
     async saveInstalledMap(map: Record<number, InstalledEntry>): Promise<void> {
@@ -513,7 +518,8 @@ export default Vue.extend({
       return `https://userstyles.world/style/${style.i}`;
     },
 
-    truncate(str: string, len: number): string {
+    truncate(str: string | undefined | null, len: number): string {
+      if (!str) return '';
       return str.length > len ? str.slice(0, len) + '…' : str;
     },
 
