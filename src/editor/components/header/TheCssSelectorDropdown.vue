@@ -22,23 +22,7 @@
           </b-dropdown>
         </dropdown-hack-to-support-shadow-dom>
 
-        <dropdown-hack-to-support-shadow-dom>
-          <b-dropdown
-            right
-            size="sm"
-            :disabled="disabled"
-            variant="outline-secondary"
-            class="css-selector-dropdown"
-            @show="stopInspecting"
-          >
-            <the-css-selector-dropdown-item
-              v-for="s in selectors"
-              :key="s.id"
-              :count="s.count"
-              :selector="s.value"
-            />
-          </b-dropdown>
-        </dropdown-hack-to-support-shadow-dom>
+        <the-selector-picker />
       </template>
     </b-input-group>
   </div>
@@ -46,10 +30,9 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { StylebotEditingMode } from '@stylebot/types';
 
 import TheCssSelectorInput from './TheCssSelectorInput.vue';
-import TheCssSelectorDropdownItem from './TheCssSelectorDropdownItem.vue';
+import TheSelectorPicker from './TheSelectorPicker.vue';
 import DropdownHackToSupportShadowDom from './../DropdownHackToSupportShadowDom.vue';
 
 export default Vue.extend({
@@ -57,7 +40,7 @@ export default Vue.extend({
 
   components: {
     TheCssSelectorInput,
-    TheCssSelectorDropdownItem,
+    TheSelectorPicker,
     DropdownHackToSupportShadowDom,
   },
 
@@ -81,18 +64,6 @@ export default Vue.extend({
   },
 
   computed: {
-    mode(): StylebotEditingMode {
-      return this.$store.state.options.mode;
-    },
-
-    selectors(): Array<{ value: string; count: number }> {
-      return this.$store.state.selectors;
-    },
-
-    disabled(): boolean {
-      return this.mode !== 'basic';
-    },
-
     activeSelector(): string {
       return this.$store.state.activeSelector;
     },
