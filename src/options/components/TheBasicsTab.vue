@@ -9,6 +9,10 @@
     </b-row>
 
     <b-row no-gutters class="mt-5">
+      <the-auto-load-styles />
+    </b-row>
+
+    <b-row no-gutters class="mt-5">
       <the-fonts />
     </b-row>
 
@@ -25,6 +29,7 @@ import TheFonts from './basics/TheFonts.vue';
 import TheContextMenu from './basics/TheContextMenu.vue';
 import TheKeyboardShortcuts from './basics/TheKeyboardShortcuts.vue';
 import TheReadabilityOption from './basics/TheReadabilityOption.vue';
+import TheAutoLoadStyles from './basics/TheAutoLoadStyles.vue';
 
 export default Vue.extend({
   name: 'TheBasicsTab',
@@ -34,6 +39,7 @@ export default Vue.extend({
     TheContextMenu,
     TheKeyboardShortcuts,
     TheReadabilityOption,
+    TheAutoLoadStyles,
   },
 
   computed: {

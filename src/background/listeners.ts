@@ -57,7 +57,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, _, tab) => {
   if (option && tab.status === 'complete') {
     ContextMenu.update(tab);
 
-    if (tab.url && !tab.url.startsWith('chrome') && !tab.url.startsWith('edge')) {
+    const autoLoad = await getOption('autoLoadStyles');
+    if (autoLoad && tab.url && !tab.url.startsWith('chrome') && !tab.url.startsWith('edge')) {
       try {
         const domain = new URL(tab.url).hostname;
         preloadForDomain(domain);
@@ -69,7 +70,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, _, tab) => {
     };
 
     if (!tab.url?.includes('chrome-extension://')) {
-      chrome.tabs.sendMessage(tabId, message).catch(() => {});
+      chrome.tabs.sendMessage(tabId, message).catch(_e => undefined);
     }
   }
 });
