@@ -48,6 +48,13 @@ Vue.mixin({
 });
 
 const injectCss = (shadowRoot: ShadowRoot): void => {
+  // Reset all inherited CSS properties at the shadow host boundary so that
+  // styles installed on the page cannot bleed into the editor UI.
+  const resetEl = document.createElement('style');
+  resetEl.setAttribute('id', 'stylebot-host-reset');
+  resetEl.innerHTML = ':host { all: initial !important; display: block !important; }';
+  shadowRoot.appendChild(resetEl);
+
   const url = chrome.runtime.getURL('editor/index.css');
 
   fetch(url, { method: 'GET' })
@@ -58,6 +65,21 @@ const injectCss = (shadowRoot: ShadowRoot): void => {
       styleEl.innerHTML = css;
       shadowRoot.appendChild(styleEl);
     });
+};
+
+// Detect CSS filter effects applied to html/body (e.g. invert-based dark modes)
+// and apply the same filter to the shadow host to cancel it out via double-application.
+const syncCounterFilter = (host: HTMLElement): void => {
+  const htmlFilter = getComputedStyle(document.documentElement).filter;
+  const bodyFilter = getComputedStyle(document.body).filter;
+  const pageFilter =
+    htmlFilter !== 'none' ? htmlFilter : bodyFilter !== 'none' ? bodyFilter : null;
+
+  if (pageFilter) {
+    host.style.setProperty('filter', pageFilter, 'important');
+  } else {
+    host.style.removeProperty('filter');
+  }
 };
 
 const initEditor = (store: Store<State>): void => {
@@ -73,6 +95,18 @@ const initEditor = (store: Store<State>): void => {
   // Prevent :empty selectors from hiding this element
   stylebotAppHost.appendChild(document.createComment('stylebot'));
   document.body.appendChild(stylebotAppHost);
+
+  // Apply counter-filter immediately and re-sync whenever stylesheets change
+  syncCounterFilter(stylebotAppHost);
+  const filterObserver = new MutationObserver(() =>
+    syncCounterFilter(stylebotAppHost)
+  );
+  filterObserver.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributeFilter: ['style', 'class'],
+    attributes: true,
+  });
 
   const shadowRoot = stylebotAppHost.attachShadow({ mode: 'open' });
   const stylebotApp = document.createElement('div');
