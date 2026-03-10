@@ -27,13 +27,7 @@
       </b-list-group-item>
     </div>
 
-    <b-list-group-item button class="find-styles-btn" @click="toggleSearch">
-      <b-icon icon="search" />
-      <span class="pl-2">{{ t('find_styles') }}</span>
-      <span v-if="allResults.length > 0" class="find-styles-badge">
-        {{ allResults.length }}
-      </span>
-    </b-list-group-item>
+
 
     <div v-if="showSearch" class="find-styles-panel">
       <!-- Loading -->
@@ -183,7 +177,7 @@ export default Vue.extend({
     hoverTimer: ReturnType<typeof setTimeout> | null;
   } {
     return {
-      showSearch: false,
+      showSearch: true,
       loading: false,
       error: false,
       allResults: [],
@@ -225,6 +219,7 @@ export default Vue.extend({
   async mounted(): Promise<void> {
     this.domain = this.getDomain();
     await this.loadInstalledMap();
+    this.search();
   },
 
   beforeDestroy(): void {

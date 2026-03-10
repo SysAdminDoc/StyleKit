@@ -11,7 +11,7 @@
         @deleted="onStyleDeleted"
       />
 
-      <readability :initial-readability="readability" />
+      <readability v-if="showReadability" :initial-readability="readability" />
 
       <toggle-stylebot :is-open="isOpen" :tab="tab" />
 
@@ -58,6 +58,7 @@ export default Vue.extend({
   data(): {
     isOpen: boolean;
     readability: boolean;
+    showReadability: boolean;
     tab?: chrome.tabs.Tab;
     styles: Array<{ url: string; css: string; enabled: boolean }>;
     googleDriveSyncEnabled: boolean;
@@ -68,6 +69,7 @@ export default Vue.extend({
       isOpen: false,
       tab: undefined,
       readability: false,
+      showReadability: false,
       googleDriveSyncEnabled: false,
       googleDriveSyncMetadata: undefined,
     };
@@ -88,6 +90,10 @@ export default Vue.extend({
     this.styles = styles.filter(style => style.css);
     this.readability = !!defaultStyle && defaultStyle.readability;
     this.googleDriveSyncEnabled = await getGoogleDriveSyncEnabled();
+
+    const optionsResult = await chrome.storage.local.get('options');
+    const opts = optionsResult['options'] || {};
+    this.showReadability = !!opts.showReadability;
   },
 
   methods: {
