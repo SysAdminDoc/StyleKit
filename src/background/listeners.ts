@@ -1,4 +1,5 @@
 import ContextMenu from './contextmenu';
+import { preloadForDomain } from './preloader';
 
 import {
   GetCommands,
@@ -55,6 +56,13 @@ chrome.tabs.onUpdated.addListener(async (tabId, _, tab) => {
 
   if (option && tab.status === 'complete') {
     ContextMenu.update(tab);
+
+    if (tab.url && !tab.url.startsWith('chrome') && !tab.url.startsWith('edge')) {
+      try {
+        const domain = new URL(tab.url).hostname;
+        preloadForDomain(domain);
+      } catch { /* ignore invalid URLs */ }
+    }
 
     const message: TabUpdated = {
       name: 'TabUpdated',
