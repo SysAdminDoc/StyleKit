@@ -35,6 +35,7 @@ export const defaultOptions: StylebotOptions = {
   },
   colorPalette: 'basic',
   darkMode: false,
+  showReadability: false,
 };
 
 export const defaultCommands: StylebotCommands = {
