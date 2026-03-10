@@ -26,8 +26,10 @@ StyleKit builds on Stylebot v3.1.4 with significant improvements:
 
 ## Popup Features
 
-- **UserStyles.world Integration** - Styles for the current site load automatically when the popup opens; no button click required
-- **Install & Preview Styles** - Hover any style template to preview it live on the page before installing
+- **Find Styles Button** - Click "Find Styles" to search UserStyles.world for styles matching the current site
+- **Auto-Load Styles** - Optionally enable auto-loading in Settings so styles appear the moment the popup opens
+- **Instant Load via Cache** - When auto-load is enabled, thumbnails are pre-fetched in the background when you visit a page, so the popup loads without waiting for network requests
+- **Install & Preview Styles** - Hover any style to preview it live on the page before installing
 - **Installed Style Toggles** - Enable or disable any installed style on the fly without uninstalling it
 - **Always Opens on Visual Editor** - The popup always returns to the visual CSS editor, never the code page
 
@@ -35,12 +37,13 @@ StyleKit builds on Stylebot v3.1.4 with significant improvements:
 
 All options are in the **Options** page (right-click the extension icon → Options):
 
-| Setting            | Default         | Description                                        |
-| ------------------ | --------------- | -------------------------------------------------- |
-| Context Menu       | On              | Right-click "Style with Stylebot" on any page      |
-| Readability Toggle | Off             | Show/hide the Readability mode button in the popup |
-| Fonts              | System defaults | Custom font list for the font picker               |
-| Keyboard Shortcuts | Various         | Customize editor hotkeys                           |
+| Setting            | Default         | Description                                                                 |
+| ------------------ | --------------- | --------------------------------------------------------------------------- |
+| Context Menu       | On              | Right-click "Style with Stylebot" on any page                               |
+| Readability Toggle | Off             | Show/hide the Readability mode button in the popup                          |
+| Auto-Load Styles   | Off             | Automatically search and load styles from UserStyles.world when popup opens |
+| Fonts              | System defaults | Custom font list for the font picker                                        |
+| Keyboard Shortcuts | Various         | Customize editor hotkeys                                                    |
 
 ## Features
 
