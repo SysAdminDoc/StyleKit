@@ -82,6 +82,15 @@ export default {
     initListeners(store);
   },
 
+  async refreshDefaultStyle(
+    { dispatch }: { dispatch: Dispatch }
+  ): Promise<void> {
+    const { defaultStyle } = await getStylesForPage(false);
+    if (defaultStyle) {
+      dispatch('initializeDefaultStyle', defaultStyle);
+    }
+  },
+
   initializeDefaultStyle(
     { commit }: { commit: Commit },
     defaultStyle: Style
