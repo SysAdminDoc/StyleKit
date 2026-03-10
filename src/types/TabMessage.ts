@@ -8,6 +8,10 @@ export type OpenStylebot = {
   name: 'OpenStylebot';
 };
 
+export type OpenStylebotInCodeMode = {
+  name: 'OpenStylebotInCodeMode';
+};
+
 export type OpenStylebotFromContextMenu = {
   name: 'OpenStylebotFromContextMenu';
 };
@@ -42,6 +46,7 @@ export type UpdateReader = {
 type TabMessage =
   | ToggleStylebot
   | OpenStylebot
+  | OpenStylebotInCodeMode
   | OpenStylebotFromContextMenu
   | ToggleReadabilityForTab
   | ApplyStylesToTab

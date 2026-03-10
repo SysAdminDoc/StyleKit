@@ -27,6 +27,11 @@ const initChromeListener = (store: Store<State>): void => {
         if (!state.visible) {
           toggleStylebot(store);
         }
+      } else if (message.name === 'OpenStylebotInCodeMode') {
+        dispatch('setMode', 'code');
+        if (!state.visible) {
+          toggleStylebot(store);
+        }
       } else if (message.name === 'OpenStylebotFromContextMenu') {
         updateSelectorWithContextMenuSelector({ state, commit });
 

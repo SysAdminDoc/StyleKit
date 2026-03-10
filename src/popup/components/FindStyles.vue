@@ -106,7 +106,7 @@
 import Vue from 'vue';
 import {
   SetStyle,
-  ToggleStylebot,
+  OpenStylebotInCodeMode,
 } from '@stylebot/types';
 import { convertUserCssToRaw } from '../../utils/usercss';
 
@@ -359,8 +359,8 @@ export default Vue.extend({
     editStyle(): void {
       if (!this.tab?.id) return;
 
-      const message: ToggleStylebot = {
-        name: 'ToggleStylebot',
+      const message: OpenStylebotInCodeMode = {
+        name: 'OpenStylebotInCodeMode',
       };
 
       chrome.tabs.sendMessage(this.tab.id, message).catch(() => {});
