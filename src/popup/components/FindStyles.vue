@@ -1,17 +1,19 @@
 <template>
   <div>
     <!-- Installed USW styles: each as its own popup entry -->
-    <b-list-group-item
-      v-for="entry in domainInstalled"
-      :key="entry.id"
-      class="usw-installed-row"
-    >
-      <span class="usw-installed-name" :title="entry.name">{{ truncate(entry.name, 30) }}</span>
-      <div class="usw-installed-actions">
-        <button class="style-action-btn edit-btn" title="Edit CSS" @click="editStyle()">&#x270E;</button>
-        <button class="style-action-btn delete-btn" title="Uninstall" @click="deleteStyleById(entry.id)">&#x2715;</button>
-      </div>
-    </b-list-group-item>
+    <div v-if="domainInstalled.length > 0" class="usw-installed-list">
+      <b-list-group-item
+        v-for="entry in domainInstalled"
+        :key="entry.id"
+        class="usw-installed-row"
+      >
+        <span class="usw-installed-name" :title="entry.name">{{ truncate(entry.name, 30) }}</span>
+        <div class="usw-installed-actions">
+          <button class="style-action-btn edit-btn" title="Edit CSS" @click="editStyle()">&#x270E;</button>
+          <button class="style-action-btn delete-btn" title="Uninstall" @click="deleteStyleById(entry.id)">&#x2715;</button>
+        </div>
+      </b-list-group-item>
+    </div>
 
     <b-list-group-item button class="find-styles-btn" @click="toggleSearch">
       <b-icon icon="search" />
@@ -559,6 +561,25 @@ export default Vue.extend({
 
 <style lang="scss">
 /* ── Installed USW style rows (shown above trigger) ─────────── */
+.usw-installed-list {
+  max-height: 148px; // ~4 rows before scrolling
+  overflow-y: auto;
+  border-bottom: 1px solid #313244;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #45475a;
+    border-radius: 2px;
+  }
+}
+
 .usw-installed-row {
   display: flex !important;
   align-items: center;
