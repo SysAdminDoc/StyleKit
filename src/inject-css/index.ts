@@ -59,3 +59,19 @@ const run = () => {
 };
 
 run();
+
+chrome.runtime.onMessage.addListener((message: any) => {
+  if (message.name === 'PreviewStyle') {
+    const id = `stylekit-preview-${message.id}`;
+    let el = document.getElementById(id) as HTMLStyleElement | null;
+    if (!el) {
+      el = document.createElement('style');
+      el.id = id;
+      document.documentElement.appendChild(el);
+    }
+    el.textContent = message.css;
+  } else if (message.name === 'RemovePreviewStyle') {
+    const el = document.getElementById(`stylekit-preview-${message.id}`);
+    if (el) el.remove();
+  }
+});
