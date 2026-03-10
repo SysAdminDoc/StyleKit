@@ -1,5 +1,18 @@
 <template>
   <div>
+    <!-- Installed USW styles: each as its own popup entry -->
+    <b-list-group-item
+      v-for="entry in domainInstalled"
+      :key="entry.id"
+      class="usw-installed-row"
+    >
+      <span class="usw-installed-name" :title="entry.name">{{ truncate(entry.name, 30) }}</span>
+      <div class="usw-installed-actions">
+        <button class="style-action-btn edit-btn" title="Edit CSS" @click="editStyle()">&#x270E;</button>
+        <button class="style-action-btn delete-btn" title="Uninstall" @click="deleteStyleById(entry.id)">&#x2715;</button>
+      </div>
+    </b-list-group-item>
+
     <b-list-group-item button class="find-styles-btn" @click="toggleSearch">
       <b-icon icon="search" />
       <span class="pl-2">{{ t('find_styles') }}</span>
@@ -157,16 +170,15 @@ interface UserstyleEntry {
   t: number;
   w: number;
   r: number;
-  ai: number;
   an: string;
-  sn: string;
-  sa: boolean;
-  source: 'usw' | 'usoa';
+  sn: string; // screenshot URL
+  source: 'usw';
 }
 
 interface InstalledEntry {
   domain: string;
   css: string;
+  name: string;
 }
 
 export default Vue.extend({
@@ -228,6 +240,18 @@ export default Vue.extend({
         Object.keys(this.installedMap).map(Number)
       );
     },
+
+    domainInstalled(): Array<{ id: number; name: string; domain: string; css: string }> {
+      if (!this.domain) return [];
+      return Object.entries(this.installedMap)
+        .filter(([, entry]) => entry.domain === this.domain)
+        .map(([id, entry]) => ({ id: Number(id), ...entry }));
+    },
+  },
+
+  async mounted(): Promise<void> {
+    this.domain = this.getDomain();
+    await this.loadInstalledMap();
   },
 
   methods: {
@@ -310,27 +334,39 @@ export default Vue.extend({
       }
     },
 
+    async fetchThumbnailDataUrl(url: string): Promise<string> {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return '';
+        const buffer = await res.arrayBuffer();
+        const uint8 = new Uint8Array(buffer);
+        const CHUNK = 8192;
+        let binary = '';
+        for (let i = 0; i < uint8.length; i += CHUNK) {
+          binary += String.fromCharCode(...Array.from(uint8.subarray(i, i + CHUNK)));
+        }
+        const contentType = res.headers.get('content-type') || 'image/webp';
+        return `data:${contentType};base64,${btoa(binary)}`;
+      } catch {
+        return '';
+      }
+    },
+
     loadThumbnails(): void {
       const BATCH = 4;
-      const ids = this.allResults.map(s => s.i);
-      const fetchBatch = (offset: number) => {
-        if (offset >= ids.length) return;
-        const batch = ids.slice(offset, offset + BATCH);
-        let done = 0;
-        batch.forEach(id => {
-          chrome.runtime.sendMessage(
-            {
-              name: 'GetThumbnail',
-              url: `https://userstyles.world/api/style/preview/${id}.png`,
-            },
-            (dataUrl: string) => {
-              if (dataUrl) this.$set(this.thumbnails, id, dataUrl);
-              if (++done === batch.length) fetchBatch(offset + BATCH);
-            }
-          );
-        });
+      const styles = this.allResults.filter(s => s.sn);
+      const processBatch = async (offset: number): Promise<void> => {
+        if (offset >= styles.length) return;
+        const batch = styles.slice(offset, offset + BATCH);
+        await Promise.all(
+          batch.map(async style => {
+            const dataUrl = await this.fetchThumbnailDataUrl(style.sn);
+            if (dataUrl) this.$set(this.thumbnails, style.i, dataUrl);
+          })
+        );
+        await processBatch(offset + BATCH);
       };
-      fetchBatch(0);
+      processBatch(0);
     },
 
     setBusy(id: number, busy: boolean): void {
@@ -344,10 +380,7 @@ export default Vue.extend({
       const cached = this.previewCssCache.get(style.i);
       if (cached !== undefined) return cached;
 
-      const url =
-        style.source === 'usw'
-          ? `https://userstyles.world/api/style/${style.i}.user.css`
-          : `https://cdn.jsdelivr.net/gh/uso-archive/data@flomaster/data/usercss/${style.i}.user.css`;
+      const url = `https://userstyles.world/api/style/${style.i}.user.css`;
 
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -413,7 +446,7 @@ export default Vue.extend({
         // Persist to our tracking map so install state survives popup close
         const newMap: Record<number, InstalledEntry> = {
           ...this.installedMap,
-          [style.i]: { domain: this.domain, css },
+          [style.i]: { domain: this.domain, css, name: style.n },
         };
         await this.saveInstalledMap(newMap);
         this.installedMap = newMap;
@@ -438,18 +471,16 @@ export default Vue.extend({
       }
     },
 
-    async deleteStyle(style: UserstyleEntry): Promise<void> {
-      const entry = this.installedMap[style.i];
+    async deleteStyleById(id: number): Promise<void> {
+      const entry = this.installedMap[id];
       if (!entry) return;
       const domain = entry.domain;
 
-      // Remove this style from tracking map
       const newMap: Record<number, InstalledEntry> = { ...this.installedMap };
-      delete newMap[style.i];
+      delete newMap[id];
       await this.saveInstalledMap(newMap);
       this.installedMap = newMap;
 
-      // Recompute merged CSS for the domain (may be '' if no other styles remain)
       const mergedCss = this.getMergedCssForDomain(domain, newMap);
       chrome.runtime.sendMessage({
         name: 'SetStyle',
@@ -458,13 +489,16 @@ export default Vue.extend({
         readability: false,
       } as SetStyle);
 
-      // Stop preview for this style if active
-      if (this.previewingId === style.i) {
+      if (this.previewingId === id) {
         this.removePreview();
         this.previewingId = null;
       }
 
       this.$emit('style-deleted', domain);
+    },
+
+    async deleteStyle(style: UserstyleEntry): Promise<void> {
+      await this.deleteStyleById(style.i);
     },
 
     editStyle(): void {
@@ -476,9 +510,7 @@ export default Vue.extend({
     },
 
     getStyleUrl(style: UserstyleEntry): string {
-      return style.source === 'usw'
-        ? `https://userstyles.world/style/${style.i}`
-        : `https://uso.kkx.one/style/${style.i}`;
+      return `https://userstyles.world/style/${style.i}`;
     },
 
     truncate(str: string, len: number): string {
@@ -495,6 +527,33 @@ export default Vue.extend({
 </script>
 
 <style lang="scss">
+/* ── Installed USW style rows (shown above trigger) ─────────── */
+.usw-installed-row {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 6px 12px !important;
+  gap: 6px;
+  background: rgba(166, 227, 161, 0.04);
+  border-left: 2px solid rgba(166, 227, 161, 0.4) !important;
+}
+
+.usw-installed-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: #a6e3a1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.usw-installed-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
 /* ── Trigger button ─────────────────────────────────────────── */
 .find-styles-btn {
   .b-icon {
