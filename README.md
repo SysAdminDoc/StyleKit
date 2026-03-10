@@ -67,6 +67,15 @@ npm test
 npm run lint
 ```
 
+## Related Tools
+
+| Tool | Type | Best For |
+|------|------|----------|
+| **StyleKit** (this repo) | Stylebot fork | Casual users who want plain-English labels, guided onboarding, and one-click site recipes |
+| [StyleCraft](https://github.com/SysAdminDoc/StyleCraft) | Ground-up MV3 extension | Power users who want a full CSS editor with syntax highlighting, linting, autocomplete, Stylus import, and UserStyles.world integration |
+
+If you outgrow the visual editor and want a professional-grade CSS manager with no build step required, see [StyleCraft](https://github.com/SysAdminDoc/StyleCraft).
+
 ## Credits
 
 StyleKit is built on [Stylebot](https://github.com/ankit/stylebot) by [Ankit Ahuja](https://github.com/ankit), licensed under MIT. All original contributors are credited through the git history.
