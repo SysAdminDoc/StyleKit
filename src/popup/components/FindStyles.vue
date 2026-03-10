@@ -130,6 +130,9 @@ import { SetStyle, OpenStylebotInCodeMode } from '@stylebot/types';
 import { convertUserCssToRaw } from '../../utils/usercss';
 
 const STORAGE_KEY = 'stylekit-usw-installs';
+const INDEX_SESSION_KEY = 'stylekit-usw-index';
+const THUMB_LOCAL_KEY = 'stylekit-usw-thumbs';
+const INDEX_TTL_MS = 60 * 60 * 1000;
 
 interface UserstyleEntry {
   i: number;
@@ -279,27 +282,39 @@ export default Vue.extend({
       this.error = false;
 
       try {
-        // Load installed state from storage before showing results
         await this.loadInstalledMap();
 
-        const res = await fetch('https://userstyles.world/api/index/uso-format');
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        const index: UserstyleEntry[] = (json.data || []).map(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (e: any) => ({ ...e, source: 'usw' as const })
-        );
+        // Use session-cached index if fresh
+        let index: UserstyleEntry[];
+        const sessionResult = await chrome.storage.session.get(INDEX_SESSION_KEY);
+        const sessionCache = sessionResult[INDEX_SESSION_KEY] as
+          | { data: UserstyleEntry[]; ts: number }
+          | undefined;
 
-        const dom = this.domain.toLowerCase().replace(/^www\./, '');
+        if (sessionCache && Date.now() - sessionCache.ts < INDEX_TTL_MS) {
+          index = sessionCache.data;
+        } else {
+          const res = await fetch('https://userstyles.world/api/index/uso-format', {
+            referrerPolicy: 'no-referrer',
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          index = (json.data || []).map((e: any) => ({ ...e, source: 'usw' as const }));
+          await chrome.storage.session.set({
+            [INDEX_SESSION_KEY]: { data: index, ts: Date.now() },
+          });
+        }
+
+        const dom = this.domain.toLowerCase().replace(/^www./, '');
         this.allResults = index
           .filter((entry: UserstyleEntry) => {
-            const cat = (entry.c || '').toLowerCase().replace(/^www\./, '');
+            const cat = (entry.c || '').toLowerCase().replace(/^www./, '');
             if (!cat) return false;
             if (cat === dom) return true;
             if (dom.endsWith('.' + cat) || cat.endsWith('.' + dom)) return true;
-            // Match on significant domain part (strip TLD)
-            const domCore = dom.replace(/\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/, '');
-            const catCore = cat.replace(/\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/, '');
+            const domCore = dom.replace(/.(com|org|net|io|co|edu|gov|me|app|dev)(.w+)?$/, '');
+            const catCore = cat.replace(/.(com|org|net|io|co|edu|gov|me|app|dev)(.w+)?$/, '');
             if (domCore === catCore) return true;
             return domCore.split('.').some((part: string) => part === catCore || part === cat);
           })
@@ -316,7 +331,7 @@ export default Vue.extend({
 
     async fetchThumbnailDataUrl(url: string): Promise<string> {
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { referrerPolicy: 'no-referrer' });
         if (!res.ok) return '';
         const buffer = await res.arrayBuffer();
         const uint8 = new Uint8Array(buffer);
@@ -332,21 +347,45 @@ export default Vue.extend({
       }
     },
 
-    loadThumbnails(): void {
-      const BATCH = 4;
+    async loadThumbnails(): Promise<void> {
       const styles = this.allResults.filter(s => s.sn);
-      const processBatch = async (offset: number): Promise<void> => {
-        if (offset >= styles.length) return;
-        const batch = styles.slice(offset, offset + BATCH);
-        await Promise.all(
-          batch.map(async style => {
-            const dataUrl = await this.fetchThumbnailDataUrl(style.sn);
-            if (dataUrl) this.$set(this.thumbnails, style.i, dataUrl);
-          })
+      if (!styles.length) return;
+
+      // Apply cached thumbnails immediately
+      const thumbResult = await chrome.storage.local.get(THUMB_LOCAL_KEY);
+      const thumbCache = (thumbResult[THUMB_LOCAL_KEY] as Record<number, string>) || {};
+      for (const style of styles) {
+        if (thumbCache[style.i]) {
+          this.$set(this.thumbnails, style.i, thumbCache[style.i]);
+        }
+      }
+
+      // Load first 10 uncached thumbnails
+      const uncached = styles.filter(s => !this.thumbnails[s.i]);
+      await this.fetchThumbBatch(uncached.slice(0, 10));
+
+      // Load next 10 in background while user scrolls first batch
+      if (uncached.length > 10) {
+        this.fetchThumbBatch(uncached.slice(10, 20));
+      }
+    },
+
+    async fetchThumbBatch(styles: UserstyleEntry[]): Promise<void> {
+      await Promise.all(
+        styles.map(async style => {
+          const dataUrl = await this.getThumb(style.i, style.sn);
+          if (dataUrl) this.$set(this.thumbnails, style.i, dataUrl);
+        })
+      );
+    },
+
+    getThumb(styleId: number, url: string): Promise<string> {
+      return new Promise(resolve => {
+        chrome.runtime.sendMessage(
+          { name: 'GetThumbnail', styleId, url },
+          (response: string) => resolve(response || '')
         );
-        await processBatch(offset + BATCH);
-      };
-      processBatch(0);
+      });
     },
 
     setBusy(id: number, busy: boolean): void {
@@ -362,7 +401,7 @@ export default Vue.extend({
 
       const url = `https://userstyles.world/api/style/${style.i}.user.css`;
 
-      const res = await fetch(url);
+      const res = await fetch(url, { referrerPolicy: 'no-referrer' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const sourceCode = await res.text();
       const css = convertUserCssToRaw(sourceCode);
