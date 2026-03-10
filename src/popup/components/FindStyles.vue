@@ -284,16 +284,31 @@ export default Vue.extend({
       try {
         await this.loadInstalledMap();
 
-        // Use session-cached index if fresh
+                // Use session-cached index if fresh (defensive: session may not be available)
         let index: UserstyleEntry[];
-        const sessionResult = await chrome.storage.session.get(INDEX_SESSION_KEY);
-        const sessionCache = sessionResult[INDEX_SESSION_KEY] as
-          | { data: UserstyleEntry[]; ts: number }
-          | undefined;
-
-        if (sessionCache && Date.now() - sessionCache.ts < INDEX_TTL_MS) {
-          index = sessionCache.data;
-        } else {
+        try {
+          const sessionResult = await chrome.storage.session.get(INDEX_SESSION_KEY);
+          const sessionCache = sessionResult[INDEX_SESSION_KEY] as
+            | { data: UserstyleEntry[]; ts: number }
+            | undefined;
+          if (sessionCache && Date.now() - sessionCache.ts < INDEX_TTL_MS) {
+            index = sessionCache.data;
+          } else {
+            const res = await fetch('https://userstyles.world/api/index/uso-format', {
+              referrerPolicy: 'no-referrer',
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const json = await res.json();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            index = (json.data || []).map((e: any) => ({ ...e, source: 'usw' as const }));
+            try {
+              await chrome.storage.session.set({
+                [INDEX_SESSION_KEY]: { data: index, ts: Date.now() },
+              });
+            } catch { /* session storage unavailable */ }
+          }
+        } catch {
+          // Session storage unavailable — fetch index directly
           const res = await fetch('https://userstyles.world/api/index/uso-format', {
             referrerPolicy: 'no-referrer',
           });
@@ -301,26 +316,8 @@ export default Vue.extend({
           const json = await res.json();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           index = (json.data || []).map((e: any) => ({ ...e, source: 'usw' as const }));
-          await chrome.storage.session.set({
-            [INDEX_SESSION_KEY]: { data: index, ts: Date.now() },
-          });
         }
-
-        const dom = this.domain.toLowerCase().replace(/^www./, '');
-        this.allResults = index
-          .filter((entry: UserstyleEntry) => {
-            const cat = (entry.c || '').toLowerCase().replace(/^www./, '');
-            if (!cat) return false;
-            if (cat === dom) return true;
-            if (dom.endsWith('.' + cat) || cat.endsWith('.' + dom)) return true;
-            const domCore = dom.replace(/.(com|org|net|io|co|edu|gov|me|app|dev)(.w+)?$/, '');
-            const catCore = cat.replace(/.(com|org|net|io|co|edu|gov|me|app|dev)(.w+)?$/, '');
-            if (domCore === catCore) return true;
-            return domCore.split('.').some((part: string) => part === catCore || part === cat);
-          })
-          .slice(0, 150);
-
-        this.loadThumbnails();
+this.loadThumbnails();
       } catch (e) {
         console.error('Find styles error:', e);
         this.error = true;
