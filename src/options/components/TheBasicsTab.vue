@@ -5,6 +5,10 @@
     </b-row>
 
     <b-row no-gutters class="mt-5">
+      <the-readability-option />
+    </b-row>
+
+    <b-row no-gutters class="mt-5">
       <the-fonts />
     </b-row>
 
@@ -20,6 +24,7 @@ import Vue from 'vue';
 import TheFonts from './basics/TheFonts.vue';
 import TheContextMenu from './basics/TheContextMenu.vue';
 import TheKeyboardShortcuts from './basics/TheKeyboardShortcuts.vue';
+import TheReadabilityOption from './basics/TheReadabilityOption.vue';
 
 export default Vue.extend({
   name: 'TheBasicsTab',
@@ -28,6 +33,7 @@ export default Vue.extend({
     TheFonts,
     TheContextMenu,
     TheKeyboardShortcuts,
+    TheReadabilityOption,
   },
 
   computed: {

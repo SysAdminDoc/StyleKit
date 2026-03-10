@@ -31,6 +31,7 @@ export type StylebotOptions = {
   basicModeSections: StylebotBasicModeSections;
   colorPalette: StylebotColorPalette;
   darkMode: boolean;
+  showReadability: boolean;
 };
 
 export type Style = {
