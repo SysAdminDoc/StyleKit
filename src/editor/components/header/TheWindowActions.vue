@@ -1,6 +1,5 @@
 <template>
   <div>
-    <the-more-action class="stylebot-window-action more-action" />
     <the-dock-toggle class="stylebot-window-action dock-action" />
     <the-close-action class="stylebot-window-action close-action" />
   </div>
@@ -9,7 +8,6 @@
 <script lang="ts">
 import Vue from 'vue';
 
-import TheMoreAction from './TheMoreAction.vue';
 import TheDockToggle from './TheDockToggle.vue';
 import TheCloseAction from './TheCloseAction.vue';
 
@@ -17,7 +15,6 @@ export default Vue.extend({
   name: 'TheWindowActions',
 
   components: {
-    TheMoreAction,
     TheDockToggle,
     TheCloseAction,
   },
@@ -40,14 +37,6 @@ export default Vue.extend({
 
     &:focus {
       box-shadow: none !important;
-    }
-  }
-
-  &.more-action .btn-group {
-    right: 48px !important;
-
-    .btn .b-icon {
-      font-size: 14px !important;
     }
   }
 
