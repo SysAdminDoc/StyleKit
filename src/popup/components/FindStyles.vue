@@ -7,7 +7,19 @@
         :key="entry.id"
         class="usw-installed-row"
       >
-        <span class="usw-installed-name" :title="entry.name">{{ truncate(entry.name, 30) }}</span>
+        <label class="usw-toggle" :title="entry.enabled !== false ? 'Disable' : 'Enable'">
+          <input
+            type="checkbox"
+            :checked="entry.enabled !== false"
+            @change="toggleInstalledStyle(entry.id)"
+          />
+          <span class="usw-toggle-track" />
+        </label>
+        <span
+          class="usw-installed-name"
+          :class="{ 'usw-installed-disabled': entry.enabled === false }"
+          :title="entry.name"
+        >{{ truncate(entry.name, 30) }}</span>
         <div class="usw-installed-actions">
           <button class="style-action-btn edit-btn" title="Edit CSS" @click="editStyle()">&#x270E;</button>
           <button class="style-action-btn delete-btn" title="Uninstall" @click="deleteStyleById(entry.id)">&#x2715;</button>
@@ -142,6 +154,7 @@ interface InstalledEntry {
   domain: string;
   css: string;
   name: string;
+  enabled?: boolean;
 }
 
 export default Vue.extend({
@@ -254,7 +267,7 @@ export default Vue.extend({
 
     getMergedCssForDomain(domain: string, map: Record<number, InstalledEntry>): string {
       return Object.values(map)
-        .filter(e => e.domain === domain)
+        .filter(e => e.domain === domain && e.enabled !== false)
         .map(e => e.css)
         .join('\n\n')
         .trim();
@@ -491,6 +504,43 @@ export default Vue.extend({
       }
     },
 
+    async toggleInstalledStyle(id: number): Promise<void> {
+      const entry = this.installedMap[id];
+      if (!entry) return;
+      const domain = entry.domain;
+      const newEnabled = entry.enabled === false ? true : false;
+
+      const newMap: Record<number, InstalledEntry> = {
+        ...this.installedMap,
+        [id]: { ...entry, enabled: newEnabled },
+      };
+      await this.saveInstalledMap(newMap);
+      this.installedMap = newMap;
+
+      const mergedCss = this.getMergedCssForDomain(domain, newMap);
+      chrome.runtime.sendMessage({
+        name: 'SetStyle',
+        url: domain,
+        css: mergedCss,
+        readability: false,
+      } as SetStyle);
+
+      if (this.tab?.id) {
+        if (mergedCss) {
+          chrome.tabs.sendMessage(this.tab.id, {
+            name: 'PreviewStyle',
+            id: `usw-installed-${domain}`,
+            css: mergedCss,
+          }).catch(() => { /* fire-and-forget */ });
+        } else {
+          chrome.tabs.sendMessage(this.tab.id, {
+            name: 'RemovePreviewStyle',
+            id: `usw-installed-${domain}`,
+          }).catch(() => { /* fire-and-forget */ });
+        }
+      }
+    },
+
     async deleteStyleById(id: number): Promise<void> {
       const entry = this.installedMap[id];
       if (!entry) return;
@@ -594,6 +644,49 @@ export default Vue.extend({
   border-left: 2px solid rgba(166, 227, 161, 0.4) !important;
 }
 
+.usw-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin: 0 6px 0 0;
+  flex-shrink: 0;
+
+  input {
+    display: none;
+  }
+
+  .usw-toggle-track {
+    width: 28px;
+    height: 15px;
+    border-radius: 8px;
+    background: #45475a;
+    position: relative;
+    transition: background 0.18s;
+    display: block;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #6c7086;
+      transition: transform 0.18s, background 0.18s;
+    }
+  }
+
+  input:checked + .usw-toggle-track {
+    background: rgba(166, 227, 161, 0.3);
+
+    &::after {
+      transform: translateX(13px);
+      background: #a6e3a1;
+    }
+  }
+}
+
 .usw-installed-name {
   flex: 1;
   min-width: 0;
@@ -602,6 +695,11 @@ export default Vue.extend({
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  &.usw-installed-disabled {
+    color: #45475a;
+    text-decoration: line-through;
+  }
 }
 
 .usw-installed-actions {
