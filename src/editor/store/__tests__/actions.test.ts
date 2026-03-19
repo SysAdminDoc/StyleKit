@@ -1,11 +1,9 @@
 import * as postcss from 'postcss';
 import actions from '../actions';
 
-import mockState from '../__mocks__/state';
 import * as stylebotCss from '@stylekit/css';
 import * as chromeUtils from '../../utils/chrome';
 
-vi.mock('postcss');
 vi.mock('@stylekit/css');
 vi.mock('../../utils/chrome');
 
@@ -13,11 +11,32 @@ const mockRoot = ({
   some: vi.fn(),
   walkRules: vi.fn(),
   append: vi.fn(),
-  toString: vi.fn(),
+  toString: vi.fn().mockReturnValue(''),
 } as never) as postcss.Root;
 
 const mockCommit = vi.fn();
 const mockDispatch = vi.fn();
+
+const mockState = {
+  css: '',
+  enabled: true,
+  url: 'example.com',
+  selectors: [],
+  activeSelector: '',
+  contextMenuSelector: '',
+  help: false,
+  visible: false,
+  inspecting: false,
+  resizing: false,
+  readability: false,
+  colorPickerVisible: false,
+  options: {} as any,
+  commands: null,
+  editorCommands: {} as any,
+  readabilitySettings: {} as any,
+  cssHistory: [''],
+  cssHistoryIndex: 0,
+};
 
 describe('actions', () => {
   beforeAll(() => {
@@ -27,12 +46,12 @@ describe('actions', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.spyOn(postcss, 'parse').mockReturnValue(mockRoot);
+    vi.mocked(stylebotCss.safeParse).mockReturnValue(mockRoot);
   });
 
   describe('applyCss', () => {
     it('does not commit invalid css', () => {
-      vi.spyOn(postcss, 'parse').mockImplementation(() => {
+      vi.mocked(stylebotCss.safeParse).mockImplementation(() => {
         throw new Error();
       });
 
@@ -50,7 +69,7 @@ describe('actions', () => {
 
     it('invokes setStyle correctly', () => {
       const css = 'a { color: red; }';
-      vi.spyOn(stylebotCss, 'removeEmptyRules').mockReturnValue(css);
+      vi.mocked(stylebotCss.removeEmptyRules).mockReturnValue(css);
 
       actions.applyCss({ commit: mockCommit, state: mockState }, { css });
 
@@ -88,7 +107,7 @@ describe('actions', () => {
     it('invokes addDeclaration correctly', () => {
       const state = { ...mockState, activeSelector: 'a' };
 
-      vi.spyOn(stylebotCss, 'addDeclaration').mockReturnValue(
+      vi.mocked(stylebotCss.addDeclaration).mockReturnValue(
         'outputOfAddDeclaration'
       );
 

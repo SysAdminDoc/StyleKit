@@ -10,7 +10,7 @@ import {
 const mockState: State = {
   css: '',
   enabled: true,
-  url: document.domain,
+  url: 'example.com',
 
   selectors: [],
   activeSelector: '',

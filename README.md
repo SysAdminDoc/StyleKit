@@ -4,7 +4,7 @@
 
 StyleKit is a browser extension that lets you customize any website's appearance instantly. It is a modernized fork of [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, with new features focused on making CSS customization accessible to everyone.
 
-## What's New in StyleKit v4.0.0
+## What's New in StyleKit v4.2.0
 
 StyleKit builds on Stylebot v3.1.4 with significant improvements:
 
