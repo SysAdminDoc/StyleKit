@@ -1,7 +1,7 @@
 # CLAUDE.md - StyleKit
 
 ## Project Overview
-StyleKit is a Chrome/Firefox browser extension (Manifest V3) that lets users customize any website's appearance. Forked from Stylebot, rebranded and enhanced. v1.0.0.
+StyleKit is a Chrome/Firefox browser extension (Manifest V3) that lets users customize any website's appearance. Forked from Stylebot, rebranded and enhanced. v1.1.0.
 
 ## Tech Stack
 - **Framework**: Vue 3 + Vuex 4 + TypeScript

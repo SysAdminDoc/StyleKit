@@ -13,12 +13,14 @@ declare global {
 class MonacoEditorIframe {
   // todo: import monaco types
   editor?: any;
+  currentLanguage = 'css';
 
   constructor() {
     this.loadEditor(() => {
       this.attachWindowListeners();
       this.defineThemes();
       this.initEditor();
+      this.addLanguageToggle();
       this.postMessage({ type: 'stylebotMonacoIframeLoaded' });
     });
   }
@@ -154,6 +156,43 @@ class MonacoEditorIframe {
         });
       }
     }
+  }
+
+  addLanguageToggle(): void {
+    const container = this.getContainer();
+    const btn = document.createElement('button');
+    btn.textContent = 'CSS';
+    btn.title = 'Toggle CSS/SCSS syntax';
+    Object.assign(btn.style, {
+      position: 'absolute',
+      top: '4px',
+      right: '12px',
+      zIndex: '10',
+      background: '#313244',
+      border: '1px solid #45475a',
+      borderRadius: '3px',
+      color: '#6c7086',
+      fontSize: '10px',
+      fontWeight: '600',
+      padding: '2px 6px',
+      cursor: 'pointer',
+      fontFamily: 'sans-serif',
+      letterSpacing: '0.5px',
+    });
+
+    btn.addEventListener('click', () => {
+      this.currentLanguage = this.currentLanguage === 'css' ? 'scss' : 'css';
+      btn.textContent = this.currentLanguage.toUpperCase();
+      btn.style.color = this.currentLanguage === 'scss' ? '#cba6f7' : '#6c7086';
+
+      const model = this.editor.getModel();
+      if (model) {
+        window.monaco.editor.setModelLanguage(model, this.currentLanguage);
+      }
+    });
+
+    container.style.position = 'relative';
+    container.appendChild(btn);
   }
 
   attachWindowListeners(): void {

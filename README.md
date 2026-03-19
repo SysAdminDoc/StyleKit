@@ -1,7 +1,7 @@
 # StyleKit
 
 ![License](https://img.shields.io/github/license/SysAdminDoc/StyleKit)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-green)
 ![Firefox](https://img.shields.io/badge/Firefox-Supported-orange)
 ![No Tracking](https://img.shields.io/badge/Analytics-None-brightgreen)
@@ -14,10 +14,13 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 
 ### Visual CSS Editor
 - **Point-and-click styling** -- select any element on the page, then adjust fonts, colors, spacing, borders, and visibility through an intuitive panel
+- **Multi-select elements** -- hold Shift and click to add elements to the selector (e.g., `h1, h2, h3`)
+- **Element search** -- find elements by CSS selector, tag name, class, ID, or text content
 - **Plain English labels** -- "Text Size" instead of `font-size`, "Fill Color" instead of `background-color`
-- **Section hints** -- each editor section shows a brief description of what's inside
-- **Collapsible sections** -- stay open until manually closed, persist across selections
-- **Font picker with live previews** -- system fonts rendered in their own typeface
+- **1,500+ Google Fonts** -- full Google Fonts catalog with search/filter, cached for 1 week
+- **Gradient generator** -- visual linear/radial gradient builder with live preview, color stops, and angle control
+- **Accessibility overlay** -- shows ARIA role and WCAG contrast ratio (pass/fail) in the element tooltip during inspect
+- **Responsive preview** -- test styles at Mobile (375px), Tablet (768px), Laptop (1024px), and Desktop (1440px)
 - **Color preset palette** -- 15 quick-pick colors above the color picker
 - **Box model widget** -- visual margin/padding/border editor with Catppuccin dark theme
 - **CSS variables panel** -- edit custom properties on the selected element
@@ -25,12 +28,15 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 
 ### Code Editor
 - **Full Monaco editor** -- syntax highlighting, autocomplete, word wrap
+- **CSS/SCSS mode toggle** -- switch syntax highlighting between CSS and SCSS
+- **CSS linting** -- real-time error detection (missing braces, invalid values) with relaxed rules for modern CSS
 - **Live preview** -- CSS changes apply instantly as you type
 - **Diff view** -- see what changed since you started editing
 - **Copy / Export / Reset** buttons in the footer
 
 ### Popup
 - **Find Styles** -- search [UserStyles.world](https://userstyles.world) for community styles matching the current site
+- **Style auto-update** -- installed styles older than 24h are checked for updates; one-click update button
 - **Hover preview** -- preview any style live on the page before installing
 - **Install with one click** -- styles are saved and applied immediately
 - **Toggle installed styles** -- enable/disable individual installed styles
@@ -67,7 +73,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 
 ### From Release
 
-1. Download `StyleKit-v1.0.0-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
+1. Download `StyleKit-v1.1.0-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
 2. Unzip the file
 3. Open `chrome://extensions`
 4. Enable **Developer mode**

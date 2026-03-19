@@ -31,6 +31,34 @@ function hasKey<O extends object>(obj: O, key: string | number | symbol): key is
   return key in obj;
 }
 
+// Parse CSS color string to [r, g, b]
+function parseColor(color: string): [number, number, number] | null {
+  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (match) return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
+  return null;
+}
+
+// Relative luminance per WCAG 2.0
+function luminance(r: number, g: number, b: number): number {
+  const [rs, gs, bs] = [r, g, b].map(c => {
+    c = c / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+// WCAG contrast ratio between two CSS color strings
+function getContrastRatio(fg: string, bg: string): number {
+  const fgRgb = parseColor(fg);
+  const bgRgb = parseColor(bg);
+  if (!fgRgb || !bgRgb) return 0;
+  const l1 = luminance(...fgRgb);
+  const l2 = luminance(...bgRgb);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 // Note that the Overlay components are not affected by the active Theme,
 // because they highlight elements in the main Chrome window (outside of devtools).
 // The colors below were chosen to roughly match those used by Chrome devtools.
@@ -123,6 +151,7 @@ class OverlayTip {
   tip: HTMLElement;
   nameSpan: HTMLElement;
   dimSpan: HTMLElement;
+  a11ySpan: HTMLElement;
 
   constructor(doc: Document, container: HTMLElement) {
     this.tip = doc.createElement('div');
@@ -161,6 +190,18 @@ class OverlayTip {
       color: '#a6adc8',
     });
 
+    this.a11ySpan = doc.createElement('span');
+    this.tip.appendChild(this.a11ySpan);
+
+    Object.assign(this.a11ySpan.style, {
+      color: '#6c7086',
+      borderLeft: '1px solid #45475a',
+      paddingLeft: '0.5rem',
+      marginLeft: '0.5rem',
+      fontSize: '10px',
+      fontWeight: 'normal',
+    });
+
     this.tip.style.zIndex = '10000000';
     container.appendChild(this.tip);
   }
@@ -171,10 +212,17 @@ class OverlayTip {
     }
   }
 
-  updateText(name: string, width: number, height: number) {
+  updateText(name: string, width: number, height: number, a11yInfo?: string) {
     this.nameSpan.textContent = name;
     this.dimSpan.textContent =
-      Math.round(width) + 'px × ' + Math.round(height) + 'px';
+      Math.round(width) + 'px \u00D7 ' + Math.round(height) + 'px';
+
+    if (a11yInfo) {
+      this.a11ySpan.textContent = a11yInfo;
+      this.a11ySpan.style.display = '';
+    } else {
+      this.a11ySpan.style.display = 'none';
+    }
   }
 
   updatePosition(dims: Box, bounds: Box) {
@@ -271,10 +319,40 @@ export default class Overlay {
     });
 
     if (!property) {
+      // Gather accessibility info from first element
+      let a11yInfo = '';
+      if (elements.length > 0) {
+        const el = elements[0];
+        const parts: string[] = [];
+
+        const role = el.getAttribute('role') || el.tagName.toLowerCase();
+        if (role) parts.push(role);
+
+        const ariaLabel = el.getAttribute('aria-label');
+        if (ariaLabel) parts.push(`"${ariaLabel}"`);
+
+        // Compute contrast ratio for text elements
+        try {
+          const style = window.getComputedStyle(el);
+          const fg = style.color;
+          const bg = style.backgroundColor;
+          if (fg && bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+            const ratio = getContrastRatio(fg, bg);
+            if (ratio > 0) {
+              const pass = ratio >= 4.5 ? '\u2713' : '\u2717';
+              parts.push(`${ratio.toFixed(1)}:1 ${pass}`);
+            }
+          }
+        } catch { /* skip */ }
+
+        a11yInfo = parts.join(' \u00B7 ');
+      }
+
       this.tip.updateText(
         cssSelector,
         outerBox.right - outerBox.left,
-        outerBox.bottom - outerBox.top
+        outerBox.bottom - outerBox.top,
+        a11yInfo
       );
 
       const tipBounds = getNestedBoundingClientRect(
