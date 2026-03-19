@@ -44,17 +44,38 @@ class MonacoEditorIframe {
     const container = this.getContainer();
     const editorOptions = this.getEditorOptions();
 
-    // Disable CSS validation to avoid false errors for modern CSS features
-    // like :has(), CSS nesting, and -webkit- prefixed properties (#817, #763, #794)
+    // Enable CSS validation with relaxed settings to allow modern CSS features
+    // while still catching syntax errors (missing braces, invalid values, etc.)
     try {
+      const cssOptions = {
+        validate: true,
+        lint: {
+          compatibleVendorPrefixes: 'ignore' as const,
+          vendorPrefix: 'ignore' as const,
+          duplicateProperties: 'warning' as const,
+          emptyRules: 'warning' as const,
+          importStatement: 'ignore' as const,
+          boxModel: 'ignore' as const,
+          universalSelector: 'ignore' as const,
+          zeroUnits: 'ignore' as const,
+          fontFaceProperties: 'ignore' as const,
+          hexColorLength: 'ignore' as const,
+          argumentsInColorFunction: 'ignore' as const,
+          unknownProperties: 'ignore' as const,
+          validProperties: [],
+          ieHack: 'ignore' as const,
+          unknownVendorSpecificProperties: 'ignore' as const,
+          propertyIgnoredDueToDisplay: 'ignore' as const,
+          idSelector: 'ignore' as const,
+          unknownAtRules: 'ignore' as const,
+          float: 'ignore' as const,
+        },
+      };
+
       if (window.monaco.languages?.css?.cssDefaults?.setOptions) {
-        window.monaco.languages.css.cssDefaults.setOptions({
-          validate: false,
-        });
+        window.monaco.languages.css.cssDefaults.setOptions(cssOptions);
       } else if (window.monaco.languages?.css?.cssDefaults?.setDiagnosticsOptions) {
-        window.monaco.languages.css.cssDefaults.setDiagnosticsOptions({
-          validate: false,
-        });
+        window.monaco.languages.css.cssDefaults.setDiagnosticsOptions(cssOptions);
       }
     } catch (e) {
       // Monaco version may not support CSS validation options
