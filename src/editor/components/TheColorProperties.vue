@@ -2,6 +2,7 @@
   <div>
     <color />
     <background-color class="mt-2" />
+    <gradient-picker class="mt-2" />
     <opacity class="mt-2" />
     <box-shadow class="mt-2" />
   </div>
@@ -12,6 +13,7 @@ import { defineComponent } from 'vue';
 
 import Color from './color/Color.vue';
 import BackgroundColor from './color/BackgroundColor.vue';
+import GradientPicker from './color/GradientPicker.vue';
 import Opacity from './color/Opacity.vue';
 import BoxShadow from './color/BoxShadow.vue';
 
@@ -21,6 +23,7 @@ export default defineComponent({
   components: {
     Color,
     BackgroundColor,
+    GradientPicker,
     Opacity,
     BoxShadow,
   },
