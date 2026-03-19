@@ -201,7 +201,10 @@ export default defineComponent({
       url: string;
       css: string;
     }): void {
-      this.$store.dispatch('saveStyle', { initialUrl, url, css });
+      const error = this.$store.dispatch('saveStyle', { initialUrl, url, css });
+      if (error && typeof error === 'string') {
+        this.showToast(error);
+      }
     },
 
     showToast(message: string): void {
