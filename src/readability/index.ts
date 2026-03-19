@@ -37,12 +37,10 @@ export const apply = async (forceApply = false): Promise<void> => {
 
   showLoader();
 
-  if (document.readyState === 'complete') {
-    run();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => run());
   } else {
-    document.addEventListener('DOMContentLoaded', async () => {
-      run();
-    });
+    run();
   }
 
   // Re-apply readability when SPA navigation changes content

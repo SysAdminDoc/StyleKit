@@ -30,12 +30,11 @@ export default defineComponent({
 
   methods: {
     open(): void {
+      this.markAsSeen();
       chrome.tabs.create({
         url: 'https://stylebot.dev/releases/3.1',
       });
-
       window.close();
-      this.markAsSeen();
     },
 
     dismiss(e: MouseEvent): void {
