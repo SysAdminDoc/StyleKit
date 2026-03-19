@@ -161,7 +161,7 @@ export default defineComponent({
     document.addEventListener('mousedown', this.mousedown);
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     document.removeEventListener('mousedown', this.mousedown);
   },
 
