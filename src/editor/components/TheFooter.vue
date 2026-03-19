@@ -55,11 +55,12 @@
         size="sm"
         variant="link"
         class="reset-btn"
+        :class="{ confirming: confirmReset }"
         :disabled="!hasCss"
-        title="Reset all styles for this page"
+        :title="confirmReset ? 'Click again to confirm reset' : 'Reset all styles for this page'"
         @click="resetAll"
       >
-        &#x2715;
+        {{ confirmReset ? 'Sure?' : '&#x2715;' }}
       </b-button>
     </b-col>
     <b-col><the-editor-mode-actions /></b-col>
@@ -81,6 +82,7 @@ export default defineComponent({
     return {
       copied: false,
       exported: false,
+      confirmReset: false,
     };
   },
 
@@ -166,7 +168,13 @@ export default defineComponent({
     },
 
     resetAll(): void {
-      this.$store.dispatch('applyCss', { css: '' });
+      if (this.confirmReset) {
+        this.confirmReset = false;
+        this.$store.dispatch('applyCss', { css: '' });
+      } else {
+        this.confirmReset = true;
+        setTimeout(() => { this.confirmReset = false; }, 3000);
+      }
     },
   },
 });
@@ -259,6 +267,15 @@ export default defineComponent({
 
   &:disabled {
     color: #585b70;
+  }
+
+  &.confirming {
+    color: #1e1e2e;
+    background: #f38ba8;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
   }
 }
 </style>

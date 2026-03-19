@@ -67,6 +67,7 @@ export default defineComponent({
     statusType: string;
     exporting: boolean;
     importing: boolean;
+    confirmOverwrite: boolean;
   } {
     return {
       token: '',
@@ -77,6 +78,7 @@ export default defineComponent({
       statusType: '',
       exporting: false,
       importing: false,
+      confirmOverwrite: false,
     };
   },
 
@@ -93,6 +95,18 @@ export default defineComponent({
     },
 
     async exportToGist(): Promise<void> {
+      // Require confirmation before overwriting existing gist
+      if (this.gistId && !this.confirmOverwrite) {
+        this.confirmOverwrite = true;
+        this.status = 'Click Export again to overwrite existing backup';
+        this.statusType = 'warning';
+        setTimeout(() => {
+          this.confirmOverwrite = false;
+          if (this.statusType === 'warning') this.status = '';
+        }, 5000);
+        return;
+      }
+      this.confirmOverwrite = false;
       this.exporting = true;
       this.status = '';
 
@@ -176,7 +190,14 @@ export default defineComponent({
           throw new Error('stylekit-styles.json not found in Gist');
         }
 
-        const styles = JSON.parse(file.content);
+        const parsed = JSON.parse(file.content);
+        // Support versioned format: { version, styles }
+        const styles = parsed?.version && parsed?.styles ? parsed.styles : parsed;
+
+        if (!styles || typeof styles !== 'object' || Array.isArray(styles)) {
+          throw new Error('Invalid format: expected a StyleKit styles object');
+        }
+
         this.$store.dispatch('setAllStyles', styles);
 
         this.status = 'Imported successfully';
@@ -222,6 +243,10 @@ export default defineComponent({
 
   &.error {
     color: #f38ba8;
+  }
+
+  &.warning {
+    color: #fab387;
   }
 }
 
