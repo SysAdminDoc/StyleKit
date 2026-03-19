@@ -27,7 +27,8 @@ const injectCss = (shadowRoot: ShadowRoot): void => {
       styleEl.setAttribute('id', 'stylebot-editor-css');
       styleEl.textContent = css;
       shadowRoot.appendChild(styleEl);
-    });
+    })
+    .catch(e => console.warn('StyleKit: failed to load editor CSS', e));
 };
 
 // Detect CSS filter effects applied to html/body (e.g. invert-based dark modes)

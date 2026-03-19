@@ -76,7 +76,7 @@ export default defineComponent({
     }
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     this.$store.commit('setInspecting', false);
     this.highlighter?.stopInspecting();
   },
