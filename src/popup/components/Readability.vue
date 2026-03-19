@@ -32,15 +32,20 @@ export default defineComponent({
 
   methods: {
     onChange(): void {
-      chrome.tabs.query({ active: true }, ([tab]) => {
-        if (tab.id) {
+      chrome.tabs.query({ active: true }, (tabs) => {
+        const tab = tabs?.[0];
+        if (tab?.id) {
           const message: ToggleReadabilityForTab = {
             name: 'ToggleReadabilityForTab',
           };
 
           chrome.tabs.sendMessage(tab.id, message).catch(() => {
-            // Content script not available on this tab
+            // Content script not available — revert toggle
+            this.readability = !this.readability;
           });
+        } else {
+          // No active tab — revert toggle
+          this.readability = !this.readability;
         }
       });
     },

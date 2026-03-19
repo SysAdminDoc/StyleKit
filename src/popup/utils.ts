@@ -41,15 +41,30 @@ export const getIsStylebotOpen = async (
   return false;
 };
 
-export const toggleStylebot = (tab: chrome.tabs.Tab): void => {
-  if (tab.id) {
-    const message: ToggleStylebot = {
-      name: 'ToggleStylebot',
-    };
-
-    chrome.tabs.sendMessage(tab.id, message).catch(() => {
-      // Content script not available on this tab
-    });
-    window.close();
-  }
+const isRestrictedUrl = (url?: string): boolean => {
+  if (!url) return true;
+  return (
+    url.startsWith('chrome://') ||
+    url.startsWith('chrome-extension://') ||
+    url.startsWith('edge://') ||
+    url.startsWith('about:') ||
+    url.startsWith('chrome.google.com/webstore')
+  );
 };
+
+export const toggleStylebot = (tab: chrome.tabs.Tab): void => {
+  if (!tab.id || isRestrictedUrl(tab.url)) {
+    return;
+  }
+
+  const message: ToggleStylebot = {
+    name: 'ToggleStylebot',
+  };
+
+  chrome.tabs.sendMessage(tab.id, message).catch(() => {
+    // Content script not available on this tab
+  });
+  window.close();
+};
+
+export { isRestrictedUrl };
