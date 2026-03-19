@@ -10,14 +10,25 @@ export const getCssWithExpandedImports = (css: string): Promise<string> => {
     const urls: Array<string> = [];
 
     root.walkAtRules('import', (atRule: postcss.AtRule) => {
-      const regex = /^(url\()?([^\)]*)(\))?$/;
-      const paramsWithoutQuotes = atRule.params
-        .replace(/"/g, '')
-        .replace(/\'/g, '');
-      const matches = paramsWithoutQuotes.match(regex);
+      const params = atRule.params.trim();
+      let url = '';
 
-      if (matches) {
-        urls.push(matches[2]);
+      // Match: url("..."), url('...'), url(...)
+      const urlFuncMatch = params.match(/^url\(\s*["']?(.+?)["']?\s*\)$/);
+      // Match: "..." or '...' (may contain parens in URL)
+      const quotedMatch = params.match(/^["'](.+?)["']$/);
+
+      if (urlFuncMatch) {
+        url = urlFuncMatch[1].trim();
+      } else if (quotedMatch) {
+        url = quotedMatch[1].trim();
+      }
+
+      // Strip trailing ) that may be left over from malformed @import syntax
+      url = url.replace(/\)+$/, '');
+
+      if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        urls.push(url);
         atRule.remove();
       }
     });
@@ -39,13 +50,16 @@ export const getCssWithExpandedImports = (css: string): Promise<string> => {
     });
 
     let output = root.toString();
-    Promise.all(promises).then((values: Array<string>) => {
-      const merged = values.join('\n\n');
-      if (merged) {
-        output = `${merged}\n\n${output}`;
-      }
-
-      resolve(output);
-    });
+    Promise.all(promises)
+      .then((values: Array<string>) => {
+        const merged = values.filter(Boolean).join('\n\n');
+        if (merged) {
+          output = `${merged}\n\n${output}`;
+        }
+        resolve(output);
+      })
+      .catch(() => {
+        resolve(output);
+      });
   });
 };

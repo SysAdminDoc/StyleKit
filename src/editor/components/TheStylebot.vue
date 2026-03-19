@@ -4,7 +4,7 @@
 
     <div
       class="stylebot-body"
-      :style="colorPickerVisible ? 'pointer-events: none' : ''"
+      :class="{ 'pointer-events-disabled': colorPickerVisible }"
     >
       <the-basic-editor v-if="mode === 'basic'" />
       <the-magic-editor v-else-if="mode === 'magic'" />
@@ -86,5 +86,9 @@ export default defineComponent({
   overflow: auto;
   flex: 1;
   min-height: 0;
+
+  &.pointer-events-disabled {
+    pointer-events: none;
+  }
 }
 </style>

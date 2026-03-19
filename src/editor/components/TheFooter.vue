@@ -146,7 +146,12 @@ export default defineComponent({
       if (!css) return;
 
       const styleData = JSON.stringify(
-        { [url]: { css, enabled: true, readability: false } },
+        {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          app: 'StyleKit',
+          styles: { [url]: { css, enabled: true, readability: false } },
+        },
         null,
         2
       );
