@@ -261,12 +261,10 @@ export const apply = (forceApply = false): void => {
   }
   cacheCurrentUrl();
 
-  if (document.readyState === 'complete') {
-    initDarkMode();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => initDarkMode());
   } else {
-    document.addEventListener('DOMContentLoaded', async () => {
-      initDarkMode();
-    });
+    initDarkMode();
   }
 };
 

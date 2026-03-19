@@ -67,15 +67,18 @@ export default defineComponent({
           return '';
         }
 
-        const [length, unit] = value.split(/(-?\d+)/).filter(Boolean);
-
-        // todo: support other units.
-        // currently, we render empty input and overwrite on edit
-        if (unit !== 'px') {
+        const match = value.match(/^(-?\d+(?:\.\d+)?)\s*(px|em|rem|%|vh|vw|vmin|vmax|ch|ex|pt)?$/);
+        if (!match) {
           return '';
         }
 
-        return length;
+        const [, num, unit] = match;
+        // Only show editable value for px; other units displayed read-only
+        if (unit && unit !== 'px') {
+          return '';
+        }
+
+        return num;
       },
 
       set(length: string): void {
@@ -104,11 +107,8 @@ export default defineComponent({
         event.preventDefault();
         event.stopPropagation();
 
-        if (!this.length) {
-          this.length = '1';
-        } else {
-          this.length = `${parseInt(this.length, 10) + 1}`;
-        }
+        const current = parseInt(this.length, 10);
+        this.length = `${isNaN(current) ? 1 : current + 1}`;
       }
 
       // down arrow
@@ -116,11 +116,8 @@ export default defineComponent({
         event.preventDefault();
         event.stopPropagation();
 
-        if (!this.length) {
-          this.length = '-1';
-        } else {
-          this.length = `${parseInt(this.length, 10) - 1}`;
-        }
+        const current = parseInt(this.length, 10);
+        this.length = `${isNaN(current) ? -1 : current - 1}`;
       }
     },
   },

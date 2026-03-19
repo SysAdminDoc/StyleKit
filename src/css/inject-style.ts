@@ -42,6 +42,6 @@ export const removeCSSFromDocument = (id: string): void => {
   const el = document.getElementById(stylesheetId);
 
   if (el) {
-    el.textContent = '';
+    el.remove();
   }
 };

@@ -17,7 +17,7 @@ const initCss = async (root: ShadowRoot): Promise<void> => {
       .then(css => {
         const el = document.createElement('style');
         el.setAttribute('id', 'stylebot-reader');
-        el.innerHTML = css;
+        el.textContent = css;
         root.appendChild(el);
         resolve();
       });

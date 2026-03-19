@@ -239,17 +239,20 @@ export default {
   ): Promise<void> {
     let css = state.css;
 
+    // Add @import for Google Web Font if needed
     if (value) {
       css = await addGoogleWebFont(value, css);
     }
 
-    if (css !== state.css) {
-      dispatch('applyCss', { css });
+    // Apply font-family declaration
+    if (state.activeSelector) {
+      css = addDeclaration('font-family', value, state.activeSelector, css);
     }
 
-    dispatch('applyDeclaration', { property: 'font-family', value });
+    // Clean up unused @import rules
+    css = cleanGoogleWebFonts(css);
 
-    css = cleanGoogleWebFonts(state.css);
+    // Single batched CSS update instead of 3 separate applyCss calls
     if (css !== state.css) {
       dispatch('applyCss', { css });
     }

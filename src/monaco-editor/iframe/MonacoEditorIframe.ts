@@ -113,7 +113,8 @@ class MonacoEditorIframe {
     this.editor.focus();
 
     if (selector) {
-      const regex = `^${selector}\\s\\{\\n\\s*(?!\\}).*$`;
+      const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = `^${escaped}\\s\\{\\n\\s*(?!\\}).*$`;
       const match = this.editor.getModel().findNextMatch(
         regex,
         {
