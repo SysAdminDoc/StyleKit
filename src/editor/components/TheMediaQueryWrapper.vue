@@ -184,8 +184,13 @@ export default defineComponent({
   padding: 2px 8px;
   flex-shrink: 0;
 
-  &:hover {
+  &:hover:not(:disabled) {
     color: #b4d0fb;
+  }
+
+  &:disabled {
+    color: #585b70;
+    cursor: default;
   }
 }
 </style>
