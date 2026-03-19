@@ -28,6 +28,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { Declaration } from 'postcss';
+import { addDeclaration } from '@stylekit/css';
 
 import CssProperty from '../CssProperty.vue';
 import CssPropertyValue from '../CssPropertyValue.vue';
@@ -88,12 +89,14 @@ export default defineComponent({
         'border-left-width',
       ];
 
+      const selector = this.$store.state.activeSelector;
+      if (!selector) return;
+
+      let css = this.$store.state.css;
       for (const property of properties) {
-        this.$store.dispatch('applyDeclaration', {
-          property,
-          value: '',
-        });
+        css = addDeclaration(property, '', selector, css);
       }
+      this.$store.dispatch('applyCss', { css });
     },
   },
 });
