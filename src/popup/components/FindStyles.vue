@@ -242,7 +242,7 @@ export default defineComponent({
     }
   },
 
-  beforeDestroy(): void {
+  beforeUnmount(): void {
     if (this.hoverTimer !== null) {
       clearTimeout(this.hoverTimer);
     }
@@ -385,7 +385,7 @@ export default defineComponent({
       const thumbCache = (thumbResult[THUMB_LOCAL_KEY] as Record<number, string>) || {};
       for (const style of styles) {
         if (thumbCache[style.i]) {
-          this.$set(this.thumbnails, style.i, thumbCache[style.i]);
+          this.thumbnails = { ...this.thumbnails, [style.i]: thumbCache[style.i] };
         }
       }
 
@@ -403,17 +403,27 @@ export default defineComponent({
       await Promise.all(
         styles.map(async style => {
           const dataUrl = await this.getThumb(style.i, style.sn);
-          if (dataUrl) this.$set(this.thumbnails, style.i, dataUrl);
+          if (dataUrl) this.thumbnails = { ...this.thumbnails, [style.i]: dataUrl };
         })
       );
     },
 
     getThumb(styleId: number, url: string): Promise<string> {
       return new Promise(resolve => {
-        chrome.runtime.sendMessage(
-          { name: 'GetThumbnail', styleId, url },
-          (response: string) => resolve(response || '')
-        );
+        try {
+          chrome.runtime.sendMessage(
+            { name: 'GetThumbnail', styleId, url },
+            (response: string) => {
+              if (chrome.runtime.lastError) {
+                resolve('');
+                return;
+              }
+              resolve(response || '');
+            }
+          );
+        } catch {
+          resolve('');
+        }
       });
     },
 

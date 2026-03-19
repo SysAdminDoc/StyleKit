@@ -28,12 +28,12 @@ const extractAccessToken = (redirectUri: string) => {
  */
 const validate = async (redirectURL?: string): Promise<AccessToken> => {
   if (!redirectURL) {
-    throw 'Authorization failure';
+    throw new Error('Authorization failure');
   }
 
   const accessToken = extractAccessToken(redirectURL);
   if (!accessToken) {
-    throw 'Authorization failure';
+    throw new Error('Authorization failure');
   }
 
   const validationBaseURL = 'https://www.googleapis.com/oauth2/v3/tokeninfo';
@@ -44,7 +44,7 @@ const validate = async (redirectURL?: string): Promise<AccessToken> => {
 
   const response = await fetch(validationRequest);
   if (response.status !== 200) {
-    throw 'Token validation error';
+    throw new Error('Token validation error');
   }
 
   const json: { aud: string } = await response.json();
@@ -52,7 +52,7 @@ const validate = async (redirectURL?: string): Promise<AccessToken> => {
     return accessToken;
   }
 
-  throw 'Token validation error';
+  throw new Error('Token validation error');
 };
 
 const authorize = async (): Promise<string | undefined> => {
