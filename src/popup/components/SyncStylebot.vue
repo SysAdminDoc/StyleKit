@@ -63,10 +63,24 @@ export default defineComponent({
 
       this.syncInProgress = true;
 
-      chrome.runtime.sendMessage(message, () => {
-        this.updateSyncTime();
+      try {
+        chrome.runtime.sendMessage(message, () => {
+          if (chrome.runtime.lastError) {
+            console.warn('StyleKit: sync failed', chrome.runtime.lastError);
+          }
+          this.updateSyncTime();
+          this.syncInProgress = false;
+        });
+      } catch {
         this.syncInProgress = false;
-      });
+      }
+
+      // Safety timeout: unlock UI if callback never fires
+      setTimeout(() => {
+        if (this.syncInProgress) {
+          this.syncInProgress = false;
+        }
+      }, 30000);
     },
   },
 });

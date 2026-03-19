@@ -76,7 +76,7 @@ export default createStore<State>({
         url,
         css,
       }: { initialUrl?: string; url: string; css: string }
-    ) {
+    ): string | null {
       try {
         // validate by parsing
         safeParse(css);
@@ -95,8 +95,10 @@ export default createStore<State>({
 
         setAllStyles(styles);
         state.styles = styles;
+        return null;
       } catch (e) {
         console.warn('StyleKit: failed to save style — invalid CSS', e);
+        return 'Invalid CSS syntax. Please check your styles and try again.';
       }
     },
 
