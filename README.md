@@ -39,7 +39,7 @@ All options are in the **Options** page (right-click the extension icon → Opti
 
 | Setting            | Default         | Description                                                                 |
 | ------------------ | --------------- | --------------------------------------------------------------------------- |
-| Context Menu       | On              | Right-click "Style with Stylebot" on any page                               |
+| Context Menu       | On              | Right-click "Style with StyleKit" on any page                               |
 | Readability Toggle | Off             | Show/hide the Readability mode button in the popup                          |
 | Auto-Load Styles   | Off             | Automatically search and load styles from UserStyles.world when popup opens |
 | Fonts              | System defaults | Custom font list for the font picker                                        |

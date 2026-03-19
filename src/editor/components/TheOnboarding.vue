@@ -46,11 +46,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 const ONBOARDING_KEY = 'stylekit-onboarding-done';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheOnboarding',
 
   data() {

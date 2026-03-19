@@ -57,7 +57,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 interface Recipe {
   name: string;
@@ -200,7 +200,7 @@ const universalRecipes: Recipe[] = [
   },
 ];
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheSiteRecipes',
 
   data() {

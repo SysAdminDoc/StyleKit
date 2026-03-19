@@ -26,7 +26,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 type DiffLine = {
   type: 'added' | 'removed' | 'unchanged';
@@ -34,7 +34,7 @@ type DiffLine = {
   text: string;
 };
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheCssDiffView',
 
   props: {

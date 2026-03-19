@@ -4,7 +4,7 @@ import {
   StylebotOptions,
   StylebotCommands,
   ReadabilitySettings,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 import { State, CssSelectorMetadata } from './';
 

@@ -85,12 +85,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { formatDistanceToNow } from 'date-fns';
 
 import AppButton from '../AppButton.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheGoogleDriveSync',
 
   components: {

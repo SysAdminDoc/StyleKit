@@ -1,21 +1,19 @@
-import Vue from 'vue';
-import Vuex from 'vuex';
+import { createStore } from 'vuex';
 
-import * as postcss from 'postcss';
-
-import { defaultCommands } from '@stylebot/settings';
+import { defaultCommands } from '@stylekit/settings';
 import {
   StyleMap,
   StylebotOptions,
   StylebotCommands,
   GoogleDriveSyncMetadata,
-} from '@stylebot/types';
+} from '@stylekit/types';
 import {
   getGoogleDriveSyncEnabled,
   getGoogleDriveSyncMetadata,
-} from '@stylebot/sync';
-import { getCurrentTimestamp } from '@stylebot/utils';
-import { setGoogleDriveSyncEnabled } from '@stylebot/sync';
+} from '@stylekit/sync';
+import { getCurrentTimestamp } from '@stylekit/utils';
+import { safeParse } from '@stylekit/css';
+import { setGoogleDriveSyncEnabled } from '@stylekit/sync';
 
 import {
   getAllStyles,
@@ -27,8 +25,6 @@ import {
   runGoogleDriveSync,
 } from '../utils';
 
-Vue.use(Vuex);
-
 type State = {
   styles: StyleMap;
 
@@ -39,7 +35,7 @@ type State = {
   googleDriveSyncMetadata: GoogleDriveSyncMetadata | undefined;
 };
 
-export default new Vuex.Store<State>({
+export default createStore<State>({
   state: {
     styles: {},
     options: null,
@@ -83,7 +79,7 @@ export default new Vuex.Store<State>({
     ) {
       try {
         // validate by parsing
-        postcss.parse(css);
+        safeParse(css);
         const styles = { ...state.styles };
 
         styles[url] = {
@@ -100,7 +96,7 @@ export default new Vuex.Store<State>({
         setAllStyles(styles);
         state.styles = styles;
       } catch (e) {
-        // todo
+        console.warn('StyleKit: failed to save style — invalid CSS', e);
       }
     },
 

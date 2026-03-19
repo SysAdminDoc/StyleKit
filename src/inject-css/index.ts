@@ -2,14 +2,14 @@
  * This content script injects any custom style for the page (if it exists)
  * as soon as the document starts loading.
  */
-import { injectCSSIntoDocument } from '@stylebot/css';
-import { apply as applyReadability } from '@stylebot/readability';
+import { injectCSSIntoDocument } from '@stylekit/css';
+import { apply as applyReadability } from '@stylekit/readability';
 
 import {
   GetStylesForPage,
   GetStylesForIframe,
   GetStylesForPageResponse,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 const MAX_INJECT_COUNT = 10;
 const INJECT_CSS_TIMEOUT = 300;
@@ -27,7 +27,9 @@ const injectCss = (
 
         styles.forEach(style => {
           if (style.enabled) {
-            injectCSSIntoDocument(style.css, style.url);
+            injectCSSIntoDocument(style.css, style.url).catch(e =>
+              console.warn('StyleKit: failed to inject CSS for', style.url, e)
+            );
           }
         });
 

@@ -138,12 +138,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { StylebotCommands, StylebotEditorCommands } from '@stylebot/types';
+import { defineComponent } from 'vue';
+import { StylebotCommands, StylebotEditorCommands } from '@stylekit/types';
 
 import { openOptionsPage } from '../../utils/chrome';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheHelpDialog',
 
   computed: {

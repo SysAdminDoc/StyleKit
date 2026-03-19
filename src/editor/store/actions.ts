@@ -1,4 +1,3 @@
-import * as postcss from 'postcss';
 import { Commit, Dispatch, Store } from 'vuex';
 
 import { State } from './';
@@ -10,12 +9,13 @@ import {
   injectRootIntoDocument,
   getCssAfterApplyingFilterEffectToPage,
   removeEmptyRules,
-} from '@stylebot/css';
+  safeParse,
+} from '@stylekit/css';
 
 import {
   apply as applyReadability,
   remove as removeReadability,
-} from '@stylebot/readability';
+} from '@stylekit/readability';
 
 import {
   Style,
@@ -25,9 +25,9 @@ import {
   StylebotBasicModeSections,
   StylebotLayout,
   StylebotColorPalette,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
-import { defaultOptions } from '@stylebot/settings';
+import { defaultOptions } from '@stylekit/settings';
 
 import {
   getAllOptions,
@@ -95,14 +95,15 @@ export default {
     { commit }: { commit: Commit },
     defaultStyle: Style
   ): void {
-    const { url, enabled, css, readability } = defaultStyle;
+    const { url, enabled, readability } = defaultStyle;
+    const css = defaultStyle.css || '';
 
     commit('setUrl', url);
     commit('setCss', css);
     commit('setEnabled', enabled);
     commit('setReadability', readability);
 
-    const root = postcss.parse(defaultStyle.css);
+    const root = safeParse(css);
     commit('setSelectors', root);
   },
 
@@ -179,23 +180,19 @@ export default {
     { commit, state }: { commit: Commit; state: State },
     { css, skipHistory }: { css: string; skipHistory?: boolean }
   ): void {
-    try {
-      const root = postcss.parse(css);
-      injectRootIntoDocument(root, state.url);
+    const root = safeParse(css);
+    injectRootIntoDocument(root, state.url);
 
-      commit('setCss', css);
-      commit('setSelectors', root);
+    commit('setCss', css);
+    commit('setSelectors', root);
 
-      if (!skipHistory) {
-        commit('pushCssHistory', css);
-      }
-
-      // when saving, cleanup any empty rules
-      const cleanCss = removeEmptyRules(css);
-      setStyle(state.url, cleanCss, state.readability);
-    } catch (e) {
-      //
+    if (!skipHistory) {
+      commit('pushCssHistory', css);
     }
+
+    // when saving, cleanup any empty rules
+    const cleanCss = removeEmptyRules(css);
+    setStyle(state.url, cleanCss, state.readability);
   },
 
   undo({ state, dispatch }: { state: State; dispatch: Dispatch }): void {

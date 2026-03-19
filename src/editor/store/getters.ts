@@ -1,7 +1,7 @@
 import * as postcss from 'postcss';
 
 import { State } from './';
-import { getRule, getFilterEffectValueForPage } from '@stylebot/css';
+import { getRule, getFilterEffectValueForPage } from '@stylekit/css';
 
 export default {
   activeRule: (state: State): postcss.Rule | null => {

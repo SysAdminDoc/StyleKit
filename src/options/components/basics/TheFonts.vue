@@ -18,10 +18,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { defaultOptions } from '@stylebot/settings';
+import { defineComponent } from 'vue';
+import { defaultOptions } from '@stylekit/settings';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheFonts',
 
   computed: {

@@ -1,10 +1,11 @@
 import { compareAsc } from 'date-fns';
 
-import { StyleMap, GoogleDriveSyncMetadata } from '@stylebot/types';
-import { getCurrentTimestamp } from '@stylebot/utils';
+import { StyleMap, GoogleDriveSyncMetadata } from '@stylekit/types';
+import { getCurrentTimestamp } from '@stylekit/utils';
 
 import mergeStyles from './merge-styles';
 import getAccessToken from './get-access-token';
+import { SyncError } from './retry';
 import {
   getGoogleDriveSyncMetadata,
   getLocalStylesMetadata,
@@ -80,9 +81,8 @@ const merge = async (
  *    - Else, write remote styles to local
  * 4) If local styles' modified timestamp > remote sync timestamp, write local styles to remote.
  */
-export const runGoogleDriveSync = async (): Promise<void> => {
+const runSync = async (accessToken: string): Promise<void> => {
   const styles = await getAllStyles();
-  const accessToken = await getAccessToken();
   const remoteSyncMetadata = await getSyncFileMetadata(accessToken);
 
   console.debug('syncing with google drive...');
@@ -144,4 +144,24 @@ export const runGoogleDriveSync = async (): Promise<void> => {
     ...remoteSyncMetadata,
     modifiedTime: getCurrentTimestamp(),
   });
+};
+
+/**
+ * Run sync with automatic token refresh on 401 errors.
+ * Gets a fresh access token and retries once if auth fails.
+ */
+export const runGoogleDriveSync = async (): Promise<void> => {
+  let accessToken = await getAccessToken();
+
+  try {
+    await runSync(accessToken);
+  } catch (error) {
+    if (error instanceof SyncError && error.statusCode === 401) {
+      console.debug('Access token expired, re-authenticating...');
+      accessToken = await getAccessToken();
+      await runSync(accessToken);
+    } else {
+      throw error;
+    }
+  }
 };

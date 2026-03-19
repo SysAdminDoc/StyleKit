@@ -4,7 +4,7 @@ import {
   StylebotCommands,
   ReadabilitySettings,
   Timestamp,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
 export type GetOptionResponse = StylebotOptions[keyof StylebotOptions];

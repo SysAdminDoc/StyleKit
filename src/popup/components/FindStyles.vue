@@ -132,8 +132,8 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { SetStyle, OpenStylebotInCodeMode } from '@stylebot/types';
+import { defineComponent } from 'vue';
+import { SetStyle, OpenStylebotInCodeMode } from '@stylekit/types';
 import { convertUserCssToRaw } from '../../utils/usercss';
 
 const STORAGE_KEY = 'stylekit-usw-installs';
@@ -161,7 +161,7 @@ interface InstalledEntry {
   enabled?: boolean;
 }
 
-export default Vue.extend({
+export default defineComponent({
   name: 'FindStyles',
 
   props: {

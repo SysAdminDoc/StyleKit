@@ -3,8 +3,8 @@ import { State } from 'editor/store';
 import {
   injectCSSIntoDocument,
   appendImportantToDeclarations,
-} from '@stylebot/css';
-import { Style } from '@stylebot/types';
+} from '@stylekit/css';
+import { Style } from '@stylekit/types';
 
 import {
   enableStyle as sendEnableStyleMessage,

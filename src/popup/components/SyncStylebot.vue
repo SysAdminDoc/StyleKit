@@ -21,13 +21,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { formatDistanceToNow } from 'date-fns';
 
-import { getGoogleDriveSyncMetadata } from '@stylebot/sync';
-import { RunGoogleDriveSync } from '@stylebot/types';
+import { getGoogleDriveSyncMetadata } from '@stylekit/sync';
+import { RunGoogleDriveSync } from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'SyncStylebot',
 
   data(): {

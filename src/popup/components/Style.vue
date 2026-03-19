@@ -30,15 +30,15 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import {
   EnableStyle,
   DisableStyle,
   SetStyle,
   ToggleStylebot,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'Style',
   props: {
     url: {
@@ -81,6 +81,7 @@ export default Vue.extend({
       };
 
       chrome.runtime.sendMessage(message);
+      this.$emit('toggled', { url: this.url, enabled: true });
     },
 
     disable(): void {
@@ -90,6 +91,7 @@ export default Vue.extend({
       };
 
       chrome.runtime.sendMessage(message);
+      this.$emit('toggled', { url: this.url, enabled: false });
     },
 
     edit(): void {

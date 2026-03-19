@@ -66,7 +66,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { Declaration } from 'postcss';
 
 type Snippet = {
@@ -282,7 +282,7 @@ const SNIPPET_CATEGORIES: SnippetCategory[] = [
   },
 ];
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheSnippetLibrary',
 
   data(): {

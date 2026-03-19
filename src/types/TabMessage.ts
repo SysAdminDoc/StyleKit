@@ -1,4 +1,4 @@
-import { ReadabilitySettings, Style } from '@stylebot/types';
+import { ReadabilitySettings, Style } from '@stylekit/types';
 
 export type ToggleStylebot = {
   name: 'ToggleStylebot';

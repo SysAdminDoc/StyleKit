@@ -1,9 +1,8 @@
-import { StylebotOptions } from '@stylebot/types';
-import { defaultOptions } from '@stylebot/settings';
+import { StylebotOptions } from '@stylekit/types';
+import { getCachedOptions, setCachedOptions } from './cache';
 
 export const getAll = async (): Promise<StylebotOptions> => {
-  const items = await chrome.storage.local.get('options');
-  return items['options'] || defaultOptions;
+  return getCachedOptions();
 };
 
 export const get = async (
@@ -24,5 +23,6 @@ export const set = async (
     [name]: value,
   };
 
+  setCachedOptions(options);
   await chrome.storage.local.set({ options });
 };

@@ -20,3 +20,4 @@ export {
 export { addGoogleWebFont, cleanGoogleWebFonts } from './webfont';
 export { addDeclaration, appendImportantToDeclarations } from './declaration';
 export { getRule, addEmptyRule, removeEmptyRules } from './rule';
+export { safeParse } from './safe-parse';

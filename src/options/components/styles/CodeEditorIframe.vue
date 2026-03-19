@@ -3,10 +3,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import CodeEditorIframeShared from '../../../shared/components/CodeEditorIframe.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'CodeEditorIframe',
   components: { CodeEditorIframeShared },
 });

@@ -10,10 +10,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { getNotification, setNotification } from '@stylebot/utils';
+import { defineComponent } from 'vue';
+import { getNotification, setNotification } from '@stylekit/utils';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'ReleaseNotification',
 
   data(): {

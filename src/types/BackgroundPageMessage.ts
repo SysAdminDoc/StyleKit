@@ -3,7 +3,7 @@ import {
   StylebotCommands,
   ReadabilitySettings,
   StyleMap,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 export type SetStyle = {
   name: 'SetStyle';

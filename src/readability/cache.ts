@@ -2,6 +2,7 @@ declare global {
   interface Window {
     stylebotReaderUrl: string;
     stylebotReaderOriginalDocumentBodyElements: Array<Node>;
+    stylebotReaderSpaListenerInit: boolean;
   }
 }
 
@@ -28,4 +29,35 @@ export const revertToCachedDocument = (): void => {
       document.body.appendChild(node);
     });
   }
+};
+
+/**
+ * Listen for SPA navigation (pushState, replaceState, popstate)
+ * and trigger a callback when the URL changes.
+ */
+export const initSpaNavigationListener = (
+  onNavigate: () => void
+): void => {
+  if (window.stylebotReaderSpaListenerInit) {
+    return;
+  }
+  window.stylebotReaderSpaListenerInit = true;
+
+  // Intercept History API calls
+  const originalPushState = history.pushState.bind(history);
+  const originalReplaceState = history.replaceState.bind(history);
+
+  history.pushState = function (...args) {
+    originalPushState(...args);
+    onNavigate();
+  };
+
+  history.replaceState = function (...args) {
+    originalReplaceState(...args);
+    onNavigate();
+  };
+
+  window.addEventListener('popstate', () => {
+    onNavigate();
+  });
 };

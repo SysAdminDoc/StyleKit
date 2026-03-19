@@ -1,11 +1,11 @@
-import Vue from 'vue';
+import { createApp, h } from 'vue';
 
 import { isProbablyReaderable } from '@mozilla/readability';
 
 import App from './App.vue';
 import { getDomainUrlAndSource, getReadabilityArticle } from './utils';
 
-import { ReadabilityArticle } from '@stylebot/types';
+import { ReadabilityArticle } from '@stylekit/types';
 import { cacheDocument } from './cache';
 
 const initCss = async (root: ShadowRoot): Promise<void> => {
@@ -50,16 +50,13 @@ const initVueApp = async (
 ) => {
   const el = await initShadowDOM();
 
-  new Vue({
-    el,
-    render: createElement => {
-      const context = {
-        props: { url, source, article },
-      };
-
-      return createElement(App, context);
+  const app = createApp({
+    render() {
+      return h(App, { url, source, article });
     },
   });
+
+  app.mount(el);
 };
 
 export const initReader = async (): Promise<void> => {

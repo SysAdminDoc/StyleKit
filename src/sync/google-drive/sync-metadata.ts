@@ -1,4 +1,4 @@
-import { GoogleDriveSyncMetadata } from '@stylebot/types';
+import { GoogleDriveSyncMetadata } from '@stylekit/types';
 
 export const getGoogleDriveSyncMetadata = async (): Promise<
   GoogleDriveSyncMetadata | undefined

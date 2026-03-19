@@ -1,7 +1,7 @@
 <template>
   <div class="material-color-palette">
     <v-swatches
-      v-model="value"
+      v-model="localValue"
       inline
       :swatch-size="18"
       :spacing-size="0"
@@ -14,11 +14,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import VSwatches from 'vue-swatches';
+import { defineComponent } from 'vue';
+import VSwatches from 'vue3-swatches';
 import { materialSwatches as swatches } from '../../utils/swatches';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'MaterialColorPalette',
 
   components: {
@@ -26,11 +26,13 @@ export default Vue.extend({
   },
 
   props: {
-    value: {
+    modelValue: {
       type: String,
       required: true,
     },
   },
+
+  emits: ['update:modelValue'],
 
   data() {
     return {
@@ -38,9 +40,14 @@ export default Vue.extend({
     };
   },
 
-  watch: {
-    value() {
-      this.$emit('input', this.value);
+  computed: {
+    localValue: {
+      get(): string {
+        return this.modelValue;
+      },
+      set(val: string): void {
+        this.$emit('update:modelValue', val);
+      },
     },
   },
 });

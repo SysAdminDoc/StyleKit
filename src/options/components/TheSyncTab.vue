@@ -56,7 +56,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import AppButton from './AppButton.vue';
 import TheGoogleDriveSync from './sync/TheGoogleDriveSync.vue';
@@ -68,7 +68,7 @@ import {
   exportAsCSSFile,
 } from '../utils';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheSyncTab',
 
   components: {

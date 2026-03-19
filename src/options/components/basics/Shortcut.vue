@@ -9,18 +9,18 @@
     <b-col sm="5">
       <b-form-input
         :id="id"
-        :value="value"
+        :model-value="value"
         class="shortcut"
-        @input="$emit('input', $event)"
+        @update:model-value="$emit('update:modelValue', $event)"
       />
     </b-col>
   </b-row>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'Shortcut',
 
   props: {

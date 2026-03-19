@@ -1,16 +1,16 @@
 <template>
   <div>
     <color-palette-picker class="color-palette-picker mt-1" />
-    <color-input v-model="value" class="color-input mt-1 ml-2" />
+    <color-input v-model="localValue" class="color-input mt-1 ml-2" />
   </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import ColorInput from './ColorInput.vue';
 import ColorPalettePicker from './ColorPalettePicker.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'ColorPaletteFooter',
 
   components: {
@@ -19,15 +19,22 @@ export default Vue.extend({
   },
 
   props: {
-    value: {
+    modelValue: {
       type: String,
       required: true,
     },
   },
 
-  watch: {
-    value() {
-      this.$emit('input', this.value);
+  emits: ['update:modelValue'],
+
+  computed: {
+    localValue: {
+      get(): string {
+        return this.modelValue;
+      },
+      set(val: string): void {
+        this.$emit('update:modelValue', val);
+      },
     },
   },
 });

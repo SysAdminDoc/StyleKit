@@ -1,5 +1,5 @@
 import { set as setCommands } from './commands';
-import { defaultCommands } from '@stylebot/settings';
+import { defaultCommands } from '@stylekit/settings';
 
 const defaultShortcutUpdate = async (): Promise<void> => {
   const key = `default_shortcut_update_complete`;
