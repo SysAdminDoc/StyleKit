@@ -1,14 +1,14 @@
 # CLAUDE.md - StyleKit
 
 ## Project Overview
-StyleKit is a Chrome/Firefox browser extension (Manifest V3) that lets users customize any website's appearance. Forked from Stylebot, rebranded and enhanced. v4.1.0.
+StyleKit is a Chrome/Firefox browser extension (Manifest V3) that lets users customize any website's appearance. Forked from Stylebot, rebranded and enhanced. v4.2.0.
 
 ## Tech Stack
 - **Framework**: Vue 3 + Vuex 4 + TypeScript
 - **Build**: Vite 5 (multi-entry rollup)
 - **UI**: Bootstrap 5, bootstrap-vue-3, vue3-swatches, vue-draggable-resizable
 - **CSS**: SCSS, PostCSS (cssnano, postcss-rem-to-pixel)
-- **Testing**: Vitest (tests use globals - no imports needed for describe/it/expect)
+- **Testing**: Vitest + jsdom (tests use globals - no imports needed for describe/it/expect)
 - **Linting**: ESLint + Prettier + husky + lint-staged
 - **CI**: GitHub Actions (Node 22, npm ci)
 
@@ -53,20 +53,27 @@ src/
 - CSS is output per entry point directory (e.g., `editor/index.css`)
 - `copyAssetsPlugin` handles manifest, icons, Monaco, and HTML file copying
 - `localePlugin` transforms `.config` locale files to Chrome `_locales` JSON
+- Version synced from package.json into manifest at build time
 
 ## Key Patterns
 - **Shadow DOM**: Editor and readability mount Vue apps inside shadow DOM to isolate from page styles
 - **Path aliases**: `@stylekit/*` maps to `src/*/index` (configured in both vite.config.ts and tsconfig.json)
 - **Store alias**: `editor/store` maps to `src/editor/store/index`
+- **Vue 3 lifecycle**: Uses `beforeUnmount`/`unmounted` (NOT Vue 2's `beforeDestroy`/`destroyed`)
 - **Vue 3 v-model**: Uses `modelValue` prop + `update:modelValue` event (not Vue 2's `value`/`input`)
+- **Vue 3 reactivity**: Use object spread for reactive updates (NOT `this.$set()`)
 - **Content scripts**: ES module format with static imports to shared chunks
 - **Web accessible resources**: `chunks/*`, `editor/index.css`, `readability/index.css`, `readability/index.js`, `monaco-editor/*`
 - **postMessage**: Uses `chrome.runtime.getURL('/')` as targetOrigin (not wildcard `*`)
 - **Sender validation**: Background listener checks `sender.id === chrome.runtime.id`
 - **CSS injection**: Uses `textContent` (not `innerHTML`) for style elements
+- **CSS removal**: Uses `el.remove()` (not `el.textContent = ''`) to avoid orphan elements
+- **Batched CSS updates**: Multi-property changes (clearLayout, applyFontFamily) batch into single `applyCss` dispatch
+- **Restricted page detection**: `isRestrictedUrl()` in popup/utils.ts checks chrome://, edge://, about: URLs
+- **readyState checks**: Use `document.readyState === 'loading'` pattern (NOT `=== 'complete'`) to handle interactive state
 
 ## DOM Element IDs (Legacy - Do Not Rename)
-These `stylebot-*` IDs/classes are baked into user-saved CSS selectors and page DOM. Renaming them would break existing user styles:
+These `stylebot-*` IDs/classes are baked into user-saved CSS selectors and page DOM:
 - `#stylebot` — shadow host root
 - `#stylebot-app` — Vue app mount inside shadow DOM
 - `.stylebot` — class used to exclude editor elements from dark mode processing
@@ -75,10 +82,13 @@ These `stylebot-*` IDs/classes are baked into user-saved CSS selectors and page 
 - `stylebot-color-picker` — color picker class in shadow DOM
 
 ## Known Issues
-- Test files use Jest APIs (`jest.mock`, `fetchMock`) that need migration to Vitest equivalents
+- 2/8 test suites fail (pre-existing: FontSize.vue component mount + actions.test.ts mock mismatch with safeParse)
 - Sass `@import` deprecation warnings (migrating to `@use` is a future task)
 - bootstrap-vue-3 has no TypeScript declarations (shimmed in `shims.vue.d.ts`)
 - CSS minification warnings from bootstrap-vue-3 unbalanced braces (library issue)
+- Google Drive sync merge is style-level only (per-selector conflicts not handled)
 
 ## Version History
-- **v4.1.0** — Full audit: rebranded `@stylebot/*` aliases to `@stylekit/*` across 79 files + 15 locales, security hardening (sender validation, innerHTML→textContent, postMessage origins, URL validation, RegExp safety), memory leak fixes (ColorPicker, TheReader), CI modernized (Node 22, npm, actions/v4), ESLint config fixed, error handling improved
+- **v4.2.0** — UX improvements: Find Styles retry button, readability toggle revert on failure, restricted page detection in popup, delete confirmation (two-click), saveStyle error feedback wired to UI. Version bump.
+- **v4.1.1** — Bug fixes: removeCSSFromDocument memory leak, clearLayout history pollution (15 dispatches -> 1), sync UI lockup, Length NaN/regex bugs, opacity float precision, dark mode + readability readyState race, Monaco regex injection, SPA listener stacking, reader innerHTML.
+- **v4.1.0** — Full audit: rebranded `@stylebot/*` to `@stylekit/*` (79 files + 15 locales), security hardening, memory leak fixes, Vue 3 lifecycle migration (9 components), Jest->Vitest test migration (3/5 broken suites fixed), CI modernized (Node 22, npm, actions/v4), ESLint config fixed.
