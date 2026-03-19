@@ -19,10 +19,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-import { defaultReadabilitySettings } from '@stylebot/settings';
-import { addGoogleWebFont, injectCSSIntoDocument } from '@stylebot/css';
+import { defaultReadabilitySettings } from '@stylekit/settings';
+import { addGoogleWebFont, injectCSSIntoDocument } from '@stylekit/css';
 
 import { hideLoader } from '../loader';
 
@@ -31,11 +31,11 @@ import {
   GetReadabilitySettingsResponse,
   UpdateReader,
   ReadabilityTheme,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 import TheReaderHeader from './TheReaderHeader.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheReader',
 
   components: {
@@ -65,8 +65,12 @@ export default Vue.extend({
     width: number;
     lineHeight: number;
     theme: ReadabilityTheme;
+    _messageListener: ((message: UpdateReader) => void) | null;
   } {
-    return defaultReadabilitySettings;
+    return {
+      ...defaultReadabilitySettings,
+      _messageListener: null,
+    };
   },
 
   async mounted(): Promise<void> {
@@ -81,7 +85,7 @@ export default Vue.extend({
 
     hideLoader();
 
-    chrome.runtime.onMessage.addListener((message: UpdateReader) => {
+    this._messageListener = (message: UpdateReader) => {
       if (message.name === 'UpdateReader') {
         this.size = message.value.size;
         this.font = message.value.font;
@@ -91,7 +95,14 @@ export default Vue.extend({
 
         this.injectFont(this.font);
       }
-    });
+    };
+    chrome.runtime.onMessage.addListener(this._messageListener);
+  },
+
+  beforeUnmount() {
+    if (this._messageListener) {
+      chrome.runtime.onMessage.removeListener(this._messageListener);
+    }
   },
 
   methods: {

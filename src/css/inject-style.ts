@@ -16,7 +16,7 @@ export const injectCSSIntoDocument = async (
   const el = document.getElementById(stylesheetId);
 
   if (el) {
-    el.innerHTML = cssWithExpandedImports;
+    el.textContent = cssWithExpandedImports;
     return;
   }
 
@@ -42,6 +42,6 @@ export const removeCSSFromDocument = (id: string): void => {
   const el = document.getElementById(stylesheetId);
 
   if (el) {
-    el.innerHTML = '';
+    el.textContent = '';
   }
 };

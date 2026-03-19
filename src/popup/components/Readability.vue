@@ -7,10 +7,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { ToggleReadabilityForTab } from '@stylebot/types';
+import { defineComponent } from 'vue';
+import { ToggleReadabilityForTab } from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'Readability',
   props: {
     initialReadability: Boolean,

@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { Declaration } from 'postcss';
 
 import ColorTextInput from './ColorTextInput.vue';
@@ -32,7 +32,7 @@ import MaterialColorPalette from './MaterialColorPalette.vue';
 import ColorPaletteFooter from './ColorPaletteFooter.vue';
 import ColorPresets from './ColorPresets.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'ColorPicker',
 
   components: {
@@ -93,6 +93,10 @@ export default Vue.extend({
     },
   },
 
+  beforeUnmount() {
+    document.removeEventListener('click', this.onDocumentClick);
+  },
+
   methods: {
     onFocus(event: FocusEvent): void {
       (event.target as HTMLInputElement).select();
@@ -110,15 +114,12 @@ export default Vue.extend({
     onClose(): void {
       this.open = false;
       this.$store.commit('setColorPickerVisible', false);
-
-      setTimeout(() => {
-        document.removeEventListener('click', this.onDocumentClick);
-      }, 0);
+      document.removeEventListener('click', this.onDocumentClick);
     },
 
     onPresetSelect(color: string): void {
       this.value = color;
-      this.$emit('input', color);
+      this.$emit('change', color);
     },
 
     onDocumentClick(e: MouseEvent): void {

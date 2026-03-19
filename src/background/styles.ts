@@ -1,16 +1,16 @@
-import * as postcss from 'postcss';
-
-import { getCurrentTimestamp } from '@stylebot/utils';
-import { appendImportantToDeclarations } from '@stylebot/css';
+import { getCurrentTimestamp } from '@stylekit/utils';
+import { appendImportantToDeclarations, safeParse } from '@stylekit/css';
 
 import {
   Style,
   StyleMap,
   StyleWithoutUrl,
   ApplyStylesToTab,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 import BackgroundPageUtils from './utils';
+import { getCachedStyles, setCachedStyles } from './cache';
+import { StyleIndex } from './style-index';
 
 export const updateIcon = (
   tab: chrome.tabs.Tab,
@@ -48,7 +48,7 @@ export const applyStylesToAllTabs = async (): Promise<void> => {
         styles,
       };
 
-      chrome.tabs.sendMessage(tab.id, message).catch(() => {});
+      chrome.tabs.sendMessage(tab.id, message).catch(e => console.warn('StyleKit: failed to send styles to tab', tab.id, e));
 
       if (tab.active) {
         updateIcon(tab, styles, defaultStyle);
@@ -58,13 +58,22 @@ export const applyStylesToAllTabs = async (): Promise<void> => {
 };
 
 export const getAll = async (): Promise<StyleMap> => {
-  const items = await chrome.storage.local.get('styles');
-  return items['styles'] || {};
+  return getCachedStyles();
 };
 
 export const get = async (url: string): Promise<StyleWithoutUrl> => {
   const styles = await getAll();
   return styles[url];
+};
+
+const styleIndex = new StyleIndex();
+let indexBuiltForStyles: StyleMap | null = null;
+
+const ensureIndex = (allStyles: StyleMap): void => {
+  if (indexBuiltForStyles !== allStyles) {
+    styleIndex.build(allStyles);
+    indexBuiltForStyles = allStyles;
+  }
 };
 
 export const getStylesForPage = (
@@ -83,29 +92,31 @@ export const getStylesForPage = (
     return { styles: [] };
   }
 
+  ensureIndex(allStyles);
+  const matchingUrls = styleIndex.getMatchingUrls(pageUrl);
+
   const styles = [];
   let defaultStyle: Style | undefined;
 
-  for (const url in allStyles) {
-    const matches = BackgroundPageUtils.matches(pageUrl, url);
+  for (const url of matchingUrls) {
+    if (!allStyles[url]) continue;
 
-    if (matches && allStyles[url]) {
-      const css = important
-        ? appendImportantToDeclarations(allStyles[url].css)
-        : allStyles[url].css;
+    const rawCss = allStyles[url].css || '';
+    const css = important
+      ? appendImportantToDeclarations(rawCss)
+      : rawCss;
 
-      const { enabled, readability, modifiedTime } = allStyles[url];
-      const style = { url, css, enabled, readability, modifiedTime };
+    const { enabled, readability, modifiedTime } = allStyles[url];
+    const style = { url, css, enabled, readability, modifiedTime };
 
-      if (url !== '*') {
-        if (!defaultStyle || url.length > defaultStyle.url.length) {
-          defaultStyle = style;
-        }
+    if (url !== '*') {
+      if (!defaultStyle || url.length > defaultStyle.url.length) {
+        defaultStyle = style;
       }
+    }
 
-      if (style.css) {
-        styles.push(style);
-      }
+    if (style.css) {
+      styles.push(style);
     }
   }
 
@@ -113,6 +124,8 @@ export const getStylesForPage = (
 };
 
 export const setAll = async (styles: StyleMap): Promise<void> => {
+  setCachedStyles(styles);
+  indexBuiltForStyles = null;
   chrome.storage.local.set({
     styles,
 
@@ -198,6 +211,12 @@ export const move = async (src: string, dest: string): Promise<void> => {
 
 export const getImportCss = (url: string): Promise<string> => {
   return new Promise(resolve => {
+    // Only allow CSS imports from HTTPS URLs
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:') { resolve(''); return; }
+    } catch { resolve(''); return; }
+
     fetch(url)
       .then(response => {
         if (!response.ok) {
@@ -211,7 +230,7 @@ export const getImportCss = (url: string): Promise<string> => {
           resolve('');
           return;
         }
-        postcss.parse(css);
+        safeParse(css);
         resolve(css);
       })
       .catch(() => {

@@ -2,23 +2,25 @@
   <button
     :disabled="disabled"
     class="color-picker-toggle"
-    :style="{ background: `${value}` }"
+    :style="{ background: `${modelValue}` }"
     @click="$emit('click')"
   />
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'ColorPickerToggle',
 
   props: {
-    value: {
+    modelValue: {
       type: String,
       required: true,
     },
   },
+
+  emits: ['click'],
 
   computed: {
     disabled(): boolean {

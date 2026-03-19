@@ -26,7 +26,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 type ComputedProp = { name: string; value: string };
 type StyleGroup = { label: string; props: ComputedProp[] };
@@ -100,7 +100,7 @@ const STYLE_GROUPS: Array<{ label: string; properties: string[] }> = [
   },
 ];
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheComputedStyles',
 
   computed: {

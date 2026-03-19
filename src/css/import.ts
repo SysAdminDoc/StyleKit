@@ -1,11 +1,12 @@
 import * as postcss from 'postcss';
+import { safeParse } from './safe-parse';
 
-import { GetImportCss, GetImportCssResponse } from '@stylebot/types';
+import { GetImportCss, GetImportCssResponse } from '@stylekit/types';
 
 // fetch and expand all imports for external CSS to get around CORS
 export const getCssWithExpandedImports = (css: string): Promise<string> => {
   return new Promise(resolve => {
-    const root = postcss.parse(css);
+    const root = safeParse(css);
     const urls: Array<string> = [];
 
     root.walkAtRules('import', (atRule: postcss.AtRule) => {
