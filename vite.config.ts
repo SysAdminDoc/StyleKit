@@ -139,6 +139,7 @@ export default defineConfig({
 
   test: {
     globals: true,
+    setupFiles: ['./vitest.setup.ts'],
     environmentMatchGlobs: [
       ['src/editor/**/__tests__/**', 'jsdom'],
     ],
