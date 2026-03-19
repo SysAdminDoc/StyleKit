@@ -432,15 +432,17 @@
     }
   }
 
-  /* Computed CSS panel */
-  .stylebot-computed-css {
-    background: $dark-surface;
-    color: $dark-text;
+  /* Link buttons (global catch-all for unstyled btn-link) */
+  .btn-link {
+    color: $dark-text-dim;
+    text-decoration: none;
 
-    .list-group-item {
-      background: $dark-surface;
-      border-color: $dark-border;
-      color: $dark-text-dim;
+    &:hover {
+      color: $dark-text;
+    }
+
+    &:disabled {
+      color: $dark-surface-2;
     }
   }
 

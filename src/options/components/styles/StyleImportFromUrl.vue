@@ -93,6 +93,12 @@ export default defineComponent({
           return;
         }
 
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType && !contentType.includes('css') && !contentType.includes('text/plain') && !contentType.includes('text/html')) {
+          this.error = `Unexpected content type: ${contentType}. Expected CSS.`;
+          return;
+        }
+
         const text = await response.text();
         if (!text.trim()) {
           this.error = 'URL returned empty content';
