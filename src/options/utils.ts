@@ -12,7 +12,7 @@ import {
   StylebotCommands,
   StyleMap,
   RunGoogleDriveSync,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 export const getAllStyles = async (): Promise<GetAllStylesResponse> => {
   const message: GetAllStyles = {

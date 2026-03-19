@@ -3,16 +3,16 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import { Declaration, Rule } from 'postcss';
 import {
   StylebotEditingMode,
   StylebotLayout,
   StylebotEditorCommands,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheKeyboardShortcuts',
 
   computed: {

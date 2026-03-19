@@ -5,14 +5,17 @@
   "compilerOptions": {
     "strict": true,
     "module": "esnext",
-    "lib": ["dom", "esnext", "dom.iterable", "es2019"],
+    "target": "esnext",
+    "lib": ["dom", "esnext", "dom.iterable"],
     "downlevelIteration": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "types": ["chrome", "jest", "node"],
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["chrome", "node", "vitest/globals"],
     "baseUrl": "src",
     "paths": {
-      "@stylebot/*": ["*/index"]
+      "@stylekit/*": ["*/index"]
     }
   }
 }

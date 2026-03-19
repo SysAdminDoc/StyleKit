@@ -31,11 +31,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import DropdownHackToSupportShadowDom from '../DropdownHackToSupportShadowDom.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'ColorPalettePicker',
 
   components: {

@@ -6,7 +6,20 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "stylekit@sysadmindoc.dev"
+      "id": "stylekit@sysadmindoc.dev",
+      "strict_min_version": "128.0"
     }
-  }
+  },
+
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "identity",
+    "menus",
+    "unlimitedStorage",
+    "scripting"
+  ],
+
+  "commands": {}
 }

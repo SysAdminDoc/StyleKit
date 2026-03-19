@@ -3,7 +3,7 @@ import {
   GetStylesForPage,
   GetIsStylebotOpen,
   GetStylesForPageResponse,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 export const getCurrentTab = async (): Promise<chrome.tabs.Tab | undefined> => {
   const window = await chrome.windows.getCurrent({ populate: true });

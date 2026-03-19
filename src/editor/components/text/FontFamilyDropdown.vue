@@ -48,14 +48,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { t } from '@stylebot/i18n';
+import { defineComponent } from 'vue';
+import { t } from '@stylekit/i18n';
 
 import { openOptionsPage } from '../../utils/chrome';
 
 import DropdownHackToSupportShadowDom from './../DropdownHackToSupportShadowDom.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'FontFamilyDropdown',
 
   components: {

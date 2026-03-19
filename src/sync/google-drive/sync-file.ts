@@ -1,7 +1,8 @@
-import { getCurrentTimestamp } from '@stylebot/utils';
-import { GoogleDriveSyncMetadata, StyleMap } from '@stylebot/types';
+import { getCurrentTimestamp } from '@stylekit/utils';
+import { GoogleDriveSyncMetadata, StyleMap } from '@stylekit/types';
 
 import { AccessToken } from './get-access-token';
+import { syncFetch, withRetry } from './retry';
 
 const GOOGLE_DRIVE_FILE_GET_API = `https://www.googleapis.com/drive/v3/files`;
 const GOOGLE_DRIVE_FILE_UPLOAD_API = `https://www.googleapis.com/upload/drive/v3/files`;
@@ -24,38 +25,42 @@ export const getFileMetadata = async (
   id: string,
   accessToken: AccessToken
 ): Promise<GoogleDriveSyncMetadata | null> => {
-  const url = `${GOOGLE_DRIVE_FILE_GET_API}/${id}?fields=${GOOGLE_DRIVE_FILE_FIELDS}`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: getAuthorizationHeaders(accessToken),
-  });
+  return withRetry(async () => {
+    const url = `${GOOGLE_DRIVE_FILE_GET_API}/${id}?fields=${GOOGLE_DRIVE_FILE_FIELDS}`;
+    const response = await syncFetch(url, {
+      method: 'GET',
+      headers: getAuthorizationHeaders(accessToken),
+    });
 
-  return await response.json();
+    return await response.json();
+  });
 };
 
 const createBackupFolder = async (
   accessToken: AccessToken
 ): Promise<string> => {
-  const form = new FormData();
-  const metadata = {
-    name: SYNC_FOLDER_NAME,
-    mimeType: 'application/vnd.google-apps.folder',
-  };
+  return withRetry(async () => {
+    const form = new FormData();
+    const metadata = {
+      name: SYNC_FOLDER_NAME,
+      mimeType: 'application/vnd.google-apps.folder',
+    };
 
-  form.append(
-    'metadata',
-    new Blob([JSON.stringify(metadata)], { type: 'application/json' })
-  );
+    form.append(
+      'metadata',
+      new Blob([JSON.stringify(metadata)], { type: 'application/json' })
+    );
 
-  const url = `${GOOGLE_DRIVE_FILE_UPLOAD_API}?uploadType=multipart&fields=${GOOGLE_DRIVE_FILE_FIELDS}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: getAuthorizationHeaders(accessToken),
-    body: form,
+    const url = `${GOOGLE_DRIVE_FILE_UPLOAD_API}?uploadType=multipart&fields=${GOOGLE_DRIVE_FILE_FIELDS}`;
+    const response = await syncFetch(url, {
+      method: 'POST',
+      headers: getAuthorizationHeaders(accessToken),
+      body: form,
+    });
+
+    const { id } = await response.json();
+    return id;
   });
-
-  const { id } = await response.json();
-  return id;
 };
 
 const createBackup = async (
@@ -63,28 +68,30 @@ const createBackup = async (
   blob: Blob,
   folderId: string
 ): Promise<GoogleDriveSyncMetadata> => {
-  const form = new FormData();
-  const metadata = {
-    name: SYNC_FILE_NAME,
-    parents: [folderId],
-    mimeType: 'application/json',
-    modifiedTime: getCurrentTimestamp(),
-  };
-  const metadataBlob = new Blob([JSON.stringify(metadata)], {
-    type: 'application/json',
+  return withRetry(async () => {
+    const form = new FormData();
+    const metadata = {
+      name: SYNC_FILE_NAME,
+      parents: [folderId],
+      mimeType: 'application/json',
+      modifiedTime: getCurrentTimestamp(),
+    };
+    const metadataBlob = new Blob([JSON.stringify(metadata)], {
+      type: 'application/json',
+    });
+
+    form.append('metadata', metadataBlob);
+    form.append('file', blob);
+
+    const url = `${GOOGLE_DRIVE_FILE_UPLOAD_API}?uploadType=multipart&fields=${GOOGLE_DRIVE_FILE_FIELDS}`;
+    const response = await syncFetch(url, {
+      method: 'POST',
+      headers: getAuthorizationHeaders(accessToken),
+      body: form,
+    });
+
+    return await response.json();
   });
-
-  form.append('metadata', metadataBlob);
-  form.append('file', blob);
-
-  const url = `${GOOGLE_DRIVE_FILE_UPLOAD_API}?uploadType=multipart&fields=${GOOGLE_DRIVE_FILE_FIELDS}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: getAuthorizationHeaders(accessToken),
-    body: form,
-  });
-
-  return await response.json();
 };
 
 const patchBackup = async (
@@ -92,26 +99,28 @@ const patchBackup = async (
   accessToken: AccessToken,
   blob: Blob
 ): Promise<GoogleDriveSyncMetadata> => {
-  const form = new FormData();
-  const metadata = {
-    modifiedTime: getCurrentTimestamp(),
-  };
+  return withRetry(async () => {
+    const form = new FormData();
+    const metadata = {
+      modifiedTime: getCurrentTimestamp(),
+    };
 
-  const metadataBlob = new Blob([JSON.stringify(metadata)], {
-    type: 'application/json',
+    const metadataBlob = new Blob([JSON.stringify(metadata)], {
+      type: 'application/json',
+    });
+
+    form.append('metadata', metadataBlob);
+    form.append('file', blob);
+
+    const url = `${GOOGLE_DRIVE_FILE_UPLOAD_API}/${id}?uploadType=multipart&fields=${GOOGLE_DRIVE_FILE_FIELDS}`;
+    const response = await syncFetch(url, {
+      method: 'PATCH',
+      headers: getAuthorizationHeaders(accessToken),
+      body: form,
+    });
+
+    return await response.json();
   });
-
-  form.append('metadata', metadataBlob);
-  form.append('file', blob);
-
-  const url = `${GOOGLE_DRIVE_FILE_UPLOAD_API}/${id}?uploadType=multipart&fields=${GOOGLE_DRIVE_FILE_FIELDS}`;
-  const response = await fetch(url, {
-    method: 'PATCH',
-    headers: getAuthorizationHeaders(accessToken),
-    body: form,
-  });
-
-  return await response.json();
 };
 
 /**
@@ -121,25 +130,23 @@ const patchBackup = async (
 export const getSyncFileMetadata = async (
   accessToken: AccessToken
 ): Promise<GoogleDriveSyncMetadata | null> => {
-  const query = `name = '${SYNC_FILE_NAME}'`;
-  const url = `${GOOGLE_DRIVE_FILE_GET_API}?q=${encodeURIComponent(query)}`;
+  return withRetry(async () => {
+    const query = `name = '${SYNC_FILE_NAME}'`;
+    const url = `${GOOGLE_DRIVE_FILE_GET_API}?q=${encodeURIComponent(query)}`;
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: getAuthorizationHeaders(accessToken),
+    const response = await syncFetch(url, {
+      method: 'GET',
+      headers: getAuthorizationHeaders(accessToken),
+    });
+
+    const { files } = await response.json();
+    if (!files || files.length === 0) {
+      return null;
+    }
+
+    const syncMetadata = await getFileMetadata(files[0].id, accessToken);
+    return syncMetadata;
   });
-
-  const { files } = await response.json();
-  if (!files || files.length === 0) {
-    return null;
-  }
-
-  const syncMetadata = await getFileMetadata(files[0].id, accessToken);
-  if (!syncMetadata) {
-    return null;
-  }
-
-  return syncMetadata;
 };
 
 /**
@@ -149,13 +156,15 @@ export const downloadSyncFile = async (
   accessToken: string,
   id: string
 ): Promise<StyleMap> => {
-  const url = `${GOOGLE_DRIVE_FILE_GET_API}/${id}?alt=media`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: getAuthorizationHeaders(accessToken),
-  });
+  return withRetry(async () => {
+    const url = `${GOOGLE_DRIVE_FILE_GET_API}/${id}?alt=media`;
+    const response = await syncFetch(url, {
+      method: 'GET',
+      headers: getAuthorizationHeaders(accessToken),
+    });
 
-  return await response.json();
+    return await response.json();
+  });
 };
 
 /**

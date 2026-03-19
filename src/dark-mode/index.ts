@@ -1,12 +1,12 @@
-import * as dedent from 'dedent';
-import * as postcss from 'postcss';
-import * as tinycolor from 'tinycolor2';
+import dedent from 'dedent';
+import tinycolor from 'tinycolor2';
 
-import { getSelector } from '@stylebot/css';
+import { getSelector } from '@stylekit/css';
 
 declare global {
   interface Window {
     stylebotDarkModeUrl: string;
+    stylebotDarkModeObserver: MutationObserver | null;
   }
 }
 
@@ -100,15 +100,15 @@ const getElementCss = (el: HTMLElement, selector: string): string => {
   let css = `\n\n${selector} {`;
 
   if (color) {
-    css += `\n  color: ${color.toHexString()};`;
+    css += `\n  color: ${color.toHexString()} !important;`;
   }
 
   if (backgroundColor) {
-    css += `\n  background-color: ${backgroundColor.toHexString()};`;
+    css += `\n  background-color: ${backgroundColor.toHexString()} !important;`;
   }
 
   if (borderColor) {
-    css += `\n  border-color: ${borderColor.toHexString()};`;
+    css += `\n  border-color: ${borderColor.toHexString()} !important;`;
   }
 
   css += `\n}`;
@@ -117,13 +117,13 @@ const getElementCss = (el: HTMLElement, selector: string): string => {
     css += `\n${selector}:hover {`;
 
     if (color) {
-      css += `\n  color: ${color.lighten(20).toHexString()};`;
+      css += `\n  color: ${color.lighten(20).toHexString()} !important;`;
     }
 
     if (backgroundColor) {
       css += `\n  background-color: ${backgroundColor
         .darken(30)
-        .toHexString()};`;
+        .toHexString()} !important;`;
     }
 
     css += `\n}`;
@@ -132,32 +132,118 @@ const getElementCss = (el: HTMLElement, selector: string): string => {
   return css;
 };
 
-const getCss = (): string => {
-  const root = postcss.parse(getDefaultCss());
-  const all = document.querySelectorAll('body, body *:not(#stylebot)');
-  const evaluatedSelectors: Array<string> = [];
+// Track which selectors we've already processed
+const evaluatedSelectors = new Set<string>();
 
-  all.forEach(el => {
-    if (!el.closest('.stylebot')) {
-      const selector = getSelector(el as HTMLElement);
+const processElements = (elements: Iterable<Element>): string => {
+  let css = '';
 
-      try {
-        if (evaluatedSelectors.indexOf(selector) === -1) {
-          const css = getElementCss(el as HTMLElement, selector);
-          if (css) {
-            root.append(css);
-          }
+  for (const el of elements) {
+    if (el.closest('.stylebot')) continue;
 
-          evaluatedSelectors.push(selector);
+    const selector = getSelector(el as HTMLElement);
+
+    try {
+      if (!evaluatedSelectors.has(selector)) {
+        const elementCss = getElementCss(el as HTMLElement, selector);
+        if (elementCss) {
+          css += elementCss;
         }
-      } catch (e) {
-        console.log(`Error analyzing ${selector}`, e);
+        evaluatedSelectors.add(selector);
       }
+    } catch (e) {
+      // skip elements that can't be analyzed
+    }
+  }
+
+  return css;
+};
+
+const getStyleElement = (): HTMLStyleElement => {
+  const id = 'stylebot-dark-mode';
+  let el = document.getElementById(id) as HTMLStyleElement | null;
+
+  if (!el) {
+    el = document.createElement('style');
+    el.type = 'text/css';
+    el.setAttribute('id', id);
+    document.documentElement.appendChild(el);
+  }
+
+  return el;
+};
+
+const initDarkMode = (): void => {
+  evaluatedSelectors.clear();
+
+  // Start with base theme CSS
+  let css = getDefaultCss();
+
+  // Process all existing elements
+  const all = document.querySelectorAll('body, body *:not(#stylebot)');
+  css += processElements(all);
+
+  const styleEl = getStyleElement();
+  styleEl.textContent = css;
+
+  // Observe DOM mutations for dynamically added elements
+  startObserver(styleEl);
+};
+
+let mutationBuffer: MutationRecord[] = [];
+let flushScheduled = false;
+
+const flushMutations = (styleEl: HTMLStyleElement): void => {
+  flushScheduled = false;
+
+  const newElements: Element[] = [];
+  for (const mutation of mutationBuffer) {
+    for (const node of Array.from(mutation.addedNodes)) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as Element;
+        if (!el.closest('.stylebot') && el.id !== 'stylebot-dark-mode') {
+          newElements.push(el);
+          // Also grab children of newly added subtrees
+          el.querySelectorAll('*').forEach(child => newElements.push(child));
+        }
+      }
+    }
+  }
+  mutationBuffer = [];
+
+  if (newElements.length === 0) return;
+
+  const newCss = processElements(newElements);
+  if (newCss) {
+    styleEl.textContent += newCss;
+  }
+};
+
+const startObserver = (styleEl: HTMLStyleElement): void => {
+  stopObserver();
+
+  const observer = new MutationObserver((mutations) => {
+    mutationBuffer.push(...mutations);
+
+    if (!flushScheduled) {
+      flushScheduled = true;
+      requestAnimationFrame(() => flushMutations(styleEl));
     }
   });
 
-  root.walkDecls(decl => (decl.important = true));
-  return root.toString();
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  window.stylebotDarkModeObserver = observer;
+};
+
+const stopObserver = (): void => {
+  if (window.stylebotDarkModeObserver) {
+    window.stylebotDarkModeObserver.disconnect();
+    window.stylebotDarkModeObserver = null;
+  }
 };
 
 const cacheCurrentUrl = (): void => {
@@ -166,25 +252,6 @@ const cacheCurrentUrl = (): void => {
 
 const didUrlChange = (): boolean => {
   return window.stylebotDarkModeUrl !== window.location.href;
-};
-
-const initDarkMode = () => {
-  const css = getCss();
-  const id = 'stylebot-dark-mode';
-  const el = document.getElementById(id);
-
-  if (el) {
-    el.innerHTML = css;
-    return;
-  }
-
-  const style = document.createElement('style');
-
-  style.type = 'text/css';
-  style.setAttribute('id', id);
-  style.appendChild(document.createTextNode(css));
-
-  document.documentElement.appendChild(style);
 };
 
 export const apply = (forceApply = false): void => {
@@ -204,5 +271,7 @@ export const apply = (forceApply = false): void => {
 };
 
 export const remove = (): void => {
+  stopObserver();
+  evaluatedSelectors.clear();
   document.getElementById('stylebot-dark-mode')?.remove();
 };
