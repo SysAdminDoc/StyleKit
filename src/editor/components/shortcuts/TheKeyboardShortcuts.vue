@@ -127,6 +127,14 @@ export default defineComponent({
     },
 
     handleStylebotShortcut(event: KeyboardEvent): void {
+      // Escape always works, even from input/textarea
+      if (event.key === this.editorCommands.close) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.handleEscape();
+        return;
+      }
+
       const target = event.composedPath()[0] as HTMLElement;
       const tagName = target.tagName.toLowerCase();
 
@@ -218,13 +226,7 @@ export default defineComponent({
         this.toggleResize();
       }
 
-      // Hide help / stylebot
-      if (event.key === this.editorCommands.close) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        this.handleEscape();
-      }
+      // Escape is handled at the top of this method (works from inputs too)
     },
   },
 });
