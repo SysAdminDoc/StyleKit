@@ -79,6 +79,18 @@ export const runGoogleDriveSync = async (): Promise<void> => {
   return chrome.runtime.sendMessage(message);
 };
 
+const isValidStyleMap = (data: unknown): data is StyleMap => {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    if (typeof key !== 'string') return false;
+    if (!value || typeof value !== 'object') return false;
+    const style = value as Record<string, unknown>;
+    if (typeof style.css !== 'string' && style.css !== undefined) return false;
+    if (typeof style.enabled !== 'boolean' && style.enabled !== undefined) return false;
+  }
+  return true;
+};
+
 export const importStylesWithFilePicker = (): Promise<StyleMap> => {
   return new Promise((resolve, reject) => {
     const fileInput = document.createElement('input');
@@ -99,10 +111,19 @@ export const importStylesWithFilePicker = (): Promise<StyleMap> => {
 
         reader.onload = () => {
           try {
-            const styles = JSON.parse(reader.result as string);
+            const parsed = JSON.parse(reader.result as string);
+
+            // Support versioned export format: { version, styles }
+            const styles = parsed?.version && parsed?.styles ? parsed.styles : parsed;
+
+            if (!isValidStyleMap(styles)) {
+              reject('Invalid format. Expected a StyleKit JSON backup (object with URL keys and {css, enabled} values).');
+              return;
+            }
+
             resolve(styles);
           } catch (e) {
-            reject(e);
+            reject('Failed to parse JSON file. Ensure the file is valid JSON.');
           }
         };
 
@@ -119,7 +140,13 @@ export const importStylesWithFilePicker = (): Promise<StyleMap> => {
 };
 
 export const exportAsJSONFile = (styles: StyleMap): void => {
-  const json = JSON.stringify(styles);
+  const exportData = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    app: 'StyleKit',
+    styles,
+  };
+  const json = JSON.stringify(exportData, null, 2);
   const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(json);
   const downloadAnchorNode = document.createElement('a');
   downloadAnchorNode.setAttribute('href', dataStr);
