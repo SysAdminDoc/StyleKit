@@ -45,7 +45,8 @@
 
       <!-- Error -->
       <div v-else-if="error" class="find-styles-status find-styles-error">
-        {{ t('style_search_error') }}
+        <span>{{ t('style_search_error') }}</span>
+        <button class="find-styles-retry" @click="search">Retry</button>
       </div>
 
       <template v-else>
@@ -872,6 +873,24 @@ export default defineComponent({
 
 .find-styles-error {
   color: #f38ba8;
+  justify-content: space-between;
+}
+
+.find-styles-retry {
+  background: rgba(243, 139, 168, 0.1);
+  border: 1px solid rgba(243, 139, 168, 0.3);
+  color: #f38ba8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(243, 139, 168, 0.2);
+    border-color: #f38ba8;
+  }
 }
 
 .find-styles-spinner {
