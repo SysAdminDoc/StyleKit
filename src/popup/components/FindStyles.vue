@@ -22,7 +22,12 @@
         >{{ truncate(entry.name, 30) }}</span>
         <div class="usw-installed-actions">
           <button class="style-action-btn edit-btn" title="Edit CSS" @click="editStyle()">&#x270E;</button>
-          <button class="style-action-btn delete-btn" title="Uninstall" @click="deleteStyleById(entry.id)">&#x2715;</button>
+          <button
+            class="style-action-btn delete-btn"
+            :class="{ confirming: confirmDeleteId === entry.id }"
+            :title="confirmDeleteId === entry.id ? 'Click again to confirm' : 'Uninstall'"
+            @click="confirmAndDelete(entry.id)"
+          >{{ confirmDeleteId === entry.id ? 'Sure?' : '&#x2715;' }}</button>
         </div>
       </b-list-group-item>
     </div>
@@ -187,6 +192,7 @@ export default defineComponent({
     domain: string;
     hoverTimer: ReturnType<typeof setTimeout> | null;
     autoLoadStyles: boolean;
+    confirmDeleteId: number | null;
   } {
     return {
       showSearch: false,
@@ -203,6 +209,7 @@ export default defineComponent({
       domain: '',
       hoverTimer: null,
       autoLoadStyles: false,
+      confirmDeleteId: null,
     };
   },
 
@@ -612,6 +619,18 @@ export default defineComponent({
             id: `usw-installed-${domain}`,
           }).catch(() => { /* fire-and-forget */ });
         }
+      }
+    },
+
+    confirmAndDelete(id: number): void {
+      if (this.confirmDeleteId === id) {
+        this.confirmDeleteId = null;
+        this.deleteStyleById(id);
+      } else {
+        this.confirmDeleteId = id;
+        setTimeout(() => {
+          if (this.confirmDeleteId === id) this.confirmDeleteId = null;
+        }, 3000);
       }
     },
 
@@ -1090,6 +1109,15 @@ export default defineComponent({
     &:hover {
       color: #f38ba8;
       background: rgba(243, 139, 168, 0.1);
+    }
+
+    &.confirming {
+      color: #f38ba8;
+      background: rgba(243, 139, 168, 0.15);
+      font-size: 10px;
+      font-weight: 600;
+      width: auto;
+      padding: 2px 6px;
     }
   }
 }

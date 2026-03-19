@@ -26,9 +26,10 @@ export default defineComponent({
     },
   },
 
-  data(): { highlighter: Highlighter | null } {
+  data(): { highlighter: Highlighter | null; highlightTimer: ReturnType<typeof setTimeout> | null } {
     return {
       highlighter: null,
+      highlightTimer: null,
     };
   },
 
@@ -50,11 +51,15 @@ export default defineComponent({
     input(selector: string): void {
       this.$store.commit('setActiveSelector', selector);
 
-      if (validateSelector(selector)) {
-        this.highlighter?.highlight(selector);
-      } else {
-        this.highlighter?.unhighlight();
-      }
+      // Debounce highlighting to avoid DOM thrashing on rapid typing
+      if (this.highlightTimer) clearTimeout(this.highlightTimer);
+      this.highlightTimer = setTimeout(() => {
+        if (validateSelector(selector)) {
+          this.highlighter?.highlight(selector);
+        } else {
+          this.highlighter?.unhighlight();
+        }
+      }, 150);
     },
 
     focus(): void {
