@@ -135,7 +135,7 @@ export default defineComponent({
         const response = await fetch(url, {
           method,
           headers: {
-            Authorization: `token ${this.token}`,
+            Authorization: `Bearer ${this.token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(body),
@@ -174,7 +174,7 @@ export default defineComponent({
           `https://api.github.com/gists/${this.gistId}`,
           {
             headers: {
-              Authorization: `token ${this.token}`,
+              Authorization: `Bearer ${this.token}`,
             },
           }
         );
