@@ -95,6 +95,11 @@ export default {
   },
 
   pushCssHistory(state: State, css: string): void {
+    // Skip duplicate: don't push if identical to current entry
+    if (state.cssHistory[state.cssHistoryIndex] === css) {
+      return;
+    }
+
     // Truncate any forward history when a new change is made
     state.cssHistory = state.cssHistory.slice(0, state.cssHistoryIndex + 1);
     state.cssHistory.push(css);
