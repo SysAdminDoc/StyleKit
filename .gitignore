@@ -10,3 +10,6 @@ node_modules
 yarn-error.log
 coverage
 .history
+*.crx
+*.pem
+StyleKit-*.zip
