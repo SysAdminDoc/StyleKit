@@ -6,10 +6,12 @@ type LayoutProperty = 'margin' | 'border' | 'padding' | 'height' | 'width';
 class Highlighter {
   overlay: Overlay | null;
   onSelect: (selector: string) => void;
+  lastSelector: string;
 
   constructor({ onSelect }: { onSelect: (selector: string) => void }) {
     this.overlay = null;
     this.onSelect = onSelect;
+    this.lastSelector = '';
   }
 
   startInspecting = (): void => {
@@ -67,7 +69,16 @@ class Highlighter {
       event.stopPropagation();
 
       const selector = getSelector(event.target as HTMLElement);
-      this.onSelect(selector);
+
+      // Shift+click: append to existing selector with comma (multi-select)
+      if (event.shiftKey && this.lastSelector) {
+        const combined = `${this.lastSelector}, ${selector}`;
+        this.lastSelector = combined;
+        this.onSelect(combined);
+      } else {
+        this.lastSelector = selector;
+        this.onSelect(selector);
+      }
     }
   };
 
