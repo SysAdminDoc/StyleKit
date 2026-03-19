@@ -91,8 +91,8 @@ const runSync = async (accessToken: string): Promise<void> => {
     console.debug('did not find remote sync file, updating remote...');
 
     const blob = getStylesBlob(styles);
-    const remoteSyncMetadata = await writeSyncFile(accessToken, blob);
-    return setGoogleDriveSyncMetadata(remoteSyncMetadata);
+    const newSyncMetadata = await writeSyncFile(accessToken, blob);
+    return setGoogleDriveSyncMetadata(newSyncMetadata);
   }
 
   const localSyncMetadata = await getGoogleDriveSyncMetadata();

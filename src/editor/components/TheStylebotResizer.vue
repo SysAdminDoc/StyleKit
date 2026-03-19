@@ -106,7 +106,7 @@ export default defineComponent({
     window.addEventListener('resize', this.onWindowResize);
   },
 
-  destroyed() {
+  unmounted() {
     this.adjustPageLayout();
     window.removeEventListener('resize', this.onWindowResize);
     window.removeEventListener('mousemove', this.onEdgeDragMove);

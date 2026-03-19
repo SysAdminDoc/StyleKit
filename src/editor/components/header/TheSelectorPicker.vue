@@ -139,7 +139,7 @@ export default defineComponent({
     this.highlighter = new Highlighter({ onSelect: () => {} });
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     this.highlighter?.unhighlight();
     window.removeEventListener('keydown', this.onKeyDown);
   },

@@ -139,6 +139,9 @@ export default defineConfig({
 
   test: {
     globals: true,
+    environmentMatchGlobs: [
+      ['src/editor/**/__tests__/**', 'jsdom'],
+    ],
   },
 
   build: {

@@ -78,7 +78,7 @@ export default defineComponent({
     }
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('message', this.handleMessage);
     this.stopRetrying();
   },

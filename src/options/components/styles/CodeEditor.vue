@@ -46,7 +46,7 @@ export default defineComponent({
     }
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('message', this.handleMessage);
     this.stopRetrying();
   },
@@ -64,7 +64,7 @@ export default defineComponent({
 
       const contentWindow = this.getIframeContentWindow();
       if (contentWindow) {
-        contentWindow.postMessage(message, '*');
+        contentWindow.postMessage(message, chrome.runtime.getURL('/'));
       }
     },
 

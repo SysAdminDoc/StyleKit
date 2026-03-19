@@ -254,7 +254,7 @@ export default defineComponent({
     },
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     this.removePreview();
   },
 });

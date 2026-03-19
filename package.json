@@ -64,6 +64,7 @@
     "eslint-plugin-prettier": "^5.1.0",
     "eslint-plugin-vue": "^9.23.0",
     "husky": "^9.0.0",
+    "jsdom": "^29.0.0",
     "lint-staged": "^15.2.0",
     "lodash": "^4.17.21",
     "monaco-editor": "^0.47.0",
