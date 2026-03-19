@@ -4,6 +4,7 @@
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-green)
 ![Firefox](https://img.shields.io/badge/Firefox-Supported-orange)
+![No Tracking](https://img.shields.io/badge/Analytics-None-brightgreen)
 
 **StyleKit** is a browser extension that lets you customize any website's appearance instantly. Pick elements visually, tweak colors and fonts, or write raw CSS -- your changes are saved automatically and persist across visits.
 
@@ -138,9 +139,15 @@ src/
   highlighter/    Element overlay for inspector
 ```
 
+## Privacy
+
+**StyleKit collects nothing. No analytics. No tracking. No telemetry. Period.**
+
+Your styles are stored locally in `chrome.storage.local`. Cloud sync (Google Drive, Gist) is opt-in and goes directly to your own account -- StyleKit never sees or stores your data.
+
 ## Security
 
-StyleKit v1.0.0 includes comprehensive security hardening:
+StyleKit includes comprehensive security hardening:
 
 - **Sender validation** on all background message handlers
 - **`textContent`** for all CSS injection (never `innerHTML`)
