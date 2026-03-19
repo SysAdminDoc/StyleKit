@@ -35,29 +35,37 @@ export const revertToCachedDocument = (): void => {
  * Listen for SPA navigation (pushState, replaceState, popstate)
  * and trigger a callback when the URL changes.
  */
+/**
+ * Listen for SPA navigation (pushState, replaceState, popstate)
+ * and trigger a callback when the URL changes.
+ * Only patches History API once; subsequent calls update the callback.
+ */
+let spaNavigateCallback: (() => void) | null = null;
+
 export const initSpaNavigationListener = (
   onNavigate: () => void
 ): void => {
+  spaNavigateCallback = onNavigate;
+
   if (window.stylebotReaderSpaListenerInit) {
     return;
   }
   window.stylebotReaderSpaListenerInit = true;
 
-  // Intercept History API calls
   const originalPushState = history.pushState.bind(history);
   const originalReplaceState = history.replaceState.bind(history);
 
   history.pushState = function (...args) {
     originalPushState(...args);
-    onNavigate();
+    spaNavigateCallback?.();
   };
 
   history.replaceState = function (...args) {
     originalReplaceState(...args);
-    onNavigate();
+    spaNavigateCallback?.();
   };
 
   window.addEventListener('popstate', () => {
-    onNavigate();
+    spaNavigateCallback?.();
   });
 };

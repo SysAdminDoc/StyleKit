@@ -62,8 +62,9 @@ export default defineComponent({
         let value = '';
         if (percent) {
           const num = parseInt(percent, 10);
-          if (num >= 0 && num <= 100) {
-            value = `${num / 100}`;
+          if (!isNaN(num) && num >= 0 && num <= 100) {
+            // Use toFixed(2) to avoid float precision issues (e.g. 33/100 = 0.33)
+            value = (num / 100).toFixed(2).replace(/\.?0+$/, '');
           }
         }
 
