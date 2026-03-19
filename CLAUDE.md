@@ -82,13 +82,46 @@ These `stylebot-*` IDs/classes are baked into user-saved CSS selectors and page 
 - `stylebot-color-picker` — color picker class in shadow DOM
 
 ## Known Issues
-- 2/8 test suites fail (pre-existing: FontSize.vue component mount + actions.test.ts mock mismatch with safeParse)
+- 8/8 test suites pass (76/76 tests)
 - Sass `@import` deprecation warnings (migrating to `@use` is a future task)
 - bootstrap-vue-3 has no TypeScript declarations (shimmed in `shims.vue.d.ts`)
 - CSS minification warnings from bootstrap-vue-3 unbalanced braces (library issue)
 - Google Drive sync merge is style-level only (per-selector conflicts not handled)
 
+## Roadmap (Post-v1.0.0)
+Competitive analysis against Stylus, VisBug, Amino, Visual CSS Editor, and VibeCSS identified these improvements:
+
+### High Priority
+1. **Google Fonts API integration** — fetch full font list (~1500 fonts) instead of hardcoded 14; cache in storage.session
+2. **CSS linting in Monaco** — integrate Stylelint to highlight errors/warnings as user types in code editor
+3. **Multi-select elements** — hold Shift during inspect to select multiple elements; apply styles to all at once
+4. **Style auto-update** — styles installed from UserStyles.world check for updates periodically and offer one-click update
+5. **Element search** — text input in editor header to find elements by CSS selector, tag name, or text content
+6. **Gradient generator** — visual linear/radial gradient builder in the Colors section
+7. **Responsive preview** — viewport width switcher (320/768/1024/1440) to test styles at different breakpoints
+8. **Privacy messaging** — add "No analytics, no tracking" badge prominently in README and store listing
+
+### Medium Priority
+9. **Additional cloud sync** — OneDrive and Dropbox alongside Google Drive
+10. **SCSS support** in Monaco code editor (compile to CSS on save)
+11. **Style gallery integration** — support USO archive and Greasy Fork alongside UserStyles.world
+12. **Element cloning** — duplicate elements for quick design variant testing (inspired by VisBug)
+13. **Guides & rulers** — alignment guides and distance measurement between elements
+14. **Accessibility inspection** — show WCAG contrast ratio, ARIA roles on hover during inspect
+
+### Aspirational
+15. **AI-powered CSS suggestions** — Chrome's Prompt API (stable in Chrome 138+) for natural-language CSS editing
+16. **DevTools panel** — integrate as a Chrome DevTools sidebar panel (alongside Elements)
+17. **Full UserCSS format** — support `.user.css` with `@var` customizable variables
+18. **External IDE live reload** — watch filesystem for CSS changes and hot-reload
+
+## Architecture Notes for Feature Implementation
+- **Font picker**: `src/editor/components/text/FontFamilyDropdown.vue` + `src/editor/components/text/FontFamily.vue`. Hardcoded `systemFonts` array in dropdown. Replace with API fetch + cache.
+- **Monaco editor**: `src/monaco-editor/iframe/MonacoEditorIframe.ts`. Linting would need a worker or iframe-side validation. Monaco supports `registerCompletionItemProvider` for custom autocomplete.
+- **Inspector/highlighter**: `src/highlighter/Highlighter.ts` + `src/highlighter/Overlay.ts`. Multi-select would need array of targets instead of single target. Overlay already supports multi-element display (capped at 100).
+- **Style auto-update**: Background service worker already has preloader infrastructure (`src/background/preloader.ts`). Add periodic alarm to check USW API for version bumps.
+- **Gradient builder**: New component in `src/editor/components/color/`. Would dispatch `applyDeclaration` with `background-image` property.
+- **Responsive preview**: Would use `chrome.debugger` API or inject viewport meta tag + iframe wrapper.
+
 ## Version History
-- **v4.2.0** — UX improvements: Find Styles retry button, readability toggle revert on failure, restricted page detection in popup, delete confirmation (two-click), saveStyle error feedback wired to UI. Version bump.
-- **v4.1.1** — Bug fixes: removeCSSFromDocument memory leak, clearLayout history pollution (15 dispatches -> 1), sync UI lockup, Length NaN/regex bugs, opacity float precision, dark mode + readability readyState race, Monaco regex injection, SPA listener stacking, reader innerHTML.
-- **v4.1.0** — Full audit: rebranded `@stylebot/*` to `@stylekit/*` (79 files + 15 locales), security hardening, memory leak fixes, Vue 3 lifecycle migration (9 components), Jest->Vitest test migration (3/5 broken suites fixed), CI modernized (Node 22, npm, actions/v4), ESLint config fixed.
+- **v1.0.0** — First stable release. Complete rebrand from Stylebot. 9 audit rounds: security hardening, Vue 3 migration, 35+ bug fixes, 25+ UX improvements, 8/8 tests passing, versioned exports, dark mode polish, Escape key fix, dead code removal.
