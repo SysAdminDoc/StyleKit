@@ -5,7 +5,7 @@ import {
   defaultReadabilitySettings,
   defaultCommands,
   defaultEditorCommands,
-} from '@stylebot/settings';
+} from '@stylekit/settings';
 
 const mockState: State = {
   css: '',
@@ -27,6 +27,9 @@ const mockState: State = {
   commands: defaultCommands,
   editorCommands: defaultEditorCommands,
   readabilitySettings: defaultReadabilitySettings,
+
+  cssHistory: [''],
+  cssHistoryIndex: 0,
 };
 
 export default mockState;

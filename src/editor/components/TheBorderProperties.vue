@@ -8,14 +8,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import BorderStyle from './border/BorderStyle.vue';
 import BorderColor from './border/BorderColor.vue';
 import BorderWidth from './border/BorderWidth.vue';
 import BorderRadius from './border/BorderRadius.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheBorderProperties',
 
   components: {

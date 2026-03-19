@@ -12,14 +12,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-import { Highlighter } from '@stylebot/highlighter';
-import { StylebotEditingMode } from '@stylebot/types';
+import { Highlighter } from '@stylekit/highlighter';
+import { StylebotEditingMode } from '@stylekit/types';
 
 import InspectorIcon from './InspectorIcon.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheInspector',
 
   components: {

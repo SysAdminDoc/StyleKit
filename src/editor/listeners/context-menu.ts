@@ -1,5 +1,5 @@
 import { Commit } from 'vuex';
-import { getSelector } from '@stylebot/css';
+import { getSelector } from '@stylekit/css';
 
 const initContextMenuListener = ({ commit }: { commit: Commit }): void => {
   document.addEventListener('contextmenu', event => {

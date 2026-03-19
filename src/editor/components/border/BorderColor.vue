@@ -11,13 +11,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import CssProperty from '../CssProperty.vue';
 import CssPropertyValue from '../CssPropertyValue.vue';
 import ColorPicker from '../color/ColorPicker.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'BorderColor',
 
   components: {

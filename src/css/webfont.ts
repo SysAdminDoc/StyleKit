@@ -1,4 +1,5 @@
 import { parse } from 'postcss';
+import { safeParse } from './safe-parse';
 
 const getGoogleFontUrlAndParams = (
   value: string
@@ -18,7 +19,7 @@ export const addGoogleWebFont = async (
   value: string,
   css: string
 ): Promise<string> => {
-  const root = parse(css);
+  const root = safeParse(css);
   const { url, params } = getGoogleFontUrlAndParams(value);
 
   return new Promise(resolve => {
@@ -59,7 +60,7 @@ export const addGoogleWebFont = async (
  * Remove unused google web fonts from given css.
  */
 export const cleanGoogleWebFonts = (css: string): string => {
-  const root = parse(css);
+  const root = safeParse(css);
   const fonts: Array<string> = [];
 
   root.walkDecls('font-family', decl => {

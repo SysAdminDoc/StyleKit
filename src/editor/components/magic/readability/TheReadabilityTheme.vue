@@ -30,10 +30,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { ReadabilityTheme } from '@stylebot/types';
+import { defineComponent } from 'vue';
+import { ReadabilityTheme } from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheReadabilityTheme',
 
   props: {

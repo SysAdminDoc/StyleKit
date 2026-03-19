@@ -6,12 +6,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import CssProperty from '../CssProperty.vue';
 import CssPropertyValueGroup from '../CssPropertyValueGroup.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TextDecoration',
 
   components: {
