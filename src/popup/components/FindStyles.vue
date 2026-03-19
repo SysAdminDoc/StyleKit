@@ -21,6 +21,13 @@
           :title="entry.name"
         >{{ truncate(entry.name, 30) }}</span>
         <div class="usw-installed-actions">
+          <button
+            v-if="updatableIds.has(entry.id)"
+            class="style-action-btn update-btn"
+            :disabled="updatingIds.has(entry.id)"
+            title="Update available"
+            @click="updateStyle(entry.id)"
+          >{{ updatingIds.has(entry.id) ? '...' : '&#x21BB;' }}</button>
           <button class="style-action-btn edit-btn" title="Edit CSS" @click="editStyle()">&#x270E;</button>
           <button
             class="style-action-btn delete-btn"
@@ -165,6 +172,8 @@ interface InstalledEntry {
   css: string;
   name: string;
   enabled?: boolean;
+  uswId?: number;
+  installedAt?: number;
 }
 
 export default defineComponent({
@@ -193,6 +202,8 @@ export default defineComponent({
     hoverTimer: ReturnType<typeof setTimeout> | null;
     autoLoadStyles: boolean;
     confirmDeleteId: number | null;
+    updatableIds: Set<number>;
+    updatingIds: Set<number>;
   } {
     return {
       showSearch: false,
@@ -210,6 +221,8 @@ export default defineComponent({
       hoverTimer: null,
       autoLoadStyles: false,
       confirmDeleteId: null,
+      updatableIds: new Set(),
+      updatingIds: new Set(),
     };
   },
 
@@ -239,6 +252,7 @@ export default defineComponent({
   async mounted(): Promise<void> {
     this.domain = this.getDomain();
     await this.loadInstalledMap();
+    this.checkForUpdates();
 
     const optResult = await chrome.storage.local.get('options');
     const opts = (optResult['options'] as Record<string, unknown>) || {};
@@ -547,7 +561,7 @@ export default defineComponent({
         // Persist to our tracking map so install state survives popup close
         const newMap: Record<number, InstalledEntry> = {
           ...this.installedMap,
-          [style.i]: { domain: this.domain, css, name: style.n },
+          [style.i]: { domain: this.domain, css, name: style.n, uswId: style.i, installedAt: Date.now() },
         };
         await this.saveInstalledMap(newMap);
         this.installedMap = newMap;
@@ -619,6 +633,89 @@ export default defineComponent({
             id: `usw-installed-${domain}`,
           }).catch(() => { /* fire-and-forget */ });
         }
+      }
+    },
+
+    async checkForUpdates(): Promise<void> {
+      const installed = Object.entries(this.installedMap);
+      if (!installed.length) return;
+
+      // Check styles older than 24 hours
+      const staleThreshold = Date.now() - (24 * 60 * 60 * 1000);
+      const toCheck = installed.filter(
+        ([, entry]) => entry.uswId && (!entry.installedAt || entry.installedAt < staleThreshold)
+      );
+      if (!toCheck.length) return;
+
+      for (const [id, entry] of toCheck) {
+        try {
+          const res = await fetch(
+            `https://userstyles.world/api/style/${entry.uswId}.user.css`,
+            { referrerPolicy: 'no-referrer', method: 'HEAD' }
+          );
+          if (!res.ok) continue;
+
+          // Compare last-modified header if available
+          const lastMod = res.headers.get('last-modified');
+          if (lastMod && entry.installedAt) {
+            const remoteTime = new Date(lastMod).getTime();
+            if (remoteTime > entry.installedAt) {
+              this.updatableIds = new Set([...this.updatableIds, Number(id)]);
+            }
+          }
+        } catch { /* silent */ }
+      }
+    },
+
+    async updateStyle(id: number): Promise<void> {
+      const entry = this.installedMap[id];
+      if (!entry?.uswId) return;
+
+      this.updatingIds = new Set([...this.updatingIds, id]);
+
+      try {
+        const url = `https://userstyles.world/api/style/${entry.uswId}.user.css`;
+        const res = await fetch(url, { referrerPolicy: 'no-referrer' });
+        if (!res.ok) return;
+
+        const sourceCode = await res.text();
+        const css = convertUserCssToRaw(sourceCode);
+        if (!css?.trim()) return;
+
+        const newMap: Record<number, InstalledEntry> = {
+          ...this.installedMap,
+          [id]: { ...entry, css, installedAt: Date.now() },
+        };
+        await this.saveInstalledMap(newMap);
+        this.installedMap = newMap;
+
+        // Re-apply merged CSS
+        const mergedCss = this.getMergedCssForDomain(entry.domain, newMap);
+        chrome.runtime.sendMessage({
+          name: 'SetStyle',
+          url: entry.domain,
+          css: mergedCss,
+          readability: false,
+        } as SetStyle);
+
+        if (this.tab?.id) {
+          chrome.tabs.sendMessage(this.tab.id, {
+            name: 'PreviewStyle',
+            id: `usw-installed-${entry.domain}`,
+            css: mergedCss,
+          }).catch(() => {});
+        }
+
+        // Remove from updatable
+        const next = new Set(this.updatableIds);
+        next.delete(id);
+        this.updatableIds = next;
+      } catch (e) {
+        console.error('Update style error:', e);
+      } finally {
+        const next = new Set(this.updatingIds);
+        next.delete(id);
+        this.updatingIds = next;
       }
     },
 
@@ -1092,6 +1189,21 @@ export default defineComponent({
     }
   }
 
+  &.update-btn {
+    color: #a6e3a1;
+    font-size: 13px;
+    animation: update-pulse 2s infinite;
+
+    &:hover {
+      color: #a6e3a1;
+      background: rgba(166, 227, 161, 0.15);
+    }
+
+    &:disabled {
+      animation: none;
+    }
+  }
+
   &.edit-btn {
     color: #585b70;
     font-size: 13px;
@@ -1133,5 +1245,10 @@ export default defineComponent({
 
 @keyframes sk-spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes update-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>

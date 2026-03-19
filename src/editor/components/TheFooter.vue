@@ -63,6 +63,20 @@
         {{ confirmReset ? 'Sure?' : '&#x2715;' }}
       </b-button>
     </b-col>
+    <b-col cols="4" class="responsive-actions d-flex align-items-center justify-content-center">
+      <b-button
+        v-for="bp in breakpoints"
+        :key="bp.width"
+        size="sm"
+        variant="link"
+        class="responsive-btn"
+        :class="{ active: activeBreakpoint === bp.width }"
+        :title="`Preview at ${bp.width}px (${bp.label})`"
+        @click="toggleBreakpoint(bp.width)"
+      >
+        {{ bp.icon }}
+      </b-button>
+    </b-col>
     <b-col><the-editor-mode-actions /></b-col>
   </b-row>
 </template>
@@ -83,6 +97,13 @@ export default defineComponent({
       copied: false,
       exported: false,
       confirmReset: false,
+      activeBreakpoint: 0,
+      breakpoints: [
+        { width: 375, label: 'Mobile', icon: '\u{1F4F1}' },
+        { width: 768, label: 'Tablet', icon: '\u{1F4CB}' },
+        { width: 1024, label: 'Laptop', icon: '\u{1F4BB}' },
+        { width: 1440, label: 'Desktop', icon: '\u{1F5A5}' },
+      ],
     };
   },
 
@@ -170,6 +191,23 @@ export default defineComponent({
       setTimeout(() => {
         this.exported = false;
       }, 2000);
+    },
+
+    toggleBreakpoint(width: number): void {
+      if (this.activeBreakpoint === width) {
+        // Reset to full width
+        this.activeBreakpoint = 0;
+        document.documentElement.style.removeProperty('max-width');
+        document.documentElement.style.removeProperty('margin');
+        document.documentElement.style.removeProperty('transition');
+        document.body.style.removeProperty('overflow-x');
+      } else {
+        this.activeBreakpoint = width;
+        document.documentElement.style.setProperty('max-width', `${width}px`, 'important');
+        document.documentElement.style.setProperty('margin', '0 auto', 'important');
+        document.documentElement.style.setProperty('transition', 'max-width 0.3s ease');
+        document.body.style.setProperty('overflow-x', 'hidden');
+      }
     },
 
     resetAll(): void {
@@ -281,6 +319,29 @@ export default defineComponent({
     font-size: 10px;
     font-weight: 600;
     padding: 2px 8px;
+  }
+}
+
+.responsive-actions {
+  gap: 2px;
+}
+
+.responsive-btn {
+  font-size: 14px;
+  padding: 2px 5px;
+  color: #585b70;
+  text-decoration: none;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  &.active {
+    opacity: 1;
+    background: rgba(137, 180, 250, 0.15);
+    border-radius: 4px;
   }
 }
 </style>
