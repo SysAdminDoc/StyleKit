@@ -13,11 +13,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { validateSelector } from '@stylebot/css';
-import { Highlighter } from '@stylebot/highlighter';
+import { defineComponent } from 'vue';
+import { validateSelector } from '@stylekit/css';
+import { Highlighter } from '@stylekit/highlighter';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheCssSelectorInput',
   props: {
     disabled: {

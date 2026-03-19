@@ -183,8 +183,8 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { StylebotBasicModeSections } from '@stylebot/types';
+import { defineComponent } from 'vue';
+import { StylebotBasicModeSections } from '@stylekit/types';
 
 import TheTextProperties from './TheTextProperties.vue';
 import TheColorProperties from './TheColorProperties.vue';
@@ -196,7 +196,7 @@ import TheSnippetLibrary from './TheSnippetLibrary.vue';
 import TheSiteRecipes from './TheSiteRecipes.vue';
 import TheMediaQueryWrapper from './TheMediaQueryWrapper.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheBasicEditor',
 
   components: {

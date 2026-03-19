@@ -16,12 +16,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import TheGrayscale from './magic/TheGrayscale.vue';
 import TheReadability from './magic/TheReadability.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheMagicEditor',
 
   components: {

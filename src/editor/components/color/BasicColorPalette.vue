@@ -1,15 +1,15 @@
 <template>
   <div class="basic-color-palette">
-    <v-swatches v-model="value" inline swatches="text-advanced" />
+    <v-swatches v-model="localValue" inline swatches="text-advanced" />
     <slot></slot>
   </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import VSwatches from 'vue-swatches';
+import { defineComponent } from 'vue';
+import VSwatches from 'vue3-swatches';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'BasicColorPalette',
 
   components: {
@@ -17,15 +17,22 @@ export default Vue.extend({
   },
 
   props: {
-    value: {
+    modelValue: {
       type: String,
       required: true,
     },
   },
 
-  watch: {
-    value() {
-      this.$emit('input', this.value);
+  emits: ['update:modelValue'],
+
+  computed: {
+    localValue: {
+      get(): string {
+        return this.modelValue;
+      },
+      set(val: string): void {
+        this.$emit('update:modelValue', val);
+      },
     },
   },
 });

@@ -39,10 +39,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import BoxModelLength from './BoxModelLength.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'Box',
 
   components: {

@@ -3,7 +3,7 @@ import {
   StylebotCommands,
   ReadabilitySettings,
   StylebotEditorCommands,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 export const defaultOptions: StylebotOptions = {
   mode: 'basic',

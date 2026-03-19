@@ -45,7 +45,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import * as postcss from 'postcss';
 
 type CssVariable = {
@@ -53,7 +53,7 @@ type CssVariable = {
   value: string;
 };
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheCssVariables',
 
   data(): { variables: CssVariable[] } {

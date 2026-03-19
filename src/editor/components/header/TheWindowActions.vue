@@ -6,12 +6,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import TheDockToggle from './TheDockToggle.vue';
 import TheCloseAction from './TheCloseAction.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheWindowActions',
 
   components: {

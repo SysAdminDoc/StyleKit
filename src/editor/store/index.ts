@@ -1,24 +1,21 @@
-import Vue from 'vue';
-import Vuex from 'vuex';
+import { createStore } from 'vuex';
 
 import {
   StylebotOptions,
   StylebotCommands,
   ReadabilitySettings,
   StylebotEditorCommands,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 import {
   defaultOptions,
   defaultEditorCommands,
   defaultReadabilitySettings,
-} from '@stylebot/settings';
+} from '@stylekit/settings';
 
 import getters from './getters';
 import actions from './actions';
 import mutations from './mutations';
-
-Vue.use(Vuex);
 
 export type CssSelectorMetadata = {
   id: number;
@@ -51,7 +48,7 @@ export type State = {
   cssHistoryIndex: number;
 };
 
-export default new Vuex.Store<State>({
+export default createStore<State>({
   state: {
     css: '',
     enabled: true,

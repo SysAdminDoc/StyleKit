@@ -1,7 +1,12 @@
 import { initReader } from './reader';
 import { shouldRunOnUrl } from './utils';
 import { showLoader, hideLoader } from './loader';
-import { cacheUrl, didUrlChange, revertToCachedDocument } from './cache';
+import {
+  cacheUrl,
+  didUrlChange,
+  revertToCachedDocument,
+  initSpaNavigationListener,
+} from './cache';
 
 import './index.scss';
 
@@ -39,6 +44,14 @@ export const apply = async (forceApply = false): Promise<void> => {
       run();
     });
   }
+
+  // Re-apply readability when SPA navigation changes content
+  initSpaNavigationListener(() => {
+    if (document.getElementById('stylebot-reader')) {
+      remove();
+      apply(true);
+    }
+  });
 };
 
 export const remove = (): void => {

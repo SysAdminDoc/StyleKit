@@ -1,6 +1,6 @@
 # `css`
 
-This package includes CSS utility methods. Aliased as `@stylebot/css`.
+This package includes CSS utility methods. Aliased as `@stylekit/css`.
 
 - **`declaration`**: Methods to add css declaration to css
 

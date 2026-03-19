@@ -6,11 +6,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import BoxModel from './layout/BoxModel.vue';
 import Visibility from './layout/Visibility.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheLayoutProperties',
 
   components: {

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import CustomLight from './themes/CustomLight';
 import CustomDark from './themes/CustomDark';
-import { IframeMessage, ParentUpdateCssMessage } from '@stylebot/monaco-editor';
+import { IframeMessage, ParentUpdateCssMessage } from '@stylekit/monaco-editor';
 
 declare global {
   interface Window {
@@ -105,7 +105,7 @@ class MonacoEditorIframe {
   }
 
   postMessage(message: IframeMessage): void {
-    window.parent.postMessage(message, '*');
+    window.parent.postMessage(message, chrome.runtime.getURL('/'));
   }
 
   handleStylebotCssUpdate(css: string, selector?: string): void {

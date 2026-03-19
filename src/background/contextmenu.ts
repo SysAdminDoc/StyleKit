@@ -1,12 +1,12 @@
-import { t } from '@stylebot/i18n';
+import { t } from '@stylekit/i18n';
 import {
   OpenStylebotFromContextMenu,
   HideElementFromContextMenu,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 import BackgroundPageUtils from './utils';
 
-const CONTEXT_MENU_ID = 'stylebot-contextmenu';
+const CONTEXT_MENU_ID = 'stylekit-contextmenu';
 const VIEW_OPTIONS_MENU_ITEM_ID = 'view-options';
 const STYLE_ELEMENT_MENU_ITEM_ID = 'style-element';
 const HIDE_ELEMENT_MENU_ITEM_ID = 'hide-element';
@@ -77,7 +77,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
           name: 'OpenStylebotFromContextMenu',
         };
 
-        chrome.tabs.sendMessage(tab.id, message).catch(() => {});
+        chrome.tabs.sendMessage(tab.id, message).catch(e => console.warn('StyleKit: failed to send context menu message', e));
       }
 
       break;
@@ -88,7 +88,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
           name: 'HideElementFromContextMenu',
         };
 
-        chrome.tabs.sendMessage(tab.id, message).catch(() => {});
+        chrome.tabs.sendMessage(tab.id, message).catch(e => console.warn('StyleKit: failed to send context menu message', e));
       }
 
       break;

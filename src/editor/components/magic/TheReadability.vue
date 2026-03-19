@@ -55,7 +55,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import CssProperty from '../CssProperty.vue';
 import CssPropertyValue from '../CssPropertyValue.vue';
@@ -66,7 +66,7 @@ import TheReadabilityFontSize from './readability/TheReadabilityFontSize.vue';
 import TheReadabilityFontFamily from './readability/TheReadabilityFontFamily.vue';
 import TheReadabilityLineHeight from './readability/TheReadabilityLineHeight.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheReadability',
 
   components: {

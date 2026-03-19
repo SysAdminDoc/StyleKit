@@ -1,5 +1,5 @@
 import Overlay from './Overlay';
-import { getSelector } from '@stylebot/css';
+import { getSelector } from '@stylekit/css';
 
 type LayoutProperty = 'margin' | 'border' | 'padding' | 'height' | 'width';
 

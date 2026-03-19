@@ -1,58 +1,21 @@
-import Vue from 'vue';
+import { createApp, h } from 'vue';
 import VueDraggableResizable from 'vue-draggable-resizable';
 import { Store } from 'vuex';
-import { t } from '@stylebot/i18n';
+import { t } from '@stylekit/i18n';
 
 import { State } from '../store';
 import TheStylebotApp from '../components/TheStylebotApp.vue';
 
 import '../index.scss';
 
-import {
-  IconsPlugin,
-  TooltipPlugin,
-  LayoutPlugin,
-  DropdownPlugin,
-  FormRadioPlugin,
-  FormInputPlugin,
-  InputGroupPlugin,
-  ButtonPlugin,
-  ButtonGroupPlugin,
-  FormGroupPlugin,
-  FormCheckboxPlugin,
-  ListGroupPlugin,
-  TableSimplePlugin,
-  CollapsePlugin,
-} from 'bootstrap-vue';
-
-Vue.use(IconsPlugin);
-Vue.use(TooltipPlugin);
-Vue.use(LayoutPlugin);
-Vue.use(DropdownPlugin);
-Vue.use(FormRadioPlugin);
-Vue.use(FormInputPlugin);
-Vue.use(InputGroupPlugin);
-Vue.use(ButtonPlugin);
-Vue.use(ButtonGroupPlugin);
-Vue.use(FormGroupPlugin);
-Vue.use(FormCheckboxPlugin);
-Vue.use(ListGroupPlugin);
-Vue.use(TableSimplePlugin);
-Vue.use(CollapsePlugin);
-Vue.component('vue-draggable-resizable', VueDraggableResizable);
-
-Vue.mixin({
-  methods: {
-    t,
-  },
-});
+import { BootstrapVue3 } from 'bootstrap-vue-3';
 
 const injectCss = (shadowRoot: ShadowRoot): void => {
   // Reset all inherited CSS properties at the shadow host boundary so that
   // styles installed on the page cannot bleed into the editor UI.
   const resetEl = document.createElement('style');
   resetEl.setAttribute('id', 'stylebot-host-reset');
-  resetEl.innerHTML = ':host { all: initial !important; display: block !important; }';
+  resetEl.textContent = ':host { all: initial !important; display: block !important; }';
   shadowRoot.appendChild(resetEl);
 
   const url = chrome.runtime.getURL('editor/index.css');
@@ -62,7 +25,7 @@ const injectCss = (shadowRoot: ShadowRoot): void => {
     .then(css => {
       const styleEl = document.createElement('style');
       styleEl.setAttribute('id', 'stylebot-editor-css');
-      styleEl.innerHTML = css;
+      styleEl.textContent = css;
       shadowRoot.appendChild(styleEl);
     });
 };
@@ -133,11 +96,18 @@ const initEditor = (store: Store<State>): void => {
 
   injectCss(shadowRoot);
 
-  new Vue({
-    store,
-    el: stylebotApp,
-    render: h => h(TheStylebotApp),
+  const app = createApp({
+    render() {
+      return h(TheStylebotApp);
+    },
   });
+
+  app.use(BootstrapVue3);
+  app.use(store);
+  app.component('vue-draggable-resizable', VueDraggableResizable);
+  app.config.globalProperties.t = t;
+
+  app.mount(stylebotApp);
 };
 
 export { initEditor };

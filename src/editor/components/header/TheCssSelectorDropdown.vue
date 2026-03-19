@@ -29,13 +29,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import TheCssSelectorInput from './TheCssSelectorInput.vue';
 import TheSelectorPicker from './TheSelectorPicker.vue';
 import DropdownHackToSupportShadowDom from './../DropdownHackToSupportShadowDom.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheCssSelectorDropdown',
 
   components: {

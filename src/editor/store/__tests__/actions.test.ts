@@ -2,11 +2,11 @@ import * as postcss from 'postcss';
 import actions from '../actions';
 
 import mockState from '../__mocks__/state';
-import * as stylebotCss from '@stylebot/css';
+import * as stylebotCss from '@stylekit/css';
 import * as chromeUtils from '../../utils/chrome';
 
 jest.mock('postcss');
-jest.mock('@stylebot/css');
+jest.mock('@stylekit/css');
 jest.mock('../../utils/chrome');
 
 const mockRoot = ({

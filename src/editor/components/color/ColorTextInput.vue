@@ -1,37 +1,34 @@
 <template>
   <b-form-input
-    v-model="value"
+    :model-value="modelValue"
     size="sm"
     autocomplete="off"
     class="color-text-input"
     :debounce="150"
     :disabled="disabled"
+    @update:model-value="$emit('update:modelValue', $event)"
     @focus="focus"
   />
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'ColorTextInput',
 
   props: {
-    value: {
+    modelValue: {
       type: String,
       required: true,
     },
   },
 
+  emits: ['update:modelValue'],
+
   computed: {
     disabled(): boolean {
       return !this.$store.state.activeSelector;
-    },
-  },
-
-  watch: {
-    value() {
-      this.$emit('input', this.value);
     },
   },
 

@@ -1,9 +1,9 @@
 import { Store } from 'vuex';
 
 import { State } from 'editor/store';
-import { TabMessage } from '@stylebot/types';
+import { TabMessage } from '@stylekit/types';
 
-import { apply as applyReadability } from '@stylebot/readability';
+import { apply as applyReadability } from '@stylekit/readability';
 
 import {
   applyStyles,

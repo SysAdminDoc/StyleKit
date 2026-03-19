@@ -11,13 +11,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-import { StylebotFonts } from '@stylebot/types';
+import { StylebotFonts } from '@stylekit/types';
 
 import FontFamilyDropdown from '../../text/FontFamilyDropdown.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheReadabilityFontFamily',
 
   components: {

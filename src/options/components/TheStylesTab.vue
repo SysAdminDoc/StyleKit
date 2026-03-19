@@ -84,10 +84,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { compareAsc } from 'date-fns';
 
-import { Style, StyleMap } from '@stylebot/types';
+import { Style, StyleMap } from '@stylekit/types';
 
 import AppButton from './AppButton.vue';
 import UndoToast from './UndoToast.vue';
@@ -96,7 +96,7 @@ import StyleEditor from './styles/StyleEditor.vue';
 import StyleImportFromUrl from './styles/StyleImportFromUrl.vue';
 import TheDeleteAllStylesButton from './styles/TheDeleteAllStylesButton.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheStylesTab',
 
   components: {

@@ -3,14 +3,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-import { getRule, addEmptyRule, removeEmptyRules } from '@stylebot/css';
-import { IframeMessage, ParentUpdateCssMessage } from '@stylebot/monaco-editor';
+import { getRule, addEmptyRule, removeEmptyRules } from '@stylekit/css';
+import { IframeMessage, ParentUpdateCssMessage } from '@stylekit/monaco-editor';
 
 import CodeEditorIframe from './code/CodeEditorIframe.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheCodeEditor',
 
   components: {
@@ -95,7 +95,7 @@ export default Vue.extend({
         selector: this.activeSelector,
       };
 
-      contentWindow.postMessage(message, '*');
+      contentWindow.postMessage(message, chrome.runtime.getURL('/'));
     },
 
     startRetryingSendCss(): void {

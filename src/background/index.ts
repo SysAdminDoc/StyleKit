@@ -1,4 +1,5 @@
 import './listeners';
+import './cache';
 
 import ContextMenu from './contextmenu';
 import DefaultShortcutUpdate from './default-shortcut-update';

@@ -1,31 +1,28 @@
 <template>
   <b-form-input
-    v-model="value"
+    :model-value="modelValue"
     size="sm"
     type="color"
     class="color-input"
     :debounce="150"
+    @update:model-value="$emit('update:modelValue', $event)"
   />
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'ColorInput',
 
   props: {
-    value: {
+    modelValue: {
       type: String,
       required: true,
     },
   },
 
-  watch: {
-    value() {
-      this.$emit('input', this.value);
-    },
-  },
+  emits: ['update:modelValue'],
 });
 </script>
 

@@ -87,7 +87,7 @@ class BackgroundPageUtils {
     return urlCollection.split(',').some(url => this.matchesUrl(pageUrl, url));
   }
 
-  /* Check if the page url matches with the stylebot pattern */
+  /* Check if the page url matches with the wildcard pattern */
   private static matchesWildcard(pageUrl: string, pattern: string) {
     try {
       const hasComma = pattern.includes(',');
@@ -120,7 +120,7 @@ class BackgroundPageUtils {
       const regexPattern = new RegExp(pattern, 'i');
       return regexPattern.test(pageUrl);
     } catch (e) {
-      console.log('Error occured while running stylebot pattern check', e);
+      console.warn('StyleKit: error in wildcard pattern check', e);
       return false;
     }
   }
@@ -129,7 +129,12 @@ class BackgroundPageUtils {
    * Check if the given url matches with the regex
    */
   private static matchesRegex(pageUrl: string, regex: string) {
-    return new RegExp(regex).test(pageUrl);
+    try {
+      return new RegExp(regex).test(pageUrl);
+    } catch (e) {
+      console.warn('StyleKit: invalid regex pattern', regex, e);
+      return false;
+    }
   }
 
   /**
@@ -148,7 +153,7 @@ class BackgroundPageUtils {
   }
 
   /**
-   * Check if Stylebot should run on a URL.
+   * Check if StyleKit should run on a URL.
    */
   static isValidUrl(url: string): boolean {
     if (url.indexOf('chrome://') !== -1) {
