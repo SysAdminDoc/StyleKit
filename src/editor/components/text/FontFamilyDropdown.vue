@@ -8,14 +8,26 @@
         :disabled="disabled"
         variant="outline-secondary"
         class="font-family-dropdown"
+        @shown="onDropdownShown"
       >
-        <b-dropdown-item v-if="!hideDefault" @click="$emit('select', '')">
+        <div class="font-search-wrapper">
+          <input
+            ref="fontSearch"
+            v-model="search"
+            class="font-search-input"
+            type="text"
+            placeholder="Search fonts..."
+            autocomplete="off"
+            @keydown.stop
+          />
+        </div>
+
+        <b-dropdown-item v-if="!hideDefault && !search" @click="$emit('select', '')">
           {{ t('default') }}
         </b-dropdown-item>
 
-        <template v-if="fonts.length > 0">
+        <template v-if="!search && fonts.length > 0">
           <b-dropdown-header>Your Fonts</b-dropdown-header>
-
           <b-dropdown-item
             v-for="font in fonts"
             :key="font"
@@ -26,11 +38,12 @@
           </b-dropdown-item>
         </template>
 
-        <b-dropdown-divider />
-        <b-dropdown-header>Common Fonts</b-dropdown-header>
-
+        <template v-if="!search">
+          <b-dropdown-divider />
+          <b-dropdown-header>System Fonts</b-dropdown-header>
+        </template>
         <b-dropdown-item
-          v-for="font in systemFonts"
+          v-for="font in filteredSystemFonts"
           :key="'sys-' + font"
           :style="{ fontFamily: font }"
           @click="$emit('select', font)"
@@ -38,8 +51,24 @@
           {{ font }}
         </b-dropdown-item>
 
-        <b-dropdown-divider />
-        <b-dropdown-item @click="editFonts">
+        <template v-if="filteredGoogleFonts.length > 0">
+          <b-dropdown-divider />
+          <b-dropdown-header>Google Fonts{{ googleFontsLoading ? ' (loading...)' : '' }}</b-dropdown-header>
+          <b-dropdown-item
+            v-for="font in filteredGoogleFonts"
+            :key="'gf-' + font"
+            @click="$emit('select', font)"
+          >
+            {{ font }}
+          </b-dropdown-item>
+        </template>
+
+        <div v-if="search && filteredSystemFonts.length === 0 && filteredGoogleFonts.length === 0" class="font-no-results">
+          No fonts matching "{{ search }}"
+        </div>
+
+        <b-dropdown-divider v-if="!search" />
+        <b-dropdown-item v-if="!search" @click="editFonts">
           {{ t('fonts_edit_list') }}
         </b-dropdown-item>
       </b-dropdown>
@@ -54,6 +83,9 @@ import { t } from '@stylekit/i18n';
 import { openOptionsPage } from '../../utils/chrome';
 
 import DropdownHackToSupportShadowDom from './../DropdownHackToSupportShadowDom.vue';
+
+const GOOGLE_FONTS_CACHE_KEY = 'stylekit-google-fonts';
+const GOOGLE_FONTS_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 
 export default defineComponent({
   name: 'FontFamilyDropdown',
@@ -83,6 +115,9 @@ export default defineComponent({
 
   data() {
     return {
+      search: '',
+      googleFonts: [] as string[],
+      googleFontsLoading: false,
       systemFonts: [
         'Arial',
         'Georgia',
@@ -108,13 +143,71 @@ export default defineComponent({
         if (!this.value) {
           return t('default');
         }
-
         return this.value;
       },
     },
+
+    filteredSystemFonts(): string[] {
+      if (!this.search) return this.systemFonts;
+      const q = this.search.toLowerCase();
+      return this.systemFonts.filter(f => f.toLowerCase().includes(q));
+    },
+
+    filteredGoogleFonts(): string[] {
+      if (!this.search) return this.googleFonts.slice(0, 50);
+      const q = this.search.toLowerCase();
+      return this.googleFonts.filter(f => f.toLowerCase().includes(q)).slice(0, 50);
+    },
+  },
+
+  async created() {
+    await this.loadGoogleFonts();
   },
 
   methods: {
+    onDropdownShown(): void {
+      this.search = '';
+      this.$nextTick(() => {
+        (this.$refs.fontSearch as HTMLInputElement)?.focus();
+      });
+    },
+
+    async loadGoogleFonts(): Promise<void> {
+      try {
+        const cached = await chrome.storage.local.get(GOOGLE_FONTS_CACHE_KEY);
+        const entry = cached[GOOGLE_FONTS_CACHE_KEY] as { fonts: string[]; ts: number } | undefined;
+
+        if (entry && Date.now() - entry.ts < GOOGLE_FONTS_TTL_MS) {
+          this.googleFonts = entry.fonts;
+          return;
+        }
+
+        this.googleFontsLoading = true;
+        const res = await fetch(
+          'https://fonts.googleapis.com/metadata/fonts?capability=WOFF2',
+          { referrerPolicy: 'no-referrer' }
+        );
+
+        if (!res.ok) return;
+
+        const text = await res.text();
+        // Google's metadata endpoint returns JSON with a )]}' prefix
+        const json = JSON.parse(text.replace(/^\)\]\}'?\n?/, ''));
+        const fonts: string[] = (json.familyMetadataList || [])
+          .map((f: { family: string }) => f.family)
+          .sort();
+
+        this.googleFonts = fonts;
+        await chrome.storage.local.set({
+          [GOOGLE_FONTS_CACHE_KEY]: { fonts, ts: Date.now() },
+        });
+      } catch (e) {
+        console.warn('StyleKit: failed to load Google Fonts list', e);
+      } finally {
+        this.googleFontsLoading = false;
+      }
+    },
+
     editFonts() {
       openOptionsPage();
     },
@@ -130,7 +223,7 @@ export default defineComponent({
   }
 
   .dropdown-menu {
-    max-height: 300px;
+    max-height: 340px;
     overflow-y: auto;
   }
 
@@ -141,5 +234,40 @@ export default defineComponent({
     color: #6c7086;
     padding: 4px 16px 2px;
   }
+}
+
+.font-search-wrapper {
+  padding: 4px 8px 6px;
+  position: sticky;
+  top: 0;
+  background: #1e1e2e;
+  z-index: 1;
+}
+
+.font-search-input {
+  width: 100%;
+  background: #313244;
+  border: 1px solid #45475a;
+  border-radius: 4px;
+  color: #cdd6f4;
+  font-size: 11px;
+  padding: 4px 8px;
+  outline: none;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: #585b70;
+  }
+
+  &:focus {
+    border-color: #89b4fa;
+  }
+}
+
+.font-no-results {
+  padding: 8px 16px;
+  font-size: 12px;
+  color: #6c7086;
+  text-align: center;
 }
 </style>
