@@ -15,34 +15,48 @@
   },
   "content_scripts": [
     {
-      "js": ["editor/index.js"],
+      "js": [
+        "editor/index.js"
+      ],
       "type": "module",
-      "matches": ["<all_urls>"],
-      "exclude_matches": ["*://*/*.xml"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "exclude_matches": [
+        "*://*/*.xml"
+      ],
       "run_at": "document_idle"
     },
     {
       "all_frames": true,
-      "js": ["inject-css/index.js"],
+      "js": [
+        "inject-css/index.js"
+      ],
       "type": "module",
-      "matches": ["<all_urls>"],
-      "exclude_matches": ["*://*/*.xml"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "exclude_matches": [
+        "*://*/*.xml"
+      ],
       "run_at": "document_start"
     }
   ],
   "action": {
     "default_icon": {
-      "16": "img/icon16.png",
-      "24": "img/icon24.png",
-      "32": "img/icon32.png"
+      "16": "icons/16.png",
+      "32": "icons/32.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
     },
     "default_title": "StyleKit",
     "default_popup": "popup/index.html"
   },
   "icons": {
-    "16": "img/icon16.png",
-    "48": "img/icon48.png",
-    "128": "img/icon128.png"
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
   },
   "permissions": [
     "tabs",
@@ -75,7 +89,9 @@
         "readability/index.css",
         "readability/index.js"
       ],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }
