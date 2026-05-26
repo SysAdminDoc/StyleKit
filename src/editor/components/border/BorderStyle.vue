@@ -25,14 +25,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { t } from '@stylebot/i18n';
+import { defineComponent } from 'vue';
+import { t } from '@stylekit/i18n';
 import { Declaration } from 'postcss';
 
 import CssProperty from '../CssProperty.vue';
 import DropdownHackToSupportShadowDom from '../DropdownHackToSupportShadowDom.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'BorderStyle',
 
   components: {

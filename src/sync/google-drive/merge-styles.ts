@@ -1,6 +1,6 @@
 import { without } from 'lodash';
 import { compareAsc } from 'date-fns';
-import { StyleMap } from '@stylebot/types';
+import { StyleMap } from '@stylekit/types';
 
 const compareModifiedTime = (t1: string, t2: string) => {
   return compareAsc(new Date(t1), new Date(t2));

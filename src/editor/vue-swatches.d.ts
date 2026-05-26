@@ -1,1 +1,1 @@
-declare module 'vue-swatches';
+declare module 'vue3-swatches';

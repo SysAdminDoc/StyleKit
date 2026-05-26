@@ -5,12 +5,12 @@ import {
   defaultReadabilitySettings,
   defaultCommands,
   defaultEditorCommands,
-} from '@stylebot/settings';
+} from '@stylekit/settings';
 
 const mockState: State = {
   css: '',
   enabled: true,
-  url: document.domain,
+  url: 'example.com',
 
   selectors: [],
   activeSelector: '',
@@ -27,6 +27,9 @@ const mockState: State = {
   commands: defaultCommands,
   editorCommands: defaultEditorCommands,
   readabilitySettings: defaultReadabilitySettings,
+
+  cssHistory: [''],
+  cssHistoryIndex: 0,
 };
 
 export default mockState;

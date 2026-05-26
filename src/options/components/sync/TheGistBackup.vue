@@ -48,10 +48,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import AppButton from '../AppButton.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheGistBackup',
 
   components: {
@@ -67,6 +67,7 @@ export default Vue.extend({
     statusType: string;
     exporting: boolean;
     importing: boolean;
+    confirmOverwrite: boolean;
   } {
     return {
       token: '',
@@ -77,6 +78,7 @@ export default Vue.extend({
       statusType: '',
       exporting: false,
       importing: false,
+      confirmOverwrite: false,
     };
   },
 
@@ -93,6 +95,18 @@ export default Vue.extend({
     },
 
     async exportToGist(): Promise<void> {
+      // Require confirmation before overwriting existing gist
+      if (this.gistId && !this.confirmOverwrite) {
+        this.confirmOverwrite = true;
+        this.status = 'Click Export again to overwrite existing backup';
+        this.statusType = 'warning';
+        setTimeout(() => {
+          this.confirmOverwrite = false;
+          if (this.statusType === 'warning') this.status = '';
+        }, 5000);
+        return;
+      }
+      this.confirmOverwrite = false;
       this.exporting = true;
       this.status = '';
 
@@ -121,7 +135,7 @@ export default Vue.extend({
         const response = await fetch(url, {
           method,
           headers: {
-            Authorization: `token ${this.token}`,
+            Authorization: `Bearer ${this.token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(body),
@@ -160,7 +174,7 @@ export default Vue.extend({
           `https://api.github.com/gists/${this.gistId}`,
           {
             headers: {
-              Authorization: `token ${this.token}`,
+              Authorization: `Bearer ${this.token}`,
             },
           }
         );
@@ -176,7 +190,14 @@ export default Vue.extend({
           throw new Error('stylekit-styles.json not found in Gist');
         }
 
-        const styles = JSON.parse(file.content);
+        const parsed = JSON.parse(file.content);
+        // Support versioned format: { version, styles }
+        const styles = parsed?.version && parsed?.styles ? parsed.styles : parsed;
+
+        if (!styles || typeof styles !== 'object' || Array.isArray(styles)) {
+          throw new Error('Invalid format: expected a StyleKit styles object');
+        }
+
         this.$store.dispatch('setAllStyles', styles);
 
         this.status = 'Imported successfully';
@@ -222,6 +243,10 @@ export default Vue.extend({
 
   &.error {
     color: #f38ba8;
+  }
+
+  &.warning {
+    color: #fab387;
   }
 }
 

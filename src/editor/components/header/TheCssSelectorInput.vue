@@ -13,11 +13,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { validateSelector } from '@stylebot/css';
-import { Highlighter } from '@stylebot/highlighter';
+import { defineComponent } from 'vue';
+import { validateSelector } from '@stylekit/css';
+import { Highlighter } from '@stylekit/highlighter';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheCssSelectorInput',
   props: {
     disabled: {
@@ -26,9 +26,10 @@ export default Vue.extend({
     },
   },
 
-  data(): { highlighter: Highlighter | null } {
+  data(): { highlighter: Highlighter | null; highlightTimer: ReturnType<typeof setTimeout> | null } {
     return {
       highlighter: null,
+      highlightTimer: null,
     };
   },
 
@@ -50,11 +51,15 @@ export default Vue.extend({
     input(selector: string): void {
       this.$store.commit('setActiveSelector', selector);
 
-      if (validateSelector(selector)) {
-        this.highlighter?.highlight(selector);
-      } else {
-        this.highlighter?.unhighlight();
-      }
+      // Debounce highlighting to avoid DOM thrashing on rapid typing
+      if (this.highlightTimer) clearTimeout(this.highlightTimer);
+      this.highlightTimer = setTimeout(() => {
+        if (validateSelector(selector)) {
+          this.highlighter?.highlight(selector);
+        } else {
+          this.highlighter?.unhighlight();
+        }
+      }, 150);
     },
 
     focus(): void {

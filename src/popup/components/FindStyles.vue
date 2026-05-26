@@ -21,8 +21,20 @@
           :title="entry.name"
         >{{ truncate(entry.name, 30) }}</span>
         <div class="usw-installed-actions">
+          <button
+            v-if="updatableIds.has(entry.id)"
+            class="style-action-btn update-btn"
+            :disabled="updatingIds.has(entry.id)"
+            title="Update available"
+            @click="updateStyle(entry.id)"
+          >{{ updatingIds.has(entry.id) ? '...' : '&#x21BB;' }}</button>
           <button class="style-action-btn edit-btn" title="Edit CSS" @click="editStyle()">&#x270E;</button>
-          <button class="style-action-btn delete-btn" title="Uninstall" @click="deleteStyleById(entry.id)">&#x2715;</button>
+          <button
+            class="style-action-btn delete-btn"
+            :class="{ confirming: confirmDeleteId === entry.id }"
+            :title="confirmDeleteId === entry.id ? 'Click again to confirm' : 'Uninstall'"
+            @click="confirmAndDelete(entry.id)"
+          >{{ confirmDeleteId === entry.id ? 'Sure?' : '&#x2715;' }}</button>
         </div>
       </b-list-group-item>
     </div>
@@ -45,7 +57,8 @@
 
       <!-- Error -->
       <div v-else-if="error" class="find-styles-status find-styles-error">
-        {{ t('style_search_error') }}
+        <span>{{ t('style_search_error') }}</span>
+        <button class="find-styles-retry" @click="search">Retry</button>
       </div>
 
       <template v-else>
@@ -132,8 +145,8 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { SetStyle, OpenStylebotInCodeMode } from '@stylebot/types';
+import { defineComponent } from 'vue';
+import { SetStyle, OpenStylebotInCodeMode } from '@stylekit/types';
 import { convertUserCssToRaw } from '../../utils/usercss';
 
 const STORAGE_KEY = 'stylekit-usw-installs';
@@ -159,9 +172,11 @@ interface InstalledEntry {
   css: string;
   name: string;
   enabled?: boolean;
+  uswId?: number;
+  installedAt?: number;
 }
 
-export default Vue.extend({
+export default defineComponent({
   name: 'FindStyles',
 
   props: {
@@ -186,6 +201,9 @@ export default Vue.extend({
     domain: string;
     hoverTimer: ReturnType<typeof setTimeout> | null;
     autoLoadStyles: boolean;
+    confirmDeleteId: number | null;
+    updatableIds: Set<number>;
+    updatingIds: Set<number>;
   } {
     return {
       showSearch: false,
@@ -202,6 +220,9 @@ export default Vue.extend({
       domain: '',
       hoverTimer: null,
       autoLoadStyles: false,
+      confirmDeleteId: null,
+      updatableIds: new Set(),
+      updatingIds: new Set(),
     };
   },
 
@@ -231,6 +252,7 @@ export default Vue.extend({
   async mounted(): Promise<void> {
     this.domain = this.getDomain();
     await this.loadInstalledMap();
+    this.checkForUpdates();
 
     const optResult = await chrome.storage.local.get('options');
     const opts = (optResult['options'] as Record<string, unknown>) || {};
@@ -242,7 +264,7 @@ export default Vue.extend({
     }
   },
 
-  beforeDestroy(): void {
+  beforeUnmount(): void {
     if (this.hoverTimer !== null) {
       clearTimeout(this.hoverTimer);
     }
@@ -385,7 +407,7 @@ export default Vue.extend({
       const thumbCache = (thumbResult[THUMB_LOCAL_KEY] as Record<number, string>) || {};
       for (const style of styles) {
         if (thumbCache[style.i]) {
-          this.$set(this.thumbnails, style.i, thumbCache[style.i]);
+          this.thumbnails = { ...this.thumbnails, [style.i]: thumbCache[style.i] };
         }
       }
 
@@ -403,17 +425,27 @@ export default Vue.extend({
       await Promise.all(
         styles.map(async style => {
           const dataUrl = await this.getThumb(style.i, style.sn);
-          if (dataUrl) this.$set(this.thumbnails, style.i, dataUrl);
+          if (dataUrl) this.thumbnails = { ...this.thumbnails, [style.i]: dataUrl };
         })
       );
     },
 
     getThumb(styleId: number, url: string): Promise<string> {
       return new Promise(resolve => {
-        chrome.runtime.sendMessage(
-          { name: 'GetThumbnail', styleId, url },
-          (response: string) => resolve(response || '')
-        );
+        try {
+          chrome.runtime.sendMessage(
+            { name: 'GetThumbnail', styleId, url },
+            (response: string) => {
+              if (chrome.runtime.lastError) {
+                resolve('');
+                return;
+              }
+              resolve(response || '');
+            }
+          );
+        } catch {
+          resolve('');
+        }
       });
     },
 
@@ -529,7 +561,7 @@ export default Vue.extend({
         // Persist to our tracking map so install state survives popup close
         const newMap: Record<number, InstalledEntry> = {
           ...this.installedMap,
-          [style.i]: { domain: this.domain, css, name: style.n },
+          [style.i]: { domain: this.domain, css, name: style.n, uswId: style.i, installedAt: Date.now() },
         };
         await this.saveInstalledMap(newMap);
         this.installedMap = newMap;
@@ -601,6 +633,101 @@ export default Vue.extend({
             id: `usw-installed-${domain}`,
           }).catch(() => { /* fire-and-forget */ });
         }
+      }
+    },
+
+    async checkForUpdates(): Promise<void> {
+      const installed = Object.entries(this.installedMap);
+      if (!installed.length) return;
+
+      // Check styles older than 24 hours
+      const staleThreshold = Date.now() - (24 * 60 * 60 * 1000);
+      const toCheck = installed.filter(
+        ([, entry]) => entry.uswId && (!entry.installedAt || entry.installedAt < staleThreshold)
+      );
+      if (!toCheck.length) return;
+
+      for (const [id, entry] of toCheck) {
+        try {
+          const res = await fetch(
+            `https://userstyles.world/api/style/${entry.uswId}.user.css`,
+            { referrerPolicy: 'no-referrer', method: 'HEAD' }
+          );
+          if (!res.ok) continue;
+
+          // Compare last-modified header if available
+          const lastMod = res.headers.get('last-modified');
+          if (lastMod && entry.installedAt) {
+            const remoteTime = new Date(lastMod).getTime();
+            if (remoteTime > entry.installedAt) {
+              this.updatableIds = new Set([...this.updatableIds, Number(id)]);
+            }
+          }
+        } catch { /* silent */ }
+      }
+    },
+
+    async updateStyle(id: number): Promise<void> {
+      const entry = this.installedMap[id];
+      if (!entry?.uswId) return;
+
+      this.updatingIds = new Set([...this.updatingIds, id]);
+
+      try {
+        const url = `https://userstyles.world/api/style/${entry.uswId}.user.css`;
+        const res = await fetch(url, { referrerPolicy: 'no-referrer' });
+        if (!res.ok) return;
+
+        const sourceCode = await res.text();
+        const css = convertUserCssToRaw(sourceCode);
+        if (!css?.trim()) return;
+
+        const newMap: Record<number, InstalledEntry> = {
+          ...this.installedMap,
+          [id]: { ...entry, css, installedAt: Date.now() },
+        };
+        await this.saveInstalledMap(newMap);
+        this.installedMap = newMap;
+
+        // Re-apply merged CSS
+        const mergedCss = this.getMergedCssForDomain(entry.domain, newMap);
+        chrome.runtime.sendMessage({
+          name: 'SetStyle',
+          url: entry.domain,
+          css: mergedCss,
+          readability: false,
+        } as SetStyle);
+
+        if (this.tab?.id) {
+          chrome.tabs.sendMessage(this.tab.id, {
+            name: 'PreviewStyle',
+            id: `usw-installed-${entry.domain}`,
+            css: mergedCss,
+          }).catch(() => {});
+        }
+
+        // Remove from updatable
+        const next = new Set(this.updatableIds);
+        next.delete(id);
+        this.updatableIds = next;
+      } catch (e) {
+        console.error('Update style error:', e);
+      } finally {
+        const next = new Set(this.updatingIds);
+        next.delete(id);
+        this.updatingIds = next;
+      }
+    },
+
+    confirmAndDelete(id: number): void {
+      if (this.confirmDeleteId === id) {
+        this.confirmDeleteId = null;
+        this.deleteStyleById(id);
+      } else {
+        this.confirmDeleteId = id;
+        setTimeout(() => {
+          if (this.confirmDeleteId === id) this.confirmDeleteId = null;
+        }, 3000);
       }
     },
 
@@ -862,6 +989,24 @@ export default Vue.extend({
 
 .find-styles-error {
   color: #f38ba8;
+  justify-content: space-between;
+}
+
+.find-styles-retry {
+  background: rgba(243, 139, 168, 0.1);
+  border: 1px solid rgba(243, 139, 168, 0.3);
+  color: #f38ba8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(243, 139, 168, 0.2);
+    border-color: #f38ba8;
+  }
 }
 
 .find-styles-spinner {
@@ -1044,6 +1189,21 @@ export default Vue.extend({
     }
   }
 
+  &.update-btn {
+    color: #a6e3a1;
+    font-size: 13px;
+    animation: update-pulse 2s infinite;
+
+    &:hover {
+      color: #a6e3a1;
+      background: rgba(166, 227, 161, 0.15);
+    }
+
+    &:disabled {
+      animation: none;
+    }
+  }
+
   &.edit-btn {
     color: #585b70;
     font-size: 13px;
@@ -1062,6 +1222,15 @@ export default Vue.extend({
       color: #f38ba8;
       background: rgba(243, 139, 168, 0.1);
     }
+
+    &.confirming {
+      color: #f38ba8;
+      background: rgba(243, 139, 168, 0.15);
+      font-size: 10px;
+      font-weight: 600;
+      width: auto;
+      padding: 2px 6px;
+    }
   }
 }
 
@@ -1076,5 +1245,10 @@ export default Vue.extend({
 
 @keyframes sk-spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes update-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>

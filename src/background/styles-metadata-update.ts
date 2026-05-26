@@ -1,4 +1,4 @@
-import { getCurrentTimestamp } from '@stylebot/utils';
+import { getCurrentTimestamp } from '@stylekit/utils';
 
 const StylesMetadataUpdate = async (): Promise<void> => {
   const items = await chrome.storage.local.get('styles-metadata');

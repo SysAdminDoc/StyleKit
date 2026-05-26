@@ -29,10 +29,8 @@ const mockExampleCss = dedent`
   }
 `;
 
-global.chrome = {
+vi.stubGlobal('chrome', {
   runtime: {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error: not able to figure out how to override sendMessage here correctly.
     sendMessage: (message: any, callback: (response: any) => void) => {
       if (message.url === 'https://fonts.googleapis.com/css?family=Lato') {
         callback(mockFontCss);
@@ -43,7 +41,7 @@ global.chrome = {
       }
     },
   },
-};
+});
 
 describe('import', () => {
   describe('getCssWithExpandedImports', () => {

@@ -23,7 +23,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import TheFonts from './basics/TheFonts.vue';
 import TheContextMenu from './basics/TheContextMenu.vue';
@@ -31,7 +31,7 @@ import TheKeyboardShortcuts from './basics/TheKeyboardShortcuts.vue';
 import TheReadabilityOption from './basics/TheReadabilityOption.vue';
 import TheAutoLoadStyles from './basics/TheAutoLoadStyles.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheBasicsTab',
 
   components: {

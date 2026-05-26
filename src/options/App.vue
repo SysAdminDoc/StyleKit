@@ -17,14 +17,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import TheBasicsTab from './components/TheBasicsTab.vue';
 import TheStylesTab from './components/TheStylesTab.vue';
 import TheSyncTab from './components/TheSyncTab.vue';
 import TheNavigation from './components/TheNavigation.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'App',
 
   components: {
@@ -60,8 +60,8 @@ export default Vue.extend({
 </script>
 
 <style lang="scss">
-@import '~bootstrap';
-@import '~bootstrap-vue';
+@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
 @import './scss/dark-mode';
 
 .main {

@@ -1,43 +1,16 @@
-import Vue from 'vue';
-import { t } from '@stylebot/i18n';
+import { createApp } from 'vue';
+import { t } from '@stylekit/i18n';
 
 import App from './App.vue';
 import store from './store/index';
 
-import {
-  IconsPlugin,
-  LayoutPlugin,
-  DropdownPlugin,
-  FormInputPlugin,
-  ButtonPlugin,
-  ListGroupPlugin,
-  FormCheckboxPlugin,
-  ModalPlugin,
-  FormTextareaPlugin,
-  FormGroupPlugin,
-  AlertPlugin,
-} from 'bootstrap-vue';
+import { BootstrapVue3 } from 'bootstrap-vue-3';
 
-Vue.use(IconsPlugin);
-Vue.use(LayoutPlugin);
-Vue.use(DropdownPlugin);
-Vue.use(FormInputPlugin);
-Vue.use(ButtonPlugin);
-Vue.use(FormCheckboxPlugin);
-Vue.use(ListGroupPlugin);
-Vue.use(ModalPlugin);
-Vue.use(FormTextareaPlugin);
-Vue.use(FormGroupPlugin);
-Vue.use(AlertPlugin);
+const app = createApp(App);
 
-Vue.mixin({
-  methods: {
-    t,
-  },
-});
+app.use(BootstrapVue3);
+app.use(store);
 
-new Vue({
-  store,
-  el: '#app',
-  render: h => h(App),
-});
+app.config.globalProperties.t = t;
+
+app.mount('#app');

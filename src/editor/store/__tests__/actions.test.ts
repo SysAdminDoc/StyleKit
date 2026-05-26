@@ -1,38 +1,57 @@
 import * as postcss from 'postcss';
 import actions from '../actions';
 
-import mockState from '../__mocks__/state';
-import * as stylebotCss from '@stylebot/css';
+import * as stylebotCss from '@stylekit/css';
 import * as chromeUtils from '../../utils/chrome';
 
-jest.mock('postcss');
-jest.mock('@stylebot/css');
-jest.mock('../../utils/chrome');
+vi.mock('@stylekit/css');
+vi.mock('../../utils/chrome');
 
 const mockRoot = ({
-  some: jest.fn(),
-  walkRules: jest.fn(),
-  append: jest.fn(),
-  toString: jest.fn(),
+  some: vi.fn(),
+  walkRules: vi.fn(),
+  append: vi.fn(),
+  toString: vi.fn().mockReturnValue(''),
 } as never) as postcss.Root;
 
-const mockCommit = jest.fn();
-const mockDispatch = jest.fn();
+const mockCommit = vi.fn();
+const mockDispatch = vi.fn();
+
+const mockState = {
+  css: '',
+  enabled: true,
+  url: 'example.com',
+  selectors: [],
+  activeSelector: '',
+  contextMenuSelector: '',
+  help: false,
+  visible: false,
+  inspecting: false,
+  resizing: false,
+  readability: false,
+  colorPickerVisible: false,
+  options: {} as any,
+  commands: null,
+  editorCommands: {} as any,
+  readabilitySettings: {} as any,
+  cssHistory: [''],
+  cssHistoryIndex: 0,
+};
 
 describe('actions', () => {
   beforeAll(() => {
-    jest.spyOn(stylebotCss, 'injectRootIntoDocument');
-    jest.spyOn(chromeUtils, 'setStyle');
+    vi.spyOn(stylebotCss, 'injectRootIntoDocument');
+    vi.spyOn(chromeUtils, 'setStyle');
   });
 
   beforeEach(() => {
-    jest.resetAllMocks();
-    jest.spyOn(postcss, 'parse').mockReturnValue(mockRoot);
+    vi.resetAllMocks();
+    vi.mocked(stylebotCss.safeParse).mockReturnValue(mockRoot);
   });
 
   describe('applyCss', () => {
     it('does not commit invalid css', () => {
-      jest.spyOn(postcss, 'parse').mockImplementation(() => {
+      vi.mocked(stylebotCss.safeParse).mockImplementation(() => {
         throw new Error();
       });
 
@@ -50,7 +69,7 @@ describe('actions', () => {
 
     it('invokes setStyle correctly', () => {
       const css = 'a { color: red; }';
-      jest.spyOn(stylebotCss, 'removeEmptyRules').mockReturnValue(css);
+      vi.mocked(stylebotCss.removeEmptyRules).mockReturnValue(css);
 
       actions.applyCss({ commit: mockCommit, state: mockState }, { css });
 
@@ -88,9 +107,9 @@ describe('actions', () => {
     it('invokes addDeclaration correctly', () => {
       const state = { ...mockState, activeSelector: 'a' };
 
-      jest
-        .spyOn(stylebotCss, 'addDeclaration')
-        .mockReturnValue('outputOfAddDeclaration');
+      vi.mocked(stylebotCss.addDeclaration).mockReturnValue(
+        'outputOfAddDeclaration'
+      );
 
       actions.applyDeclaration(
         {

@@ -3,16 +3,16 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import { Declaration, Rule } from 'postcss';
 import {
   StylebotEditingMode,
   StylebotLayout,
   StylebotEditorCommands,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheKeyboardShortcuts',
 
   computed: {
@@ -127,6 +127,14 @@ export default Vue.extend({
     },
 
     handleStylebotShortcut(event: KeyboardEvent): void {
+      // Escape always works, even from input/textarea
+      if (event.key === this.editorCommands.close) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.handleEscape();
+        return;
+      }
+
       const target = event.composedPath()[0] as HTMLElement;
       const tagName = target.tagName.toLowerCase();
 
@@ -218,13 +226,7 @@ export default Vue.extend({
         this.toggleResize();
       }
 
-      // Hide help / stylebot
-      if (event.key === this.editorCommands.close) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        this.handleEscape();
-      }
+      // Escape is handled at the top of this method (works from inputs too)
     },
   },
 });

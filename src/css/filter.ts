@@ -4,9 +4,11 @@ import {
   addDeclaration,
   getClassBasedSelector,
   getIdBasedSelector,
-} from '@stylebot/css';
+} from '@stylekit/css';
 
-import { FilterEffect } from '@stylebot/types';
+import { safeParse } from './safe-parse';
+
+import { FilterEffect } from '@stylekit/types';
 
 const getEffectRegex = (name: FilterEffect) => new RegExp(`${name}\\((.*)\\)$`);
 const getEffectDeclarationValue = (name: FilterEffect, percent: string) =>
@@ -46,7 +48,7 @@ export const getFilterEffectValueForPage = (
   effectName: FilterEffect,
   css: string
 ): number => {
-  const root = postcss.parse(css);
+  const root = safeParse(css);
   const regex = getEffectRegex(effectName);
   const selectors = getSelectorsToAttachFilterForPage();
 
@@ -73,7 +75,7 @@ export const getCssAfterApplyingFilterEffectToPage = (
   css: string,
   percent: string
 ): string => {
-  let root = postcss.parse(css);
+  let root = safeParse(css);
 
   const regex = getEffectRegex(effectName);
   const selectors = getSelectorsToAttachFilterForPage();
@@ -101,14 +103,14 @@ export const getCssAfterApplyingFilterEffectToPage = (
           });
         } else if (percent !== '0') {
           // todo: update method interfaces to avoid doing this redundant work
-          root = postcss.parse(
+          root = safeParse(
             addDeclaration('filter', effectValue, selector, root.toString())
           );
         }
       });
     } else if (percent !== '0') {
       // todo: update method interfaces to avoid doing this redundant work
-      root = postcss.parse(
+      root = safeParse(
         addDeclaration('filter', effectValue, selector, root.toString())
       );
     }

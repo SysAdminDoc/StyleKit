@@ -76,7 +76,7 @@
       <b-row align-content="center" no-gutters class="mt-1">
         <css-property>{{ t('border_color') }}</css-property>
         <css-property-value>
-          <color-picker :property="'--stylebot-box-shadow-color'" @input="onColorChange" />
+          <color-picker :property="'--stylebot-box-shadow-color'" @change="onColorChange" />
         </css-property-value>
       </b-row>
     </template>
@@ -84,7 +84,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { Declaration } from 'postcss';
 
 import CssProperty from '../CssProperty.vue';
@@ -117,7 +117,7 @@ const parseShadow = (
   };
 };
 
-export default Vue.extend({
+export default defineComponent({
   name: 'BoxShadow',
 
   components: {
@@ -216,7 +216,7 @@ export default Vue.extend({
       const y = overrides.y ?? p.y;
       const b = overrides.blur ?? p.blur;
       const s = overrides.spread ?? p.spread;
-      const c = overrides.color ?? this.shadowColor || p.color;
+      const c = overrides.color ?? (this.shadowColor || p.color);
 
       this.$store.dispatch('applyDeclaration', {
         property: 'box-shadow',

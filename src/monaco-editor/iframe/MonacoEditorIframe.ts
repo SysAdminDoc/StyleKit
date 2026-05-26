@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import CustomLight from './themes/CustomLight';
 import CustomDark from './themes/CustomDark';
-import { IframeMessage, ParentUpdateCssMessage } from '@stylebot/monaco-editor';
+import { IframeMessage, ParentUpdateCssMessage } from '@stylekit/monaco-editor';
 
 declare global {
   interface Window {
@@ -13,12 +13,14 @@ declare global {
 class MonacoEditorIframe {
   // todo: import monaco types
   editor?: any;
+  currentLanguage = 'css';
 
   constructor() {
     this.loadEditor(() => {
       this.attachWindowListeners();
       this.defineThemes();
       this.initEditor();
+      this.addLanguageToggle();
       this.postMessage({ type: 'stylebotMonacoIframeLoaded' });
     });
   }
@@ -44,17 +46,38 @@ class MonacoEditorIframe {
     const container = this.getContainer();
     const editorOptions = this.getEditorOptions();
 
-    // Disable CSS validation to avoid false errors for modern CSS features
-    // like :has(), CSS nesting, and -webkit- prefixed properties (#817, #763, #794)
+    // Enable CSS validation with relaxed settings to allow modern CSS features
+    // while still catching syntax errors (missing braces, invalid values, etc.)
     try {
+      const cssOptions = {
+        validate: true,
+        lint: {
+          compatibleVendorPrefixes: 'ignore' as const,
+          vendorPrefix: 'ignore' as const,
+          duplicateProperties: 'warning' as const,
+          emptyRules: 'warning' as const,
+          importStatement: 'ignore' as const,
+          boxModel: 'ignore' as const,
+          universalSelector: 'ignore' as const,
+          zeroUnits: 'ignore' as const,
+          fontFaceProperties: 'ignore' as const,
+          hexColorLength: 'ignore' as const,
+          argumentsInColorFunction: 'ignore' as const,
+          unknownProperties: 'ignore' as const,
+          validProperties: [],
+          ieHack: 'ignore' as const,
+          unknownVendorSpecificProperties: 'ignore' as const,
+          propertyIgnoredDueToDisplay: 'ignore' as const,
+          idSelector: 'ignore' as const,
+          unknownAtRules: 'ignore' as const,
+          float: 'ignore' as const,
+        },
+      };
+
       if (window.monaco.languages?.css?.cssDefaults?.setOptions) {
-        window.monaco.languages.css.cssDefaults.setOptions({
-          validate: false,
-        });
+        window.monaco.languages.css.cssDefaults.setOptions(cssOptions);
       } else if (window.monaco.languages?.css?.cssDefaults?.setDiagnosticsOptions) {
-        window.monaco.languages.css.cssDefaults.setDiagnosticsOptions({
-          validate: false,
-        });
+        window.monaco.languages.css.cssDefaults.setDiagnosticsOptions(cssOptions);
       }
     } catch (e) {
       // Monaco version may not support CSS validation options
@@ -105,7 +128,7 @@ class MonacoEditorIframe {
   }
 
   postMessage(message: IframeMessage): void {
-    window.parent.postMessage(message, '*');
+    window.parent.postMessage(message, chrome.runtime.getURL('/'));
   }
 
   handleStylebotCssUpdate(css: string, selector?: string): void {
@@ -113,7 +136,8 @@ class MonacoEditorIframe {
     this.editor.focus();
 
     if (selector) {
-      const regex = `^${selector}\\s\\{\\n\\s*(?!\\}).*$`;
+      const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = `^${escaped}\\s\\{\\n\\s*(?!\\}).*$`;
       const match = this.editor.getModel().findNextMatch(
         regex,
         {
@@ -132,6 +156,43 @@ class MonacoEditorIframe {
         });
       }
     }
+  }
+
+  addLanguageToggle(): void {
+    const container = this.getContainer();
+    const btn = document.createElement('button');
+    btn.textContent = 'CSS';
+    btn.title = 'Toggle CSS/SCSS syntax';
+    Object.assign(btn.style, {
+      position: 'absolute',
+      top: '4px',
+      right: '12px',
+      zIndex: '10',
+      background: '#313244',
+      border: '1px solid #45475a',
+      borderRadius: '3px',
+      color: '#6c7086',
+      fontSize: '10px',
+      fontWeight: '600',
+      padding: '2px 6px',
+      cursor: 'pointer',
+      fontFamily: 'sans-serif',
+      letterSpacing: '0.5px',
+    });
+
+    btn.addEventListener('click', () => {
+      this.currentLanguage = this.currentLanguage === 'css' ? 'scss' : 'css';
+      btn.textContent = this.currentLanguage.toUpperCase();
+      btn.style.color = this.currentLanguage === 'scss' ? '#cba6f7' : '#6c7086';
+
+      const model = this.editor.getModel();
+      if (model) {
+        window.monaco.editor.setModelLanguage(model, this.currentLanguage);
+      }
+    });
+
+    container.style.position = 'relative';
+    container.appendChild(btn);
   }
 
   attachWindowListeners(): void {

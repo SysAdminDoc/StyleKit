@@ -3,13 +3,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-import { IframeMessage, ParentUpdateCssMessage } from '@stylebot/monaco-editor';
+import { IframeMessage, ParentUpdateCssMessage } from '@stylekit/monaco-editor';
 
 import CodeEditorIframe from './CodeEditorIframe.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'CodeEditor',
 
   components: {
@@ -46,7 +46,7 @@ export default Vue.extend({
     }
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('message', this.handleMessage);
     this.stopRetrying();
   },
@@ -64,7 +64,7 @@ export default Vue.extend({
 
       const contentWindow = this.getIframeContentWindow();
       if (contentWindow) {
-        contentWindow.postMessage(message, '*');
+        contentWindow.postMessage(message, chrome.runtime.getURL('/'));
       }
     },
 

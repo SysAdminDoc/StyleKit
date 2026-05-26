@@ -17,7 +17,7 @@ import {
   SetReadabilitySettings,
   ReadabilitySettings,
   OpenDonatePage,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
 export const getAllOptions = async (): Promise<StylebotOptions> => {
   const message: GetAllOptions = {

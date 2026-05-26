@@ -1,18 +1,25 @@
 <template>
-  <b-list-group-item button class="open-stylebot" @click="toggle">
+  <b-list-group-item
+    button
+    class="open-stylebot"
+    :class="{ restricted }"
+    :disabled="restricted"
+    @click="toggle"
+  >
     <inspector-icon />
 
-    <span v-if="isOpen" class="pl-2">{{ t('close_stylebot') }}</span>
+    <span v-if="restricted" class="pl-2 restricted-text">Not available on this page</span>
+    <span v-else-if="isOpen" class="pl-2">{{ t('close_stylebot') }}</span>
     <span v-else class="pl-2">{{ t('open_stylebot') }}</span>
   </b-list-group-item>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { toggleStylebot } from '../utils';
+import { defineComponent } from 'vue';
+import { toggleStylebot, isRestrictedUrl } from '../utils';
 import InspectorIcon from './InspectorIcon.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'ToggleStylebot',
 
   components: {
@@ -26,6 +33,12 @@ export default Vue.extend({
     },
 
     isOpen: Boolean,
+  },
+
+  computed: {
+    restricted(): boolean {
+      return isRestrictedUrl(this.tab?.url);
+    },
   },
 
   methods: {
@@ -46,5 +59,15 @@ export default Vue.extend({
       fill: #495057;
     }
   }
+
+  &.restricted {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.restricted-text {
+  color: #6c7086;
+  font-style: italic;
 }
 </style>

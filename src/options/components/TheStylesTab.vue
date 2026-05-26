@@ -84,10 +84,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { compareAsc } from 'date-fns';
 
-import { Style, StyleMap } from '@stylebot/types';
+import { Style, StyleMap } from '@stylekit/types';
 
 import AppButton from './AppButton.vue';
 import UndoToast from './UndoToast.vue';
@@ -96,7 +96,7 @@ import StyleEditor from './styles/StyleEditor.vue';
 import StyleImportFromUrl from './styles/StyleImportFromUrl.vue';
 import TheDeleteAllStylesButton from './styles/TheDeleteAllStylesButton.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheStylesTab',
 
   components: {
@@ -201,7 +201,10 @@ export default Vue.extend({
       url: string;
       css: string;
     }): void {
-      this.$store.dispatch('saveStyle', { initialUrl, url, css });
+      const error = this.$store.dispatch('saveStyle', { initialUrl, url, css });
+      if (error && typeof error === 'string') {
+        this.showToast(error);
+      }
     },
 
     showToast(message: string): void {

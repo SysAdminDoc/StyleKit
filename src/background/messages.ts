@@ -45,8 +45,8 @@ import {
   GetImportCssResponse,
   GetThumbnailResponse,
   RunGoogleDriveSyncResponse,
-} from '@stylebot/types';
-import { runGoogleDriveSync } from '@stylebot/sync';
+} from '@stylekit/types';
+import { runGoogleDriveSync } from '@stylekit/sync';
 
 import {
   get as getReadabilitySettings,
@@ -191,6 +191,12 @@ export const GetThumbnail = async (
   }
 
   try {
+    const thumbUrl = new URL(message.url);
+    if (!['https://userstyles.world', 'https://img.userstyles.world'].some(
+      origin => thumbUrl.origin === origin || thumbUrl.origin.endsWith('.userstyles.world')
+    )) {
+      sendResponse(''); return;
+    }
     const res = await fetch(message.url, { referrerPolicy: 'no-referrer' });
     if (!res.ok) { sendResponse(''); return; }
     const buffer = await res.arrayBuffer();
