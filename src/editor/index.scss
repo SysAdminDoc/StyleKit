@@ -1,5 +1,5 @@
-@import '../../node_modules/vue-swatches/dist/vue-swatches.css';
-@import '../../node_modules/vue-draggable-resizable/dist/VueDraggableResizable.css';
+@import 'vue3-swatches/dist/style.css';
+@import 'vue-draggable-resizable/style.css';
 
 .stylebot-app {
   all: initial;
@@ -7,8 +7,8 @@
 
   @import 'scss/theme.scss';
 
-  @import '~bootstrap';
-  @import '~bootstrap-vue';
+  @import 'bootstrap/scss/bootstrap';
+  @import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
 
   @import 'scss/overrides.scss';
   @import 'scss/typography.scss';

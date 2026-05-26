@@ -1,4 +1,5 @@
 import * as postcss from 'postcss';
+import { safeParse } from './safe-parse';
 
 /**
  * Add declaration for given selector and css
@@ -9,10 +10,10 @@ export const addDeclaration = (
   selector: string,
   css: string
 ): string => {
-  const root = postcss.parse(css);
+  const root = safeParse(css);
   const rules: Array<postcss.Rule> = [];
 
-  root.walkRules(selector, rule => rules.push(rule));
+  root.walkRules(selector, rule => { rules.push(rule); });
   const rule = rules.length > 0 ? rules[0] : null;
 
   if (!rule) {
@@ -60,13 +61,13 @@ export const addDeclaration = (
 };
 
 export const appendImportantToDeclarations = (css: string): string => {
-  const root = postcss.parse(css);
+  const root = safeParse(css);
 
   const isAncestorAnAtRule = (node: postcss.Node): boolean => {
     if (node.type === 'atrule') {
       return true;
     } else if (node.type === 'decl' || node.type === 'rule') {
-      return isAncestorAnAtRule(node.parent);
+      return node.parent ? isAncestorAnAtRule(node.parent) : false;
     } else {
       return false;
     }

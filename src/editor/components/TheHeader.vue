@@ -15,13 +15,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import TheInspector from './header/TheInspector.vue';
 import TheWindowActions from './header/TheWindowActions.vue';
 import TheCssSelectorDropdown from './header/TheCssSelectorDropdown.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheHeader',
 
   components: {

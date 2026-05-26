@@ -4,7 +4,7 @@
 
     <div
       class="stylebot-body"
-      :style="colorPickerVisible ? 'pointer-events: none' : ''"
+      :class="{ 'pointer-events-disabled': colorPickerVisible }"
     >
       <the-basic-editor v-if="mode === 'basic'" />
       <the-magic-editor v-else-if="mode === 'magic'" />
@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import TheHeader from './TheHeader.vue';
 import TheFooter from './TheFooter.vue';
@@ -33,9 +33,9 @@ import TheStylebotResizer from './TheStylebotResizer.vue';
 import TheCssDiffView from './TheCssDiffView.vue';
 import TheToast from './TheToast.vue';
 
-import { StylebotEditingMode } from '@stylebot/types';
+import { StylebotEditingMode } from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheStylebot',
 
   components: {
@@ -86,5 +86,9 @@ export default Vue.extend({
   overflow: auto;
   flex: 1;
   min-height: 0;
+
+  &.pointer-events-disabled {
+    pointer-events: none;
+  }
 }
 </style>

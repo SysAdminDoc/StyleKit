@@ -1,5 +1,5 @@
 import { Readability } from '@mozilla/readability';
-import { ReadabilityArticle } from '@stylebot/types';
+import { ReadabilityArticle } from '@stylekit/types';
 
 export const getDomainUrlAndSource = (): { url: string; source: string } => {
   const parts = window.location.href.split('/');
@@ -63,7 +63,7 @@ export const getReadabilityArticle = async (): Promise<ReadabilityArticle> => {
       try {
         const article = new Readability(doc).parse();
 
-        if (article.content) {
+        if (article && article.content) {
           resolve(article);
           return;
         }

@@ -17,36 +17,36 @@
     <shortcut
       id="stylebot"
       :label="t('toggle_editor')"
-      @input="input('stylebot', $event)"
+      @update:model-value="input('stylebot', $event)"
     />
 
     <shortcut
       id="style"
       :label="t('toggle_styling')"
-      @input="input('style', $event)"
+      @update:model-value="input('style', $event)"
     />
 
     <shortcut
       id="readability"
       :label="t('toggle_readability')"
-      @input="input('readability', $event)"
+      @update:model-value="input('readability', $event)"
     />
 
     <shortcut
       id="grayscale"
       :label="t('toggle_grayscale')"
-      @input="input('grayscale', $event)"
+      @update:model-value="input('grayscale', $event)"
     />
   </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { StylebotCommandName } from '@stylebot/types';
+import { defineComponent } from 'vue';
+import { StylebotCommandName } from '@stylekit/types';
 
 import Shortcut from './Shortcut.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheKeyboardShortcuts',
 
   components: {

@@ -88,16 +88,16 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { debounce } from 'lodash';
-import { Highlighter } from '@stylebot/highlighter';
+import { Highlighter } from '@stylekit/highlighter';
 
 import Box from './Box.vue';
 import BoxModelLength from './BoxModelLength.vue';
 
 type HighlightTarget = 'margin' | 'border' | 'padding' | 'height';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'BoxModel',
 
   components: {

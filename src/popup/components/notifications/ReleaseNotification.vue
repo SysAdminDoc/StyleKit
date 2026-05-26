@@ -10,10 +10,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { getNotification, setNotification } from '@stylebot/utils';
+import { defineComponent } from 'vue';
+import { getNotification, setNotification } from '@stylekit/utils';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'ReleaseNotification',
 
   data(): {
@@ -30,12 +30,11 @@ export default Vue.extend({
 
   methods: {
     open(): void {
+      this.markAsSeen();
       chrome.tabs.create({
         url: 'https://stylebot.dev/releases/3.1',
       });
-
       window.close();
-      this.markAsSeen();
     },
 
     dismiss(e: MouseEvent): void {

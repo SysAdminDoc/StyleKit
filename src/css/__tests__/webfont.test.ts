@@ -1,4 +1,3 @@
-import 'jest-fetch-mock';
 import { addGoogleWebFont, cleanGoogleWebFonts } from '../webfont';
 
 const fontUrl =
@@ -7,7 +6,7 @@ const fontUrl =
 describe('webfont', () => {
   describe('addGoogleWebFont', () => {
     it('adds @import rule for font at the top of css', async () => {
-      fetchMock.mockResponse(() => Promise.resolve({ status: 200 }));
+      vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ status: 200 })));
 
       const css = 'a { font-family: Muli; }';
       const output = await addGoogleWebFont('Muli', css);
@@ -18,7 +17,7 @@ describe('webfont', () => {
     });
 
     it('does not add @import rule if it already exists', async () => {
-      fetchMock.mockResponse(() => Promise.resolve({ status: 200 }));
+      vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ status: 200 })));
 
       const css = `@import url(${fontUrl});\n\na { font-family: Muli }`;
       const output = await addGoogleWebFont('Muli', css);
@@ -27,7 +26,7 @@ describe('webfont', () => {
     });
 
     it('does not add @import rule if google web font API returns 400', async () => {
-      fetchMock.mockResponse(() => Promise.resolve({ status: 400 }));
+      vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ status: 400 })));
 
       const css = 'a { font-family: Roboto; }';
       const output = await addGoogleWebFont('Invalid', css);
@@ -36,13 +35,17 @@ describe('webfont', () => {
     });
 
     it('does not add @import rule if google web font API request fails', async () => {
-      fetchMock.mockResponse(() => Promise.reject());
+      vi.stubGlobal('fetch', vi.fn(() => Promise.reject()));
 
       const css = 'a { font-family: Roboto; }';
       const output = await addGoogleWebFont('Invalid', css);
 
       expect(output).toBe(css);
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('cleanGoogleWebFonts', () => {

@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import * as postcss from 'postcss';
 
 type MediaQueryPreset = {
@@ -62,7 +62,7 @@ const PRESETS: MediaQueryPreset[] = [
   { label: 'Print', query: 'print' },
 ];
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheMediaQueryWrapper',
 
   data(): { customQuery: string; presets: MediaQueryPreset[] } {
@@ -184,8 +184,13 @@ export default Vue.extend({
   padding: 2px 8px;
   flex-shrink: 0;
 
-  &:hover {
+  &:hover:not(:disabled) {
     color: #b4d0fb;
+  }
+
+  &:disabled {
+    color: #585b70;
+    cursor: default;
   }
 }
 </style>

@@ -38,14 +38,14 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { formatDistanceToNow } from 'date-fns';
 
 import AppButton from '../AppButton.vue';
 import StyleEditor from './StyleEditor.vue';
 import StyleDeleteButton from './StyleDeleteButton.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'Style',
 
   components: {

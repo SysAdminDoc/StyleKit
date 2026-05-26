@@ -9,9 +9,9 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'UndoToast',
 
   props: {
@@ -29,6 +29,12 @@ export default Vue.extend({
     },
   },
 
+  data() {
+    return {
+      _timer: null as ReturnType<typeof setTimeout> | null,
+    };
+  },
+
   watch: {
     visible(val: boolean) {
       if (val) {
@@ -39,22 +45,22 @@ export default Vue.extend({
     },
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     this.clearTimer();
   },
 
   methods: {
     startTimer() {
       this.clearTimer();
-      (this as any)._timer = setTimeout(() => {
+      this._timer = setTimeout(() => {
         this.$emit('expire');
       }, this.duration);
     },
 
     clearTimer() {
-      if ((this as any)._timer) {
-        clearTimeout((this as any)._timer);
-        (this as any)._timer = null;
+      if (this._timer) {
+        clearTimeout(this._timer);
+        this._timer = null;
       }
     },
 
