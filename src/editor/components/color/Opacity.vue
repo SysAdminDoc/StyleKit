@@ -25,13 +25,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import { Declaration } from 'postcss';
 
 import CssProperty from '../CssProperty.vue';
 import CssPropertyValue from '../CssPropertyValue.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'Opacity',
 
   components: {
@@ -62,8 +62,9 @@ export default Vue.extend({
         let value = '';
         if (percent) {
           const num = parseInt(percent, 10);
-          if (num >= 0 && num <= 100) {
-            value = `${num / 100}`;
+          if (!isNaN(num) && num >= 0 && num <= 100) {
+            // Use toFixed(2) to avoid float precision issues (e.g. 33/100 = 0.33)
+            value = (num / 100).toFixed(2).replace(/\.?0+$/, '');
           }
         }
 

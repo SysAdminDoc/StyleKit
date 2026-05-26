@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
 import FontSize from './text/FontSize.vue';
 import LineHeight from './text/LineHeight.vue';
@@ -25,7 +25,7 @@ import TextAlign from './text/TextAlign.vue';
 import LetterSpacing from './text/LetterSpacing.vue';
 import WordSpacing from './text/WordSpacing.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheTextProperties',
   components: {
     FontFamily,

@@ -27,11 +27,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
-import { StylebotLayout, StylebotEditingMode } from '@stylebot/types';
+import { StylebotLayout, StylebotEditingMode } from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheStylebotResizer',
 
   data: () => {
@@ -106,7 +106,7 @@ export default Vue.extend({
     window.addEventListener('resize', this.onWindowResize);
   },
 
-  destroyed() {
+  unmounted() {
     this.adjustPageLayout();
     window.removeEventListener('resize', this.onWindowResize);
     window.removeEventListener('mousemove', this.onEdgeDragMove);

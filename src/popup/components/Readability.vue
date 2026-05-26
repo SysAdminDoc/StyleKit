@@ -7,10 +7,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { ToggleReadabilityForTab } from '@stylebot/types';
+import { defineComponent } from 'vue';
+import { ToggleReadabilityForTab } from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'Readability',
   props: {
     initialReadability: Boolean,
@@ -32,15 +32,20 @@ export default Vue.extend({
 
   methods: {
     onChange(): void {
-      chrome.tabs.query({ active: true }, ([tab]) => {
-        if (tab.id) {
+      chrome.tabs.query({ active: true }, (tabs) => {
+        const tab = tabs?.[0];
+        if (tab?.id) {
           const message: ToggleReadabilityForTab = {
             name: 'ToggleReadabilityForTab',
           };
 
           chrome.tabs.sendMessage(tab.id, message).catch(() => {
-            // Content script not available on this tab
+            // Content script not available — revert toggle
+            this.readability = !this.readability;
           });
+        } else {
+          // No active tab — revert toggle
+          this.readability = !this.readability;
         }
       });
     },

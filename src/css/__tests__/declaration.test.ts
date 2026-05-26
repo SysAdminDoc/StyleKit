@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const dedent = require('dedent');
 
-import 'jest-fetch-mock';
 import { addDeclaration, appendImportantToDeclarations } from '../declaration';
 
 describe('declaration', () => {

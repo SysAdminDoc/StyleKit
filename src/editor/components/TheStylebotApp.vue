@@ -8,15 +8,15 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { StylebotCommands } from '@stylebot/types';
+import { defineComponent } from 'vue';
+import { StylebotCommands } from '@stylekit/types';
 
 import TheStylebot from './TheStylebot.vue';
 import TheHelpDialog from './shortcuts/TheHelpDialog.vue';
 import TheKeyboardShortcuts from './shortcuts/TheKeyboardShortcuts.vue';
 import TheOnboarding from './TheOnboarding.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'App',
 
   components: {

@@ -31,12 +31,16 @@
         <code-editor :css="css" @update="css = $event" />
       </div>
 
+      <div v-if="error" class="style-editor-error mx-3">
+        {{ error }}
+      </div>
+
       <div class="style-editor-footer py-5 px-3">
         <app-button
           class="ml-3"
           variant="primary"
           :disabled="!url || !css"
-          @click="$emit('save', { initialUrl, url, css })"
+          @click="save"
         >
           {{ t('save') }}
         </app-button>
@@ -48,12 +52,13 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 
+import { safeParse } from '@stylekit/css';
 import AppButton from '../AppButton.vue';
 import CodeEditor from './CodeEditor.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'StyleEditor',
 
   components: {
@@ -79,12 +84,26 @@ export default Vue.extend({
     url: string;
     css: string;
     showPatternHelp: boolean;
+    error: string;
   } {
     return {
       url: this.initialUrl,
       css: this.initialCss,
       showPatternHelp: false,
+      error: '',
     };
+  },
+
+  methods: {
+    save(): void {
+      this.error = '';
+      try {
+        safeParse(this.css);
+        this.$emit('save', { initialUrl: this.initialUrl, url: this.url, css: this.css });
+      } catch {
+        this.error = 'Invalid CSS syntax. Please check your styles and try again.';
+      }
+    },
   },
 });
 </script>
@@ -121,6 +140,12 @@ export default Vue.extend({
 
 .style-editor-code {
   height: 75%;
+}
+
+.style-editor-error {
+  color: #f38ba8;
+  font-size: 13px;
+  padding: 6px 0;
 }
 
 .style-editor-footer {

@@ -9,10 +9,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { StylebotLayout } from '@stylebot/types';
+import { defineComponent } from 'vue';
+import { StylebotLayout } from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheDockToggle',
 
   computed: {

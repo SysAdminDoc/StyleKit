@@ -48,10 +48,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import AppButton from '../AppButton.vue';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'StyleImportFromUrl',
 
   components: {
@@ -90,6 +90,12 @@ export default Vue.extend({
         const response = await fetch(this.url);
         if (!response.ok) {
           this.error = `Failed to fetch: ${response.status} ${response.statusText}`;
+          return;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType && !contentType.includes('css') && !contentType.includes('text/plain') && !contentType.includes('text/html')) {
+          this.error = `Unexpected content type: ${contentType}. Expected CSS.`;
           return;
         }
 

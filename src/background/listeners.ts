@@ -31,9 +31,9 @@ import {
   TabUpdated,
   BackgroundPageMessage,
   BackgroundPageMessageResponse,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
-import { setNotification } from '@stylebot/utils';
+import { setNotification } from '@stylekit/utils';
 
 /**
  * Open Help page on installation
@@ -107,6 +107,11 @@ chrome.runtime.onMessage.addListener(
     sender: chrome.runtime.MessageSender,
     sendResponse: (response: BackgroundPageMessageResponse) => void
   ) => {
+    // Only accept messages from our own extension
+    if (sender.id !== chrome.runtime.id) {
+      return;
+    }
+
     switch (message.name) {
       case 'GetCommands':
         GetCommands(sendResponse);

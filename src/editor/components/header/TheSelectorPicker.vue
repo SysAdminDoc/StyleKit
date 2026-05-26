@@ -61,9 +61,9 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { validateSelector } from '@stylebot/css';
-import { Highlighter } from '@stylebot/highlighter';
+import { defineComponent } from 'vue';
+import { validateSelector } from '@stylekit/css';
+import { Highlighter } from '@stylekit/highlighter';
 
 interface ElementInfo {
   tag: string;
@@ -71,7 +71,7 @@ interface ElementInfo {
   classes: string[];
 }
 
-export default Vue.extend({
+export default defineComponent({
   name: 'TheSelectorPicker',
 
   data(): {
@@ -139,7 +139,7 @@ export default Vue.extend({
     this.highlighter = new Highlighter({ onSelect: () => {} });
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     this.highlighter?.unhighlight();
     window.removeEventListener('keydown', this.onKeyDown);
   },

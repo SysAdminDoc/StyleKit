@@ -20,25 +20,26 @@
       </button>
       <button
         class="style-action-btn delete-btn"
-        title="Delete style"
+        :class="{ 'confirming': confirmingDelete }"
+        :title="confirmingDelete ? 'Click again to confirm' : 'Delete style'"
         @click="deleteStyle"
       >
-        &#x2715;
+        {{ confirmingDelete ? 'Sure?' : '&#x2715;' }}
       </button>
     </div>
   </b-list-group-item>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import {
   EnableStyle,
   DisableStyle,
   SetStyle,
   ToggleStylebot,
-} from '@stylebot/types';
+} from '@stylekit/types';
 
-export default Vue.extend({
+export default defineComponent({
   name: 'Style',
   props: {
     url: {
@@ -59,9 +60,11 @@ export default Vue.extend({
 
   data(): {
     enabled: boolean;
+    confirmingDelete: boolean;
   } {
     return {
       enabled: this.initialEnabled,
+      confirmingDelete: false,
     };
   },
 
@@ -81,6 +84,7 @@ export default Vue.extend({
       };
 
       chrome.runtime.sendMessage(message);
+      this.$emit('toggled', { url: this.url, enabled: true });
     },
 
     disable(): void {
@@ -90,6 +94,7 @@ export default Vue.extend({
       };
 
       chrome.runtime.sendMessage(message);
+      this.$emit('toggled', { url: this.url, enabled: false });
     },
 
     edit(): void {
@@ -104,15 +109,20 @@ export default Vue.extend({
     },
 
     deleteStyle(): void {
-      const message: SetStyle = {
-        name: 'SetStyle',
-        url: this.url,
-        css: '',
-        readability: false,
-      };
+      if (this.confirmingDelete) {
+        const message: SetStyle = {
+          name: 'SetStyle',
+          url: this.url,
+          css: '',
+          readability: false,
+        };
 
-      chrome.runtime.sendMessage(message);
-      this.$emit('deleted', this.url);
+        chrome.runtime.sendMessage(message);
+        this.$emit('deleted', this.url);
+      } else {
+        this.confirmingDelete = true;
+        setTimeout(() => { this.confirmingDelete = false; }, 3000);
+      }
     },
   },
 });
@@ -160,6 +170,15 @@ export default Vue.extend({
   &.delete-btn:hover {
     color: #f38ba8;
     background: rgba(243, 139, 168, 0.1);
+  }
+
+  &.delete-btn.confirming {
+    color: #f38ba8;
+    background: rgba(243, 139, 168, 0.15);
+    font-size: 10px;
+    font-weight: 600;
+    width: auto;
+    padding: 2px 6px;
   }
 }
 </style>

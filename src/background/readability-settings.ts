@@ -1,5 +1,5 @@
-import { defaultReadabilitySettings } from '@stylebot/settings';
-import { ReadabilitySettings, UpdateReader } from '@stylebot/types';
+import { defaultReadabilitySettings } from '@stylekit/settings';
+import { ReadabilitySettings, UpdateReader } from '@stylekit/types';
 
 export const get = async (): Promise<ReadabilitySettings> => {
   const items = await chrome.storage.local.get('readability-settings');
