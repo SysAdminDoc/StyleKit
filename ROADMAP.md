@@ -1,6 +1,6 @@
 # StyleKit Roadmap
 
-Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 5 + Monaco, Chrome + Firefox MV3, Google Drive / Gist sync, UserStyles.world browser.
+Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Monaco, Chrome + Firefox MV3, Google Drive / Gist sync, UserStyles.world browser.
 
 ## Planned Features
 
@@ -124,13 +124,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 5 + Mo
 - **idb** pin `>=8.x` (user-style storage >5MB); gotcha: SW reopens DB per op.
 
 ## Research-Driven Additions
-
-- [ ] P0 - Validate Monaco postMessage origins and sources
-  Why: Monaco editor frames send to the extension origin, but listeners currently accept any `message` payload shape without verifying `origin` or the expected iframe/window source.
-  Evidence: `src/editor/components/TheCodeEditor.vue`; `src/options/components/styles/CodeEditor.vue`; `src/monaco-editor/iframe/MonacoEditorIframe.ts`; Chrome messaging XSS guidance
-  Touches: editor code editor component, options code editor component, Monaco iframe, tests
-  Acceptance: Parent listeners reject messages unless `event.origin === chrome.runtime.getURL('/').slice(0, -1)` and `event.source` matches the mounted iframe; iframe rejects messages from non-extension origins; tests cover accepted and rejected messages.
-  Complexity: S
 
 - [ ] P0 - Add import and sync rollback snapshots
   Why: Gist import and Google Drive sync can replace all styles without a pre-change recovery snapshot, and sync delete conflicts are known to resurrect removed styles.
