@@ -70,7 +70,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, _, tab) => {
     };
 
     if (!tab.url?.includes('chrome-extension://')) {
-      chrome.tabs.sendMessage(tabId, message).catch(_e => undefined);
+      chrome.tabs.sendMessage(tabId, message).catch(() => undefined);
     }
   }
 });

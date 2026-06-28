@@ -18,7 +18,7 @@ import CssPropertyValue from '../CssPropertyValue.vue';
 import ColorPicker from './ColorPicker.vue';
 
 export default defineComponent({
-  name: 'Color',
+  name: 'ColorControl',
 
   components: {
     ColorPicker,

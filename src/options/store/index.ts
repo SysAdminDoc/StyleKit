@@ -157,8 +157,14 @@ export default createStore<State>({
         value: StylebotOptions[keyof StylebotOptions];
       }
     ) {
-      /* @ts-ignore */
-      state.options[name] = value;
+      if (!state.options) {
+        return;
+      }
+
+      state.options = {
+        ...state.options,
+        [name]: value,
+      } as StylebotOptions;
       setOption(name, value);
     },
 

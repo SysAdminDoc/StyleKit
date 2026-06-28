@@ -9,6 +9,7 @@ import {
   GetStylesForPage,
   GetStylesForIframe,
   GetStylesForPageResponse,
+  TabMessage,
 } from '@stylekit/types';
 
 const MAX_INJECT_COUNT = 10;
@@ -62,7 +63,7 @@ const run = () => {
 
 run();
 
-chrome.runtime.onMessage.addListener((message: any) => {
+chrome.runtime.onMessage.addListener((message: TabMessage) => {
   if (message.name === 'PreviewStyle') {
     const id = `stylekit-preview-${message.id}`;
     let el = document.getElementById(id) as HTMLStyleElement | null;

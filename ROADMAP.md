@@ -125,13 +125,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 5 + Mo
 
 ## Research-Driven Additions
 
-- [ ] P0 - Clear build/test dependency advisories
-  Why: `npm audit --json` reports 47 dev vulnerabilities, including critical `vitest` and `web-ext` chains plus vulnerable Vite/esbuild paths.
-  Evidence: `package.json`; `package-lock.json`; npm audit; GHSA-5xrq-8626-4rwp; GHSA-fx2h-pf6j-xcff
-  Touches: `package.json`, `package-lock.json`, `vite.config.ts`, test setup
-  Acceptance: `npm audit --json` reports no critical/high findings or documents only non-exploitable dev-only exceptions; `npm test`, `npm run lint`, `npm run build`, and `npm run build:firefox` pass.
-  Complexity: M
-
 - [ ] P0 - Validate Monaco postMessage origins and sources
   Why: Monaco editor frames send to the extension origin, but listeners currently accept any `message` payload shape without verifying `origin` or the expected iframe/window source.
   Evidence: `src/editor/components/TheCodeEditor.vue`; `src/options/components/styles/CodeEditor.vue`; `src/monaco-editor/iframe/MonacoEditorIframe.ts`; Chrome messaging XSS guidance

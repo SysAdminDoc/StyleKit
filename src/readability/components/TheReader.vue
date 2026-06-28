@@ -65,11 +65,11 @@ export default defineComponent({
     width: number;
     lineHeight: number;
     theme: ReadabilityTheme;
-    _messageListener: ((message: UpdateReader) => void) | null;
+    messageListener: ((message: UpdateReader) => void) | null;
   } {
     return {
       ...defaultReadabilitySettings,
-      _messageListener: null,
+      messageListener: null,
     };
   },
 
@@ -85,7 +85,7 @@ export default defineComponent({
 
     hideLoader();
 
-    this._messageListener = (message: UpdateReader) => {
+    this.messageListener = (message: UpdateReader) => {
       if (message.name === 'UpdateReader') {
         this.size = message.value.size;
         this.font = message.value.font;
@@ -96,12 +96,12 @@ export default defineComponent({
         this.injectFont(this.font);
       }
     };
-    chrome.runtime.onMessage.addListener(this._messageListener);
+    chrome.runtime.onMessage.addListener(this.messageListener);
   },
 
   beforeUnmount() {
-    if (this._messageListener) {
-      chrome.runtime.onMessage.removeListener(this._messageListener);
+    if (this.messageListener) {
+      chrome.runtime.onMessage.removeListener(this.messageListener);
     }
   },
 

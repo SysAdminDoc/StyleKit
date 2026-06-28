@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
 

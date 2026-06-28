@@ -4,7 +4,6 @@ import {
   SetOption,
   GetAllOptions,
   GetAllStylesResponse,
-  GetAllOptionsResponse,
   StylebotOptions,
   GetCommands,
   SetCommands,

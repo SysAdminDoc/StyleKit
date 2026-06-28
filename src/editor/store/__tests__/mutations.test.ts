@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import * as postcss from 'postcss';
 import mutations from '../mutations';
 import mockState from '../__mocks__/state';

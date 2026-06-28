@@ -40,7 +40,7 @@ import {
 } from '@stylekit/types';
 
 export default defineComponent({
-  name: 'Style',
+  name: 'PopupStyleItem',
   props: {
     url: {
       type: String,

@@ -1,5 +1,8 @@
+// @vitest-environment jsdom
+
 import * as postcss from 'postcss';
 import actions from '../actions';
+import mockStateTemplate from '../__mocks__/state';
 
 import * as stylebotCss from '@stylekit/css';
 import * as chromeUtils from '../../utils/chrome';
@@ -18,6 +21,7 @@ const mockCommit = vi.fn();
 const mockDispatch = vi.fn();
 
 const mockState = {
+  ...mockStateTemplate,
   css: '',
   enabled: true,
   url: 'example.com',
@@ -30,10 +34,10 @@ const mockState = {
   resizing: false,
   readability: false,
   colorPickerVisible: false,
-  options: {} as any,
+  options: mockStateTemplate.options,
   commands: null,
-  editorCommands: {} as any,
-  readabilitySettings: {} as any,
+  editorCommands: mockStateTemplate.editorCommands,
+  readabilitySettings: mockStateTemplate.readabilitySettings,
   cssHistory: [''],
   cssHistoryIndex: 0,
 };

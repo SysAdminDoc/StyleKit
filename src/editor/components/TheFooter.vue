@@ -6,8 +6,8 @@
         variant="link"
         class="undo-redo-btn"
         :disabled="!canUndo"
-        @click="undo"
         :title="t('undo')"
+        @click="undo"
       >
         &#x21B6;
       </b-button>
@@ -16,8 +16,8 @@
         variant="link"
         class="undo-redo-btn"
         :disabled="!canRedo"
-        @click="redo"
         :title="t('redo')"
+        @click="redo"
       >
         &#x21B7;
       </b-button>

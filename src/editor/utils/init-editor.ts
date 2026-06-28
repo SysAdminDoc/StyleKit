@@ -105,7 +105,7 @@ const initEditor = (store: Store<State>): void => {
 
   app.use(BootstrapVue3);
   app.use(store);
-  app.component('vue-draggable-resizable', VueDraggableResizable);
+  app.component('VueDraggableResizable', VueDraggableResizable);
   app.config.globalProperties.t = t;
 
   app.mount(stylebotApp);

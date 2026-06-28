@@ -43,6 +43,17 @@ export type UpdateReader = {
   value: ReadabilitySettings;
 };
 
+export type PreviewStyle = {
+  name: 'PreviewStyle';
+  id: string;
+  css: string;
+};
+
+export type RemovePreviewStyle = {
+  name: 'RemovePreviewStyle';
+  id: string;
+};
+
 type TabMessage =
   | ToggleStylebot
   | OpenStylebot
@@ -53,6 +64,8 @@ type TabMessage =
   | TabUpdated
   | GetIsStylebotOpen
   | HideElementFromContextMenu
-  | UpdateReader;
+  | UpdateReader
+  | PreviewStyle
+  | RemovePreviewStyle;
 
 export default TabMessage;

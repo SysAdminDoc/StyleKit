@@ -8,7 +8,6 @@ import {
   GetStylesForPage,
   SetReadability,
   GetCommands,
-  GetAllOptionsResponse,
   GetStylesForPageResponse,
   GetCommandsResponse,
   StylebotOptions,

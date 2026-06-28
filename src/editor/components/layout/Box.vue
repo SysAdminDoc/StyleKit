@@ -43,7 +43,7 @@ import { defineComponent } from 'vue';
 import BoxModelLength from './BoxModelLength.vue';
 
 export default defineComponent({
-  name: 'Box',
+  name: 'BoxControl',
 
   components: {
     BoxModelLength,

@@ -226,6 +226,10 @@ export default defineComponent({
     },
   },
 
+  beforeUnmount() {
+    this.removePreview();
+  },
+
   methods: {
     installRecipe(recipe: Recipe): void {
       const currentCss = this.$store.state.css || '';
@@ -252,10 +256,6 @@ export default defineComponent({
         this.previewStyle = null;
       }
     },
-  },
-
-  beforeUnmount() {
-    this.removePreview();
   },
 });
 </script>

@@ -4,9 +4,21 @@ import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, cpSync } from 'fs';
 import cssnano from 'cssnano';
-import postcssRemToPixel from 'postcss-rem-to-pixel';
 
 const outDir = process.env.BROWSER === 'firefox' ? 'firefox-dist' : 'dist';
+const remValuePattern = /(-?\d*\.?\d+)rem\b/g;
+
+function remToPixelPlugin() {
+  return {
+    postcssPlugin: 'stylekit-rem-to-pixel',
+    Declaration(decl: { value: string }) {
+      decl.value = decl.value.replace(remValuePattern, (_, remValue: string) => {
+        const pxValue = Number.parseFloat(remValue) * 16;
+        return `${Number.parseFloat(pxValue.toFixed(5))}px`;
+      });
+    },
+  };
+}
 
 // Transform locale .config files to Chrome _locales JSON format
 function localePlugin() {
@@ -127,7 +139,7 @@ export default defineConfig({
     postcss: {
       plugins: [
         cssnano({ preset: 'default' }),
-        postcssRemToPixel({ propList: ['*'] }),
+        remToPixelPlugin(),
       ],
     },
     preprocessorOptions: {
@@ -140,9 +152,6 @@ export default defineConfig({
   test: {
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
-    environmentMatchGlobs: [
-      ['src/editor/**/__tests__/**', 'jsdom'],
-    ],
   },
 
   build: {

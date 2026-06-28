@@ -11,7 +11,7 @@ import { defineComponent } from 'vue';
 import { ToggleReadabilityForTab } from '@stylekit/types';
 
 export default defineComponent({
-  name: 'Readability',
+  name: 'ReadabilityToggle',
   props: {
     initialReadability: Boolean,
   },

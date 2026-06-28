@@ -34,7 +34,7 @@ import CssProperty from '../CssProperty.vue';
 import CssPropertyValue from '../CssPropertyValue.vue';
 
 export default defineComponent({
-  name: 'Visibility',
+  name: 'VisibilityControl',
 
   components: {
     CssProperty,
