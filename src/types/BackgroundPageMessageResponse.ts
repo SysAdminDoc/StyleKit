@@ -4,6 +4,7 @@ import {
   StylebotCommands,
   ReadabilitySettings,
   Timestamp,
+  StylesRollbackSnapshot,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -29,6 +30,11 @@ export type GetReadabilitySettingsResponse = ReadabilitySettings;
 export type GetImportCssResponse = string;
 export type GetThumbnailResponse = string;
 export type RunGoogleDriveSyncResponse = void;
+export type SetAllStylesResponse = void;
+export type GetLastStylesRollbackSnapshotResponse =
+  StylesRollbackSnapshot | null;
+export type RestoreLastStylesRollbackSnapshotResponse =
+  StylesRollbackSnapshot | null;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -39,6 +45,9 @@ type BackgroundPageMessageResponse =
   | GetReadabilitySettingsResponse
   | GetImportCssResponse
   | GetThumbnailResponse
-  | RunGoogleDriveSyncResponse;
+  | RunGoogleDriveSyncResponse
+  | SetAllStylesResponse
+  | GetLastStylesRollbackSnapshotResponse
+  | RestoreLastStylesRollbackSnapshotResponse;
 
 export default BackgroundPageMessageResponse;

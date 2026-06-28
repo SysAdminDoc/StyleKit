@@ -11,6 +11,10 @@ import {
   StylebotCommands,
   StyleMap,
   RunGoogleDriveSync,
+  StylesRollbackReason,
+  StylesRollbackSnapshot,
+  GetLastStylesRollbackSnapshot,
+  RestoreLastStylesRollbackSnapshot,
 } from '@stylekit/types';
 
 export const getAllStyles = async (): Promise<GetAllStylesResponse> => {
@@ -29,13 +33,17 @@ export const getAllOptions = async (): Promise<StylebotOptions> => {
   return chrome.runtime.sendMessage(message);
 };
 
-export const setAllStyles = (styles: StyleMap): void => {
+export const setAllStyles = (
+  styles: StyleMap,
+  rollbackReason?: StylesRollbackReason
+): Promise<void> => {
   const message: SetAllStyles = {
     name: 'SetAllStyles',
     styles,
+    rollbackReason,
   };
 
-  chrome.runtime.sendMessage(message);
+  return chrome.runtime.sendMessage(message);
 };
 
 export const setOption = (
@@ -78,14 +86,34 @@ export const runGoogleDriveSync = async (): Promise<void> => {
   return chrome.runtime.sendMessage(message);
 };
 
-const isValidStyleMap = (data: unknown): data is StyleMap => {
+export const getLastStylesRollbackSnapshot =
+  async (): Promise<StylesRollbackSnapshot | null> => {
+    const message: GetLastStylesRollbackSnapshot = {
+      name: 'GetLastStylesRollbackSnapshot',
+    };
+
+    return chrome.runtime.sendMessage(message);
+  };
+
+export const restoreLastStylesRollbackSnapshot =
+  async (): Promise<StylesRollbackSnapshot | null> => {
+    const message: RestoreLastStylesRollbackSnapshot = {
+      name: 'RestoreLastStylesRollbackSnapshot',
+    };
+
+    return chrome.runtime.sendMessage(message);
+  };
+
+export const isValidStyleMap = (data: unknown): data is StyleMap => {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
   for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
     if (typeof key !== 'string') return false;
     if (!value || typeof value !== 'object') return false;
     const style = value as Record<string, unknown>;
-    if (typeof style.css !== 'string' && style.css !== undefined) return false;
-    if (typeof style.enabled !== 'boolean' && style.enabled !== undefined) return false;
+    if (typeof style.css !== 'string') return false;
+    if (typeof style.enabled !== 'boolean') return false;
+    if (typeof style.readability !== 'boolean' && style.readability !== undefined) return false;
+    if (typeof style.modifiedTime !== 'string' && style.modifiedTime !== undefined) return false;
   }
   return true;
 };

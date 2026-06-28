@@ -49,6 +49,18 @@ export type StyleMap = {
   [url: string]: Omit<Style, 'url'>;
 };
 
+export type StylesRollbackReason =
+  | 'json-import'
+  | 'gist-import'
+  | 'google-drive-sync';
+
+export type StylesRollbackSnapshot = {
+  id: Timestamp;
+  createdAt: Timestamp;
+  reason: StylesRollbackReason;
+  styles: StyleMap;
+};
+
 // https://developer.mozilla.org/en-US/docs/Web/CSS/filter
 export type FilterEffect =
   | 'blur'

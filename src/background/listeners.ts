@@ -23,6 +23,8 @@ import {
   GetImportCss,
   GetThumbnail,
   RunGoogleDriveSync,
+  GetLastStylesRollbackSnapshot,
+  RestoreLastStylesRollbackSnapshot,
 } from './messages';
 
 import { get as getOption } from './options';
@@ -99,6 +101,9 @@ const ASYNC_MESSAGES = new Set([
   'GetImportCss',
   'GetThumbnail',
   'RunGoogleDriveSync',
+  'SetAllStyles',
+  'GetLastStylesRollbackSnapshot',
+  'RestoreLastStylesRollbackSnapshot',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -147,7 +152,7 @@ chrome.runtime.onMessage.addListener(
         GetAllStyles(sendResponse);
         break;
       case 'SetAllStyles':
-        SetAllStyles(message);
+        SetAllStyles(message, sendResponse);
         break;
       case 'GetStylesForPage':
         GetStylesForPage(message, sender, sendResponse);
@@ -182,6 +187,14 @@ chrome.runtime.onMessage.addListener(
 
       case 'RunGoogleDriveSync':
         RunGoogleDriveSync(message, sendResponse);
+        break;
+
+      case 'GetLastStylesRollbackSnapshot':
+        GetLastStylesRollbackSnapshot(message, sendResponse);
+        break;
+
+      case 'RestoreLastStylesRollbackSnapshot':
+        RestoreLastStylesRollbackSnapshot(message, sendResponse);
         break;
     }
 

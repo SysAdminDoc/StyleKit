@@ -6,6 +6,8 @@ import {
   StylebotOptions,
   StylebotCommands,
   GoogleDriveSyncMetadata,
+  StylesRollbackReason,
+  StylesRollbackSnapshot,
 } from '@stylekit/types';
 import {
   getGoogleDriveSyncEnabled,
@@ -23,6 +25,8 @@ import {
   getCommands,
   setCommands,
   runGoogleDriveSync,
+  getLastStylesRollbackSnapshot,
+  restoreLastStylesRollbackSnapshot,
 } from '../utils';
 
 type State = {
@@ -33,7 +37,20 @@ type State = {
 
   googleDriveSyncEnabled: boolean;
   googleDriveSyncMetadata: GoogleDriveSyncMetadata | undefined;
+  lastStylesRollbackSnapshot: StylesRollbackSnapshot | null;
 };
+
+type SetAllStylesPayload =
+  | StyleMap
+  | {
+      styles: StyleMap;
+      rollbackReason?: StylesRollbackReason;
+    };
+
+const isSetAllStylesPayloadWithReason = (
+  payload: SetAllStylesPayload
+): payload is { styles: StyleMap; rollbackReason?: StylesRollbackReason } =>
+  'rollbackReason' in payload && 'styles' in payload;
 
 export default createStore<State>({
   state: {
@@ -42,6 +59,7 @@ export default createStore<State>({
     commands: defaultCommands,
     googleDriveSyncEnabled: false,
     googleDriveSyncMetadata: undefined,
+    lastStylesRollbackSnapshot: null,
   },
 
   actions: {
@@ -64,9 +82,35 @@ export default createStore<State>({
       }
     },
 
-    setAllStyles({ state }, styles: StyleMap) {
+    async getLastStylesRollbackSnapshot({ state }) {
+      state.lastStylesRollbackSnapshot = await getLastStylesRollbackSnapshot();
+    },
+
+    async setAllStyles({ state, dispatch }, payload: SetAllStylesPayload) {
+      const styles = isSetAllStylesPayloadWithReason(payload)
+        ? payload.styles
+        : payload;
+      const rollbackReason = isSetAllStylesPayloadWithReason(payload)
+        ? payload.rollbackReason
+        : undefined;
+
+      await setAllStyles(styles, rollbackReason);
       state.styles = styles;
-      setAllStyles(styles);
+
+      if (rollbackReason) {
+        await dispatch('getLastStylesRollbackSnapshot');
+      }
+    },
+
+    async restoreLastStylesRollbackSnapshot({ dispatch }) {
+      const snapshot = await restoreLastStylesRollbackSnapshot();
+
+      if (snapshot) {
+        await dispatch('getAllStyles');
+        await dispatch('getLastStylesRollbackSnapshot');
+      }
+
+      return snapshot;
     },
 
     saveStyle(
@@ -189,6 +233,7 @@ export default createStore<State>({
         await runGoogleDriveSync();
         await dispatch('getGoogleDriveSyncMetadata');
         await dispatch('getAllStyles');
+        await dispatch('getLastStylesRollbackSnapshot');
         return null;
       } catch (e) {
         const message =

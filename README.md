@@ -1,7 +1,7 @@
 # StyleKit
 
 ![License](https://img.shields.io/github/license/SysAdminDoc/StyleKit)
-![Version](https://img.shields.io/badge/version-1.1.2-blue)
+![Version](https://img.shields.io/badge/version-1.1.3-blue)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-green)
 ![Firefox](https://img.shields.io/badge/Firefox-Supported-orange)
 ![No Tracking](https://img.shields.io/badge/Analytics-None-brightgreen)
@@ -51,6 +51,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 ### Sync & Backup
 - **Google Drive sync** -- automatic bidirectional sync across devices
 - **GitHub Gist backup** -- export/import via private Gist with Bearer token auth
+- **Rollback restore** -- JSON imports, Gist imports, and Google Drive sync overwrites save a local snapshot that can be restored from the Sync tab
 - **JSON export** -- versioned format with metadata (`{version, app, exportedAt, styles}`)
 - **CSS export** -- all styles as a single `.css` file with URL comments
 - **JSON import** -- validates structure, supports both versioned and legacy formats
@@ -73,7 +74,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 
 ### From Release
 
-1. Download `StyleKit-v1.1.2-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
+1. Download `StyleKit-v1.1.3-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
 2. Unzip the file
 3. Open `chrome://extensions`
 4. Enable **Developer mode**
@@ -105,7 +106,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (9/9 suites, 80 tests)
+npm test               # Run tests (11/11 suites, 84 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 ```

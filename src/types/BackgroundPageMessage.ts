@@ -3,6 +3,7 @@ import {
   StylebotCommands,
   ReadabilitySettings,
   StyleMap,
+  StylesRollbackReason,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -30,6 +31,7 @@ export type SetAllStyles = {
   name: 'SetAllStyles';
   styles: StyleMap;
   shouldPersist?: boolean;
+  rollbackReason?: StylesRollbackReason;
 };
 
 export type MoveStyle = {
@@ -108,6 +110,14 @@ export type RunGoogleDriveSync = {
   name: 'RunGoogleDriveSync';
 };
 
+export type GetLastStylesRollbackSnapshot = {
+  name: 'GetLastStylesRollbackSnapshot';
+};
+
+export type RestoreLastStylesRollbackSnapshot = {
+  name: 'RestoreLastStylesRollbackSnapshot';
+};
+
 export type GetThumbnail = {
   name: 'GetThumbnail';
   url: string;
@@ -135,6 +145,8 @@ type BackgroundPageMessage =
   | SetReadabilitySettings
   | GetImportCss
   | RunGoogleDriveSync
+  | GetLastStylesRollbackSnapshot
+  | RestoreLastStylesRollbackSnapshot
   | GetThumbnail;
 
 export default BackgroundPageMessage;

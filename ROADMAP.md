@@ -125,13 +125,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
 
 ## Research-Driven Additions
 
-- [ ] P0 - Add import and sync rollback snapshots
-  Why: Gist import and Google Drive sync can replace all styles without a pre-change recovery snapshot, and sync delete conflicts are known to resurrect removed styles.
-  Evidence: `src/options/components/sync/TheGistBackup.vue`; `src/sync/google-drive/merge-styles.ts`; `src/sync/google-drive/sync.ts`
-  Touches: sync modules, Gist backup component, background style storage, options UI, tests
-  Acceptance: Before import/sync overwrite, StyleKit stores a timestamped local rollback copy; failed imports leave current styles unchanged; users can restore the last rollback from options.
-  Complexity: M
-
 - [ ] P1 - Restrict extension storage exposure to trusted contexts
   Why: Chrome exposes `storage.local` to content scripts by default, and StyleKit stores full style data plus backup metadata/tokens there.
   Evidence: `src/options/components/sync/TheGistBackup.vue`; `src/editor/components/text/FontFamilyDropdown.vue`; `src/editor/components/TheOnboarding.vue`; Chrome storage `setAccessLevel` docs

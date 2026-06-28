@@ -12,6 +12,9 @@ import {
   setReadability,
   getImportCss,
   applyStylesToAllTabs,
+  createStylesRollbackSnapshot,
+  getLastStylesRollbackSnapshot,
+  restoreLastStylesRollbackSnapshot,
 } from './styles';
 
 import {
@@ -36,6 +39,8 @@ import {
   GetImportCss as GetImportCssType,
   GetThumbnail as GetThumbnailType,
   RunGoogleDriveSync as RunGoogleDriveSyncType,
+  GetLastStylesRollbackSnapshot as GetLastStylesRollbackSnapshotType,
+  RestoreLastStylesRollbackSnapshot as RestoreLastStylesRollbackSnapshotType,
   GetCommandsResponse,
   GetAllOptionsResponse,
   GetAllStylesResponse,
@@ -45,6 +50,9 @@ import {
   GetImportCssResponse,
   GetThumbnailResponse,
   RunGoogleDriveSyncResponse,
+  SetAllStylesResponse,
+  GetLastStylesRollbackSnapshotResponse,
+  RestoreLastStylesRollbackSnapshotResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 
@@ -78,10 +86,16 @@ export const GetAllStyles = async (
 };
 
 export const SetAllStyles = async (
-  message: SetAllStylesType
+  message: SetAllStylesType,
+  sendResponse: (response: SetAllStylesResponse) => void
 ): Promise<void> => {
+  if (message.rollbackReason) {
+    await createStylesRollbackSnapshot(message.rollbackReason);
+  }
+
   await setAll(message.styles);
-  return applyStylesToAllTabs();
+  await applyStylesToAllTabs();
+  sendResponse();
 };
 
 export const GetStylesForIframe = async (
@@ -223,4 +237,25 @@ export const RunGoogleDriveSync = async (
 ): Promise<void> => {
   await runGoogleDriveSync();
   sendResponse();
+};
+
+export const GetLastStylesRollbackSnapshot = async (
+  _message: GetLastStylesRollbackSnapshotType,
+  sendResponse: (response: GetLastStylesRollbackSnapshotResponse) => void
+): Promise<void> => {
+  const snapshot = await getLastStylesRollbackSnapshot();
+  sendResponse(snapshot);
+};
+
+export const RestoreLastStylesRollbackSnapshot = async (
+  _message: RestoreLastStylesRollbackSnapshotType,
+  sendResponse: (response: RestoreLastStylesRollbackSnapshotResponse) => void
+): Promise<void> => {
+  const snapshot = await restoreLastStylesRollbackSnapshot();
+
+  if (snapshot) {
+    await applyStylesToAllTabs();
+  }
+
+  sendResponse(snapshot);
 };

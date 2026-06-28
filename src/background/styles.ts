@@ -6,11 +6,18 @@ import {
   StyleMap,
   StyleWithoutUrl,
   ApplyStylesToTab,
+  StylesRollbackReason,
+  StylesRollbackSnapshot,
 } from '@stylekit/types';
 
 import BackgroundPageUtils from './utils';
 import { getCachedStyles, setCachedStyles } from './cache';
 import { StyleIndex } from './style-index';
+
+const LAST_STYLES_ROLLBACK_SNAPSHOT_KEY = 'styles-rollback-last';
+
+const cloneStyles = (styles: StyleMap): StyleMap =>
+  JSON.parse(JSON.stringify(styles));
 
 export const updateIcon = (
   tab: chrome.tabs.Tab,
@@ -60,6 +67,48 @@ export const applyStylesToAllTabs = async (): Promise<void> => {
 export const getAll = async (): Promise<StyleMap> => {
   return getCachedStyles();
 };
+
+export const createStylesRollbackSnapshot = async (
+  reason: StylesRollbackReason,
+  styles?: StyleMap
+): Promise<StylesRollbackSnapshot> => {
+  const currentStyles = styles || (await getAll());
+  const timestamp = getCurrentTimestamp();
+  const snapshot: StylesRollbackSnapshot = {
+    id: timestamp,
+    createdAt: timestamp,
+    reason,
+    styles: cloneStyles(currentStyles),
+  };
+
+  await chrome.storage.local.set({
+    [LAST_STYLES_ROLLBACK_SNAPSHOT_KEY]: snapshot,
+  });
+
+  return snapshot;
+};
+
+export const getLastStylesRollbackSnapshot =
+  async (): Promise<StylesRollbackSnapshot | null> => {
+    const items = await chrome.storage.local.get(
+      LAST_STYLES_ROLLBACK_SNAPSHOT_KEY
+    );
+
+    return items[LAST_STYLES_ROLLBACK_SNAPSHOT_KEY] || null;
+  };
+
+export const restoreLastStylesRollbackSnapshot =
+  async (): Promise<StylesRollbackSnapshot | null> => {
+    const snapshot = await getLastStylesRollbackSnapshot();
+
+    if (!snapshot) {
+      return null;
+    }
+
+    await setAll(cloneStyles(snapshot.styles));
+
+    return snapshot;
+  };
 
 export const get = async (url: string): Promise<StyleWithoutUrl> => {
   const styles = await getAll();
@@ -126,7 +175,7 @@ export const getStylesForPage = (
 export const setAll = async (styles: StyleMap): Promise<void> => {
   setCachedStyles(styles);
   indexBuiltForStyles = null;
-  chrome.storage.local.set({
+  await chrome.storage.local.set({
     styles,
 
     'styles-metadata': {

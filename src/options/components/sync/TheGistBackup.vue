@@ -50,6 +50,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import AppButton from '../AppButton.vue';
+import { isValidStyleMap } from '../../utils';
 
 export default defineComponent({
   name: 'TheGistBackup',
@@ -194,11 +195,14 @@ export default defineComponent({
         // Support versioned format: { version, styles }
         const styles = parsed?.version && parsed?.styles ? parsed.styles : parsed;
 
-        if (!styles || typeof styles !== 'object' || Array.isArray(styles)) {
+        if (!isValidStyleMap(styles)) {
           throw new Error('Invalid format: expected a StyleKit styles object');
         }
 
-        this.$store.dispatch('setAllStyles', styles);
+        await this.$store.dispatch('setAllStyles', {
+          styles,
+          rollbackReason: 'gist-import',
+        });
 
         this.status = 'Imported successfully';
         this.statusType = 'success';

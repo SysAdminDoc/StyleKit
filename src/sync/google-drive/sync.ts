@@ -19,6 +19,7 @@ import {
 import {
   setAll as setAllStyles,
   getAll as getAllStyles,
+  createStylesRollbackSnapshot,
 } from '../../background/styles';
 
 const getStylesBlob = (styles: StyleMap) =>
@@ -49,6 +50,7 @@ const writeToLocal = async (
   syncMetadata: GoogleDriveSyncMetadata,
   styles: StyleMap
 ) => {
+  await createStylesRollbackSnapshot('google-drive-sync');
   await setAllStyles(styles);
 
   return setGoogleDriveSyncMetadata({
