@@ -201,3 +201,68 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
   Touches: locale transform plugin, test script, locale files, README support matrix
   Acceptance: A local check compares every locale against `en.config`, reports missing/extra keys, and fails on malformed placeholder syntax before build.
   Complexity: S
+
+## Research-Driven Additions
+
+- [ ] P0 - Reconcile release-state and version truth
+  Why: The repo currently claims v1.1.4 trusted-storage work in `CHANGELOG.md`/`CLAUDE.md`, but the package, README, artifacts, tests, and content-script storage callers still reflect v1.1.3 behavior.
+  Evidence: `package.json`; `README.md`; `CHANGELOG.md`; `CLAUDE.md`; `src/background/index.ts`; `src/editor/components/TheOnboarding.vue`; `src/editor/components/text/FontFamilyDropdown.vue`; `npm test`
+  Touches: release docs, package/manifest version path, trusted-storage implementation from the existing P1 item, tests, artifact names
+  Acceptance: All version strings, release notes, README install commands, manifest output, test counts, and shipped artifacts describe the same current release; no changelog claim remains without matching code and tests.
+  Complexity: M
+
+- [ ] P1 - Move saved-style application to USER-origin CSS insertion
+  Why: StyleKit currently appends DOM `<style>` tags and blanket `!important` rules, while MV3 supports browser-managed CSS insertion with `origin: 'USER'` for stronger cascade behavior.
+  Evidence: `src/inject-css/index.ts`; `src/editor/listeners/common.ts`; `src/css/inject-style.ts`; `src/background/styles.ts`; Chrome `scripting.insertCSS` docs; Stylus injection architecture
+  Touches: background style application, content-script injection fallback, preview/remove paths, manifest permissions, style removal tests
+  Acceptance: Saved styles and previews use `chrome.scripting.insertCSS/removeCSS` with USER origin where supported, fall back to DOM style injection only when necessary, remove applied CSS reliably, and no longer require blanket `!important` for normal cascade wins.
+  Complexity: L
+
+- [ ] P1 - Add frame-aware style matching and injection guards
+  Why: `inject-css/index.js` runs in `all_frames`, and iframe URL matching needs explicit tests to avoid styling unrelated ad/sandbox frames or missing `about:blank`/`srcdoc` cases.
+  Evidence: `src/extension/manifest.json`; `src/inject-css/index.ts`; `src/background/utils.ts`; `src/background/style-index.ts`; Chrome content-script frame docs; Stylus iframe/CSP issue history
+  Touches: style matcher, injection messages, frame targeting, tests, popup/editor apply status
+  Acceptance: Tests cover top frame, matching iframe, non-matching iframe, `about:blank`, and `srcdoc`; non-matching frames receive no saved CSS; matching child frames receive the correct style set with observable debug/status evidence.
+  Complexity: M
+
+- [ ] P1 - Add UserStyles.world provider health and degraded-state cache
+  Why: StyleKit's popup depends on UserStyles.world, and upstream issues show API/CORS/outage failures that currently collapse into generic error states.
+  Evidence: `src/popup/components/FindStyles.vue`; `src/background/preloader.ts`; userstyles-world issues #385/#386/#377
+  Touches: popup search/install/update flow, background preloader, thumbnail/result cache, diagnostics export, locale strings
+  Acceptance: Search shows clear provider status, cached last-good results remain available when the provider fails, retries use backoff, install/update failures never corrupt installed styles, and diagnostics identify provider errors without leaking CSS or tokens.
+  Complexity: M
+
+- [ ] P2 - Add opt-in shadow-root styling support
+  Why: Document-level style tags do not cross site shadow roots, so styles can silently miss modern web components even when the top-page URL matches.
+  Evidence: `src/css/inject-style.ts`; `src/inject-css/index.ts`; web.dev constructable stylesheet guidance; VisBug/shadow-DOM inspection precedent
+  Touches: style schema/options, injection runtime, MutationObserver cleanup, tests, UI copy for unsupported closed roots
+  Acceptance: A per-style option applies CSS to open shadow roots via `adoptedStyleSheets` or scoped `<style>` fallback, watches newly attached open roots, cleans up on disable/delete, and reports closed roots as unsupported rather than claiming full coverage.
+  Complexity: L
+
+- [ ] P2 - Add extension UI accessibility regression coverage
+  Why: Popup, editor, options, onboarding, toasts, and destructive controls use many custom/title-only controls without rendered focus/name/announcement tests.
+  Evidence: `src/popup/components/FindStyles.vue`; `src/popup/components/Style.vue`; `src/editor/components/header/*`; `src/editor/components/TheFooter.vue`; `src/options/components/*`; current 11 Vitest suites
+  Touches: component markup, i18n labels, modal/toast behavior, test tooling, browser smoke fixtures
+  Acceptance: Local tests or browser smokes verify accessible names for icon buttons, focus handling for modals/onboarding/delete flows, keyboard reachability without page-shortcut leakage, reduced-motion-safe animations, and status/toast announcements.
+  Complexity: M
+
+- [ ] P2 - Add manual dependency upgrade and compatibility ratchet
+  Why: `npm outdated` shows major drift in TypeScript, ESLint, typescript-eslint, Monaco, cross-env, lint-staged, and related tooling while dependency bots are intentionally prohibited.
+  Evidence: `package.json`; `package-lock.json`; `npm outdated`; repo no-Dependabot/no-Actions policy
+  Touches: package scripts, local dependency-check script, README/CLAUDE command notes, upgrade verification notes
+  Acceptance: A local command reports current/wanted/latest versions, groups safe patch/minor vs major upgrade batches, prints required local verification commands, and does not create Dependabot/Renovate/GitHub Actions config.
+  Complexity: S
+
+- [ ] P2 - Migrate project Sass imports to module syntax
+  Why: Sass has deprecated `@import`, and StyleKit's project SCSS still uses `@import` in popup/options/editor/readability styles.
+  Evidence: `src/editor/index.scss`; `src/options/App.vue`; `src/popup/App.vue`; `src/readability/index.scss`; Sass `@import` deprecation notice
+  Touches: project SCSS entry points, shared palette/theme modules, build warnings, visual smoke checks
+  Acceptance: Project-owned SCSS uses `@use`/`@forward` or CSS imports where appropriate, build output is visually unchanged, and remaining Sass warnings are either zero or limited to third-party packages with documented blockers.
+  Complexity: M
+
+- [ ] P3 - Add explicit local-source live-reload style mode
+  Why: Power users and adjacent CSS-injection tools value editing in an external editor, but StyleKit currently imports URL CSS as a one-time copy with no safe live source contract.
+  Evidence: `src/options/components/styles/StyleImportFromUrl.vue`; Stylus external-editing ecosystem; CSS-Inject/super-css-inject local CSS workflows
+  Touches: style schema, options import UI, background fetch/reload loop, permission prompts, rollback snapshots, diagnostics
+  Acceptance: Users can opt a style into a trusted localhost/file/source URL, see reload status and last fetch errors, manually snapshot/rollback before overwrites, and disable the source without losing the last saved CSS.
+  Complexity: L
