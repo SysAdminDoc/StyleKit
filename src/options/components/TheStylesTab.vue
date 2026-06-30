@@ -11,6 +11,7 @@
 
     <style-import-from-url
       v-if="importDialog"
+      :existing-styles="$store.state.styles"
       @import="
         saveStyle({ url: $event.url, css: $event.css });
         importDialog = false;

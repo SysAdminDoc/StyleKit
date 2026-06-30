@@ -1,5 +1,6 @@
 import { getCurrentTimestamp } from '@stylekit/utils';
 import { appendImportantToDeclarations, safeParse } from '@stylekit/css';
+import { isSafeCssContentType } from '../utils/style-import';
 
 import {
   Style,
@@ -269,6 +270,10 @@ export const getImportCss = (url: string): Promise<string> => {
     fetch(url)
       .then(response => {
         if (!response.ok) {
+          resolve('');
+          return;
+        }
+        if (!isSafeCssContentType(response.headers.get('content-type'))) {
           resolve('');
           return;
         }

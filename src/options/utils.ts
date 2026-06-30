@@ -16,6 +16,21 @@ import {
   GetLastStylesRollbackSnapshot,
   RestoreLastStylesRollbackSnapshot,
 } from '@stylekit/types';
+import {
+  createImportPreview,
+  createStyleImportEnvelope,
+  parseStyleImportPayload,
+  StyleImportPreview,
+} from '../utils/style-import';
+
+export {
+  createImportPreview,
+  createStyleImportEnvelope,
+  getImportDiffText,
+  isSafeCssContentType,
+  isValidStyleMap,
+  parseStyleImportPayload,
+} from '../utils/style-import';
 
 export const getAllStyles = async (): Promise<GetAllStylesResponse> => {
   const message: GetAllStyles = {
@@ -104,21 +119,9 @@ export const restoreLastStylesRollbackSnapshot =
     return chrome.runtime.sendMessage(message);
   };
 
-export const isValidStyleMap = (data: unknown): data is StyleMap => {
-  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
-  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
-    if (typeof key !== 'string') return false;
-    if (!value || typeof value !== 'object') return false;
-    const style = value as Record<string, unknown>;
-    if (typeof style.css !== 'string') return false;
-    if (typeof style.enabled !== 'boolean') return false;
-    if (typeof style.readability !== 'boolean' && style.readability !== undefined) return false;
-    if (typeof style.modifiedTime !== 'string' && style.modifiedTime !== undefined) return false;
-  }
-  return true;
-};
-
-export const importStylesWithFilePicker = (): Promise<StyleMap> => {
+export const importStylesWithFilePicker = (
+  currentStyles: StyleMap
+): Promise<StyleImportPreview> => {
   return new Promise((resolve, reject) => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -138,19 +141,17 @@ export const importStylesWithFilePicker = (): Promise<StyleMap> => {
 
         reader.onload = () => {
           try {
-            const parsed = JSON.parse(reader.result as string);
+            const parsed = parseStyleImportPayload(
+              JSON.parse(reader.result as string)
+            );
 
-            // Support versioned export format: { version, styles }
-            const styles = parsed?.version && parsed?.styles ? parsed.styles : parsed;
-
-            if (!isValidStyleMap(styles)) {
-              reject('Invalid format. Expected a StyleKit JSON backup (object with URL keys and {css, enabled} values).');
-              return;
-            }
-
-            resolve(styles);
+            resolve(createImportPreview(currentStyles, parsed.styles, 'replace'));
           } catch (e) {
-            reject('Failed to parse JSON file. Ensure the file is valid JSON.');
+            reject(
+              e instanceof Error
+                ? e.message
+                : 'Failed to parse JSON file. Ensure the file is valid JSON.'
+            );
           }
         };
 
@@ -167,12 +168,7 @@ export const importStylesWithFilePicker = (): Promise<StyleMap> => {
 };
 
 export const exportAsJSONFile = (styles: StyleMap): void => {
-  const exportData = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    app: 'StyleKit',
-    styles,
-  };
+  const exportData = createStyleImportEnvelope(styles);
   const json = JSON.stringify(exportData, null, 2);
   const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(json);
   const downloadAnchorNode = document.createElement('a');

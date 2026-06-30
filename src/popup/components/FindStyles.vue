@@ -122,6 +122,12 @@
                   <span v-if="style.w" class="find-style-installs">
                     {{ formatNumber(style.w) }}/wk
                   </span>
+                  <span
+                    v-if="pendingInstallId === style.i"
+                    class="find-style-import-summary"
+                  >
+                    {{ pendingInstallSummary }}
+                  </span>
                 </div>
               </div>
 
@@ -133,7 +139,7 @@
                   @click="installStyle(style)"
                 >
                   <span v-if="installingIds.has(style.i)" class="find-style-spinner-sm"></span>
-                  <template v-else>Install</template>
+                  <template v-else>{{ pendingInstallId === style.i ? 'Apply' : 'Install' }}</template>
                 </button>
               </div>
             </div>
@@ -146,8 +152,16 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { SetStyle, OpenStylebotInCodeMode } from '@stylekit/types';
+import { SetStyle, OpenStylebotInCodeMode, StyleMap } from '@stylekit/types';
+import { getCurrentTimestamp } from '@stylekit/utils';
 import { convertUserCssToRaw } from '../../utils/usercss';
+import {
+  assertValidImportCss,
+  createImportPreview,
+  createSingleStyleImport,
+  getImportDiffText,
+  isSafeCssContentType,
+} from '../../utils/style-import';
 
 const STORAGE_KEY = 'stylekit-usw-installs';
 const INDEX_SESSION_KEY = 'stylekit-usw-index';
@@ -204,6 +218,8 @@ export default defineComponent({
     confirmDeleteId: number | null;
     updatableIds: Set<number>;
     updatingIds: Set<number>;
+    pendingInstallId: number | null;
+    pendingInstallSummary: string;
   } {
     return {
       showSearch: false,
@@ -223,6 +239,8 @@ export default defineComponent({
       confirmDeleteId: null,
       updatableIds: new Set(),
       updatingIds: new Set(),
+      pendingInstallId: null,
+      pendingInstallSummary: '',
     };
   },
 
@@ -464,8 +482,12 @@ export default defineComponent({
 
       const res = await fetch(url, { referrerPolicy: 'no-referrer' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!isSafeCssContentType(res.headers.get('content-type'))) {
+        throw new Error('Style source returned HTML instead of CSS');
+      }
       const sourceCode = await res.text();
       const css = convertUserCssToRaw(sourceCode);
+      assertValidImportCss(css);
       if (css) this.previewCssCache.set(style.i, css);
       return css;
     },
@@ -544,6 +566,39 @@ export default defineComponent({
       }
     },
 
+    getDomainStylePreview(map: Record<number, InstalledEntry>): {
+      mergedCss: string;
+      summary: string;
+    } {
+      const mergedCss = this.getMergedCssForDomain(this.domain, map);
+      const incomingStyles = createSingleStyleImport(
+        this.domain,
+        mergedCss,
+        getCurrentTimestamp()
+      ).styles;
+      const currentMergedCss = this.getMergedCssForDomain(
+        this.domain,
+        this.installedMap
+      );
+      const currentStyles: StyleMap = currentMergedCss
+        ? createSingleStyleImport(
+            this.domain,
+            currentMergedCss,
+            incomingStyles[this.domain].modifiedTime
+          ).styles
+        : {};
+      const preview = createImportPreview(
+        currentStyles,
+        incomingStyles,
+        'merge'
+      );
+
+      return {
+        mergedCss,
+        summary: getImportDiffText(preview.diff),
+      };
+    },
+
     async installStyle(style: UserstyleEntry): Promise<void> {
       if (this.installingIds.has(style.i) || this.installedIds.has(style.i)) return;
 
@@ -563,15 +618,23 @@ export default defineComponent({
           ...this.installedMap,
           [style.i]: { domain: this.domain, css, name: style.n, uswId: style.i, installedAt: Date.now() },
         };
+
+        const preview = this.getDomainStylePreview(newMap);
+
+        if (this.pendingInstallId !== style.i) {
+          this.pendingInstallId = style.i;
+          this.pendingInstallSummary = preview.summary;
+          return;
+        }
+
         await this.saveInstalledMap(newMap);
         this.installedMap = newMap;
 
         // Merge all installed styles for this domain into one SetStyle call
-        const mergedCss = this.getMergedCssForDomain(this.domain, newMap);
         chrome.runtime.sendMessage({
           name: 'SetStyle',
           url: this.domain,
-          css: mergedCss,
+          css: preview.mergedCss,
           readability: false,
         } as SetStyle);
 
@@ -580,7 +643,7 @@ export default defineComponent({
           chrome.tabs.sendMessage(this.tab.id, {
             name: 'PreviewStyle',
             id: `usw-installed-${this.domain}`,
-            css: mergedCss,
+            css: preview.mergedCss,
           }).catch(() => { /* fire-and-forget */ });
         }
 
@@ -588,6 +651,8 @@ export default defineComponent({
         if (this.previewingId === style.i) {
           this.previewingId = null;
         }
+        this.pendingInstallId = null;
+        this.pendingInstallSummary = '';
         this.$emit('style-installed', this.domain);
       } catch (e) {
         console.error('Install style error:', e);
@@ -677,9 +742,11 @@ export default defineComponent({
         const url = `https://userstyles.world/api/style/${entry.uswId}.user.css`;
         const res = await fetch(url, { referrerPolicy: 'no-referrer' });
         if (!res.ok) return;
+        if (!isSafeCssContentType(res.headers.get('content-type'))) return;
 
         const sourceCode = await res.text();
         const css = convertUserCssToRaw(sourceCode);
+        assertValidImportCss(css);
         if (!css?.trim()) return;
 
         const newMap: Record<number, InstalledEntry> = {
@@ -740,6 +807,10 @@ export default defineComponent({
       delete newMap[id];
       await this.saveInstalledMap(newMap);
       this.installedMap = newMap;
+      if (this.pendingInstallId === id) {
+        this.pendingInstallId = null;
+        this.pendingInstallSummary = '';
+      }
 
       const mergedCss = this.getMergedCssForDomain(domain, newMap);
       chrome.runtime.sendMessage({
@@ -1148,6 +1219,12 @@ export default defineComponent({
 }
 
 /* ── Action buttons ─────────────────────────────────────────── */
+.find-style-import-summary {
+  color: #fab387;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .find-style-actions {
   display: flex;
   gap: 2px;

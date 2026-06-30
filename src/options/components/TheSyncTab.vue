@@ -8,6 +8,21 @@
       {{ t('import_error', [importError]) }}
     </b-alert>
 
+    <b-alert v-if="pendingJsonImport" show variant="warning" class="mb-4">
+      <div class="import-preview-title">JSON import preview</div>
+      <div class="description mb-3">
+        {{ pendingJsonImportSummary }}. Existing styles are unchanged until applied.
+      </div>
+      <app-button
+        class="mr-2"
+        variant="primary"
+        @click="applyPendingJsonImport"
+      >
+        Apply import
+      </app-button>
+      <app-button @click="pendingJsonImport = null">Cancel</app-button>
+    </b-alert>
+
     <b-alert v-model="showRollbackRestoreSuccessAlert" variant="success" dismissible>
       Restored styles from the last rollback snapshot.
     </b-alert>
@@ -83,6 +98,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import type { StylesRollbackSnapshot } from '@stylekit/types';
+import type { StyleImportPreview } from '../../utils/style-import';
 
 import AppButton from './AppButton.vue';
 import TheGoogleDriveSync from './sync/TheGoogleDriveSync.vue';
@@ -92,6 +108,7 @@ import {
   importStylesWithFilePicker,
   exportAsJSONFile,
   exportAsCSSFile,
+  getImportDiffText,
 } from '../utils';
 
 export default defineComponent({
@@ -111,6 +128,7 @@ export default defineComponent({
     importError: string | DOMException | null;
     rollbackRestoreError: string;
     restoringRollback: boolean;
+    pendingJsonImport: StyleImportPreview | null;
   } {
     return {
       importError: null,
@@ -120,6 +138,7 @@ export default defineComponent({
       showRollbackRestoreSuccessAlert: false,
       rollbackRestoreError: '',
       restoringRollback: false,
+      pendingJsonImport: null,
     };
   },
 
@@ -145,6 +164,12 @@ export default defineComponent({
 
       return `${reason} rollback from ${createdAt}`;
     },
+
+    pendingJsonImportSummary(): string {
+      return this.pendingJsonImport
+        ? getImportDiffText(this.pendingJsonImport.diff)
+        : '';
+    },
   },
 
   created() {
@@ -162,12 +187,29 @@ export default defineComponent({
 
     async importJson(): Promise<void> {
       try {
-        const styles = await importStylesWithFilePicker();
+        const preview = await importStylesWithFilePicker(
+          this.$store.state.styles
+        );
+        this.pendingJsonImport = preview;
+        this.showImportErrorAlert = false;
+        this.showImportSuccessAlert = false;
+      } catch (e) {
+        this.importError = e;
+        this.showImportErrorAlert = true;
+        this.showImportSuccessAlert = false;
+      }
+    },
+
+    async applyPendingJsonImport(): Promise<void> {
+      if (!this.pendingJsonImport) return;
+
+      try {
         await this.$store.dispatch('setAllStyles', {
-          styles,
+          styles: this.pendingJsonImport.styles,
           rollbackReason: 'json-import',
         });
 
+        this.pendingJsonImport = null;
         this.showImportErrorAlert = false;
         this.showImportSuccessAlert = true;
       } catch (e) {
@@ -211,6 +253,13 @@ export default defineComponent({
 }
 
 .rollback-title {
+  color: #cdd6f4;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.import-preview-title {
   color: #cdd6f4;
   font-size: 14px;
   font-weight: 600;

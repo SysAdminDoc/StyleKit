@@ -125,13 +125,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
 
 ## Research-Driven Additions
 
-- [ ] P1 - Add schema-backed import validation and dry-run previews
-  Why: URL, JSON, Gist, and UserStyles.world imports use separate validation paths, and URL import accepts `text/html` as CSS preview input.
-  Evidence: `src/options/components/styles/StyleImportFromUrl.vue`; `src/options/components/sync/TheGistBackup.vue`; `src/popup/components/FindStyles.vue`; `src/utils/usercss.ts`
-  Touches: import components, shared schema utilities, background CSS fetch, tests
-  Acceptance: All import paths validate a versioned style schema, reject unsafe content types, show a count of styles added/changed/removed before apply, and preserve existing styles on validation failure.
-  Complexity: M
-
 - [ ] P1 - Add sync tombstones and conflict reporting
   Why: Google Drive merge retains deletions because deleted styles have no timestamp, so removed styles can come back after multi-device sync.
   Evidence: `src/sync/google-drive/merge-styles.ts`; `CLAUDE.md` known issue; Stylus cloud sync feature set
