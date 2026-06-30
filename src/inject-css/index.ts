@@ -58,6 +58,7 @@ const run = () => {
     injectCss({
       name: 'GetStylesForIframe',
       url: window.location.href,
+      parentUrl: document.referrer || undefined,
       preferUserOrigin: true,
     });
   }

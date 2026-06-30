@@ -51,6 +51,7 @@ export type GetStylesForPage = {
 export type GetStylesForIframe = {
   name: 'GetStylesForIframe';
   url: string;
+  parentUrl?: string;
   important?: boolean;
   preferUserOrigin?: boolean;
 };

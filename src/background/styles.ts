@@ -20,6 +20,7 @@ import { applyUserOriginStylesToFrame } from './style-applier';
 
 const LAST_STYLES_ROLLBACK_SNAPSHOT_KEY = 'styles-rollback-last';
 const STYLE_TOMBSTONES_KEY = 'style-tombstones';
+const OPAQUE_FRAME_URLS = new Set(['about:blank', 'about:srcdoc']);
 
 const cloneStyles = (styles: StyleMap): StyleMap =>
   JSON.parse(JSON.stringify(styles));
@@ -176,13 +177,25 @@ export const getStylesForPage = (
 ): {
   styles: Array<Style>;
   defaultStyle?: Style;
+  frameMatchUrl?: string;
+  frameMatchSource?: 'top-frame' | 'frame-url' | 'parent-url' | 'blocked';
+  frameBlockedReason?: string;
 } => {
   if (!pageUrl) {
-    return { styles: [] };
+    return {
+      styles: [],
+      frameMatchSource: 'blocked',
+      frameBlockedReason: 'missing-url',
+    };
   }
 
   if (!BackgroundPageUtils.isValidHTML(pageUrl)) {
-    return { styles: [] };
+    return {
+      styles: [],
+      frameMatchUrl: pageUrl,
+      frameMatchSource: 'blocked',
+      frameBlockedReason: 'non-html-url',
+    };
   }
 
   ensureIndex(allStyles);
@@ -213,7 +226,109 @@ export const getStylesForPage = (
     }
   }
 
-  return { styles, defaultStyle };
+  return {
+    styles,
+    defaultStyle,
+    frameMatchUrl: pageUrl,
+    frameMatchSource: 'top-frame',
+  };
+};
+
+type StyleFrameMatch =
+  | {
+      url: string;
+      source: 'frame-url' | 'parent-url';
+    }
+  | {
+      source: 'blocked';
+      reason: string;
+      url?: string;
+    };
+
+const normalizeFrameUrl = (url: string): string =>
+  url.trim().split(/[?#]/)[0].toLowerCase();
+
+const isOpaqueFrameUrl = (url: string): boolean =>
+  OPAQUE_FRAME_URLS.has(normalizeFrameUrl(url));
+
+const isMatchableDocumentUrl = (url?: string): boolean => {
+  if (!url) return false;
+
+  try {
+    const parsed = new URL(url);
+    return (
+      ['http:', 'https:', 'file:'].includes(parsed.protocol) &&
+      BackgroundPageUtils.isValidHTML(url)
+    );
+  } catch {
+    return false;
+  }
+};
+
+export const resolveStyleFrameMatch = (
+  frameUrl: string,
+  parentUrl?: string
+): StyleFrameMatch => {
+  if (isMatchableDocumentUrl(frameUrl)) {
+    return {
+      url: frameUrl,
+      source: 'frame-url',
+    };
+  }
+
+  if (isOpaqueFrameUrl(frameUrl)) {
+    if (isMatchableDocumentUrl(parentUrl)) {
+      return {
+        url: parentUrl as string,
+        source: 'parent-url',
+      };
+    }
+
+    return {
+      source: 'blocked',
+      reason: 'opaque-frame-without-matchable-parent',
+      url: frameUrl,
+    };
+  }
+
+  return {
+    source: 'blocked',
+    reason: 'unsupported-frame-url',
+    url: frameUrl,
+  };
+};
+
+export const getStylesForFrame = (
+  frameUrl: string,
+  parentUrl: string | undefined,
+  allStyles: StyleMap,
+  important = false
+): {
+  styles: Array<Style>;
+  defaultStyle?: Style;
+  frameMatchUrl?: string;
+  frameMatchSource: 'frame-url' | 'parent-url' | 'blocked';
+  frameBlockedReason?: string;
+} => {
+  const match = resolveStyleFrameMatch(frameUrl, parentUrl);
+
+  if (match.source === 'blocked') {
+    return {
+      styles: [],
+      frameMatchUrl: match.url,
+      frameMatchSource: 'blocked',
+      frameBlockedReason: match.reason,
+    };
+  }
+
+  const result = getStylesForPage(match.url, allStyles, important);
+
+  return {
+    ...result,
+    frameMatchUrl: match.url,
+    frameMatchSource: match.source,
+    frameBlockedReason: undefined,
+  };
 };
 
 export const setAll = async (

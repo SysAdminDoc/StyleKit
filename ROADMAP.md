@@ -169,13 +169,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
 
 ## Research-Driven Additions
 
-- [ ] P1 - Add frame-aware style matching and injection guards
-  Why: `inject-css/index.js` runs in `all_frames`, and iframe URL matching needs explicit tests to avoid styling unrelated ad/sandbox frames or missing `about:blank`/`srcdoc` cases.
-  Evidence: `src/extension/manifest.json`; `src/inject-css/index.ts`; `src/background/utils.ts`; `src/background/style-index.ts`; Chrome content-script frame docs; Stylus iframe/CSP issue history
-  Touches: style matcher, injection messages, frame targeting, tests, popup/editor apply status
-  Acceptance: Tests cover top frame, matching iframe, non-matching iframe, `about:blank`, and `srcdoc`; non-matching frames receive no saved CSS; matching child frames receive the correct style set with observable debug/status evidence.
-  Complexity: M
-
 - [ ] P1 - Add UserStyles.world provider health and degraded-state cache
   Why: StyleKit's popup depends on UserStyles.world, and upstream issues show API/CORS/outage failures that currently collapse into generic error states.
   Evidence: `src/popup/components/FindStyles.vue`; `src/background/preloader.ts`; userstyles-world issues #385/#386/#377

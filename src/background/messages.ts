@@ -9,6 +9,7 @@ import {
   setAll,
   move,
   getStylesForPage,
+  getStylesForFrame,
   updateIcon,
   setReadability,
   getImportCss,
@@ -141,12 +142,17 @@ export const GetStylesForIframe = async (
   sendResponse: (response: GetStylesForPageResponse) => void
 ): Promise<void> => {
   const styles = await getAll();
-  const pageStyles = getStylesForPage(message.url, styles, message.important);
+  const pageStyles = getStylesForFrame(
+    message.url,
+    message.parentUrl,
+    styles,
+    message.important
+  );
   const tabId = sender.tab?.id;
 
   if (message.preferUserOrigin && tabId !== undefined) {
     const rawPageStyles = message.important
-      ? getStylesForPage(message.url, styles, false)
+      ? getStylesForFrame(message.url, message.parentUrl, styles, false)
       : pageStyles;
     pageStyles.userOriginApplied = await applyUserOriginStylesToFrame(
       tabId,

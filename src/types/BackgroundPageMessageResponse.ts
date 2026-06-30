@@ -25,6 +25,9 @@ export type GetStylesForPageResponse = {
   styles: Array<Style>;
   defaultStyle?: Style;
   userOriginApplied?: boolean;
+  frameMatchUrl?: string;
+  frameMatchSource?: 'top-frame' | 'frame-url' | 'parent-url' | 'blocked';
+  frameBlockedReason?: string;
 };
 
 export type GetCommandsResponse = StylebotCommands;
