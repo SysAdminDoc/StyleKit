@@ -125,13 +125,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
 
 ## Research-Driven Additions
 
-- [ ] P1 - Restrict extension storage exposure to trusted contexts
-  Why: Chrome exposes `storage.local` to content scripts by default, and StyleKit stores full style data plus backup metadata/tokens there.
-  Evidence: `src/options/components/sync/TheGistBackup.vue`; `src/editor/components/text/FontFamilyDropdown.vue`; `src/editor/components/TheOnboarding.vue`; Chrome storage `setAccessLevel` docs
-  Touches: background message API, editor storage callers, options sync components, `src/background/index.ts`, tests
-  Acceptance: Content scripts no longer read/write `chrome.storage.local` directly; background exposes required typed messages; `chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })` is applied without breaking onboarding, font cache, styles, or sync.
-  Complexity: L
-
 - [ ] P1 - Minimize web-accessible resources
   Why: Manifest exposes chunks and Monaco assets to `<all_urls>`; Chrome and MDN describe web-accessible resources as fingerprinting and misuse surface.
   Evidence: `src/extension/manifest.json`; Chrome web_accessible_resources docs; MDN web_accessible_resources security notes
@@ -203,13 +196,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
   Complexity: S
 
 ## Research-Driven Additions
-
-- [ ] P0 - Reconcile release-state and version truth
-  Why: The repo currently claims v1.1.4 trusted-storage work in `CHANGELOG.md`/`CLAUDE.md`, but the package, README, artifacts, tests, and content-script storage callers still reflect v1.1.3 behavior.
-  Evidence: `package.json`; `README.md`; `CHANGELOG.md`; `CLAUDE.md`; `src/background/index.ts`; `src/editor/components/TheOnboarding.vue`; `src/editor/components/text/FontFamilyDropdown.vue`; `npm test`
-  Touches: release docs, package/manifest version path, trusted-storage implementation from the existing P1 item, tests, artifact names
-  Acceptance: All version strings, release notes, README install commands, manifest output, test counts, and shipped artifacts describe the same current release; no changelog claim remains without matching code and tests.
-  Complexity: M
 
 - [ ] P1 - Move saved-style application to USER-origin CSS insertion
   Why: StyleKit currently appends DOM `<style>` tags and blanket `!important` rules, while MV3 supports browser-managed CSS insertion with `origin: 'USER'` for stronger cascade behavior.

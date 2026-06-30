@@ -41,6 +41,10 @@ import {
   RunGoogleDriveSync as RunGoogleDriveSyncType,
   GetLastStylesRollbackSnapshot as GetLastStylesRollbackSnapshotType,
   RestoreLastStylesRollbackSnapshot as RestoreLastStylesRollbackSnapshotType,
+  GetEditorOnboardingDone as GetEditorOnboardingDoneType,
+  SetEditorOnboardingDone as SetEditorOnboardingDoneType,
+  GetGoogleFontsCache as GetGoogleFontsCacheType,
+  SetGoogleFontsCache as SetGoogleFontsCacheType,
   GetCommandsResponse,
   GetAllOptionsResponse,
   GetAllStylesResponse,
@@ -53,6 +57,10 @@ import {
   SetAllStylesResponse,
   GetLastStylesRollbackSnapshotResponse,
   RestoreLastStylesRollbackSnapshotResponse,
+  GetEditorOnboardingDoneResponse,
+  SetEditorOnboardingDoneResponse,
+  GetGoogleFontsCacheResponse,
+  SetGoogleFontsCacheResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 
@@ -62,6 +70,9 @@ import {
 } from './readability-settings';
 
 import { get as getCommands, set as setCommands } from './commands';
+
+const ONBOARDING_KEY = 'stylekit-onboarding-done';
+const GOOGLE_FONTS_CACHE_KEY = 'stylekit-google-fonts';
 
 export const DisableStyle = async (
   message: DisableStyleType
@@ -258,4 +269,36 @@ export const RestoreLastStylesRollbackSnapshot = async (
   }
 
   sendResponse(snapshot);
+};
+
+export const GetEditorOnboardingDone = async (
+  _message: GetEditorOnboardingDoneType,
+  sendResponse: (response: GetEditorOnboardingDoneResponse) => void
+): Promise<void> => {
+  const items = await chrome.storage.local.get(ONBOARDING_KEY);
+  sendResponse(Boolean(items[ONBOARDING_KEY]));
+};
+
+export const SetEditorOnboardingDone = async (
+  message: SetEditorOnboardingDoneType,
+  sendResponse: (response: SetEditorOnboardingDoneResponse) => void
+): Promise<void> => {
+  await chrome.storage.local.set({ [ONBOARDING_KEY]: message.value });
+  sendResponse();
+};
+
+export const GetGoogleFontsCache = async (
+  _message: GetGoogleFontsCacheType,
+  sendResponse: (response: GetGoogleFontsCacheResponse) => void
+): Promise<void> => {
+  const items = await chrome.storage.local.get(GOOGLE_FONTS_CACHE_KEY);
+  sendResponse(items[GOOGLE_FONTS_CACHE_KEY] || null);
+};
+
+export const SetGoogleFontsCache = async (
+  message: SetGoogleFontsCacheType,
+  sendResponse: (response: SetGoogleFontsCacheResponse) => void
+): Promise<void> => {
+  await chrome.storage.local.set({ [GOOGLE_FONTS_CACHE_KEY]: message.value });
+  sendResponse();
 };

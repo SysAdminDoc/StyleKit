@@ -16,6 +16,13 @@ import {
   SetReadabilitySettings,
   ReadabilitySettings,
   OpenDonatePage,
+  GetEditorOnboardingDone,
+  GetEditorOnboardingDoneResponse,
+  SetEditorOnboardingDone,
+  GetGoogleFontsCache,
+  GetGoogleFontsCacheResponse,
+  SetGoogleFontsCache,
+  GoogleFontsCache,
 } from '@stylekit/types';
 
 export const getAllOptions = async (): Promise<StylebotOptions> => {
@@ -136,4 +143,42 @@ export const setReadabilitySettings = (value: ReadabilitySettings): void => {
   };
 
   chrome.runtime.sendMessage(message);
+};
+
+export const getEditorOnboardingDone =
+  async (): Promise<GetEditorOnboardingDoneResponse> => {
+    const message: GetEditorOnboardingDone = {
+      name: 'GetEditorOnboardingDone',
+    };
+
+    return chrome.runtime.sendMessage(message);
+  };
+
+export const setEditorOnboardingDone = (value: boolean): Promise<void> => {
+  const message: SetEditorOnboardingDone = {
+    name: 'SetEditorOnboardingDone',
+    value,
+  };
+
+  return chrome.runtime.sendMessage(message);
+};
+
+export const getGoogleFontsCache =
+  async (): Promise<GetGoogleFontsCacheResponse> => {
+    const message: GetGoogleFontsCache = {
+      name: 'GetGoogleFontsCache',
+    };
+
+    return chrome.runtime.sendMessage(message);
+  };
+
+export const setGoogleFontsCache = (
+  value: GoogleFontsCache
+): Promise<void> => {
+  const message: SetGoogleFontsCache = {
+    name: 'SetGoogleFontsCache',
+    value,
+  };
+
+  return chrome.runtime.sendMessage(message);
 };

@@ -2,6 +2,7 @@ import {
   Style,
   StylebotOptions,
   StylebotCommands,
+  GoogleFontsCache,
   ReadabilitySettings,
   Timestamp,
   StylesRollbackSnapshot,
@@ -35,6 +36,10 @@ export type GetLastStylesRollbackSnapshotResponse =
   StylesRollbackSnapshot | null;
 export type RestoreLastStylesRollbackSnapshotResponse =
   StylesRollbackSnapshot | null;
+export type GetEditorOnboardingDoneResponse = boolean;
+export type SetEditorOnboardingDoneResponse = void;
+export type GetGoogleFontsCacheResponse = GoogleFontsCache | null;
+export type SetGoogleFontsCacheResponse = void;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -48,6 +53,10 @@ type BackgroundPageMessageResponse =
   | RunGoogleDriveSyncResponse
   | SetAllStylesResponse
   | GetLastStylesRollbackSnapshotResponse
-  | RestoreLastStylesRollbackSnapshotResponse;
+  | RestoreLastStylesRollbackSnapshotResponse
+  | GetEditorOnboardingDoneResponse
+  | SetEditorOnboardingDoneResponse
+  | GetGoogleFontsCacheResponse
+  | SetGoogleFontsCacheResponse;
 
 export default BackgroundPageMessageResponse;

@@ -22,6 +22,10 @@ export type StylebotLayout = {
 
 export type StylebotColorPalette = 'basic' | 'material';
 export type StylebotFonts = Array<string>;
+export type GoogleFontsCache = {
+  fonts: string[];
+  ts: number;
+};
 
 export type StylebotOptions = {
   contextMenu: boolean;

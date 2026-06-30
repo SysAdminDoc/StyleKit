@@ -80,11 +80,14 @@
 import { defineComponent } from 'vue';
 import { t } from '@stylekit/i18n';
 
-import { openOptionsPage } from '../../utils/chrome';
+import {
+  getGoogleFontsCache,
+  openOptionsPage,
+  setGoogleFontsCache,
+} from '../../utils/chrome';
 
 import DropdownHackToSupportShadowDom from './../DropdownHackToSupportShadowDom.vue';
 
-const GOOGLE_FONTS_CACHE_KEY = 'stylekit-google-fonts';
 const GOOGLE_FONTS_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 
 export default defineComponent({
@@ -174,8 +177,7 @@ export default defineComponent({
 
     async loadGoogleFonts(): Promise<void> {
       try {
-        const cached = await chrome.storage.local.get(GOOGLE_FONTS_CACHE_KEY);
-        const entry = cached[GOOGLE_FONTS_CACHE_KEY] as { fonts: string[]; ts: number } | undefined;
+        const entry = await getGoogleFontsCache();
 
         if (entry && Date.now() - entry.ts < GOOGLE_FONTS_TTL_MS) {
           this.googleFonts = entry.fonts;
@@ -198,9 +200,7 @@ export default defineComponent({
           .sort();
 
         this.googleFonts = fonts;
-        await chrome.storage.local.set({
-          [GOOGLE_FONTS_CACHE_KEY]: { fonts, ts: Date.now() },
-        });
+        await setGoogleFontsCache({ fonts, ts: Date.now() });
       } catch (e) {
         console.warn('StyleKit: failed to load Google Fonts list', e);
       } finally {

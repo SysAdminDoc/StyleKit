@@ -48,7 +48,10 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 
-const ONBOARDING_KEY = 'stylekit-onboarding-done';
+import {
+  getEditorOnboardingDone,
+  setEditorOnboardingDone,
+} from '../utils/chrome';
 
 export default defineComponent({
   name: 'TheOnboarding',
@@ -62,8 +65,8 @@ export default defineComponent({
   },
 
   async created() {
-    const result = await chrome.storage.local.get(ONBOARDING_KEY);
-    if (!result[ONBOARDING_KEY]) {
+    const onboardingDone = await getEditorOnboardingDone();
+    if (!onboardingDone) {
       this.visible = true;
     }
   },
@@ -71,7 +74,9 @@ export default defineComponent({
   methods: {
     dismiss(): void {
       this.visible = false;
-      chrome.storage.local.set({ [ONBOARDING_KEY]: true });
+      setEditorOnboardingDone(true).catch(e =>
+        console.warn('StyleKit: failed to save onboarding state', e)
+      );
     },
   },
 });

@@ -25,6 +25,10 @@ import {
   RunGoogleDriveSync,
   GetLastStylesRollbackSnapshot,
   RestoreLastStylesRollbackSnapshot,
+  GetEditorOnboardingDone,
+  SetEditorOnboardingDone,
+  GetGoogleFontsCache,
+  SetGoogleFontsCache,
 } from './messages';
 
 import { get as getOption } from './options';
@@ -102,6 +106,10 @@ const ASYNC_MESSAGES = new Set([
   'GetThumbnail',
   'RunGoogleDriveSync',
   'SetAllStyles',
+  'SetEditorOnboardingDone',
+  'GetEditorOnboardingDone',
+  'SetGoogleFontsCache',
+  'GetGoogleFontsCache',
   'GetLastStylesRollbackSnapshot',
   'RestoreLastStylesRollbackSnapshot',
 ]);
@@ -195,6 +203,19 @@ chrome.runtime.onMessage.addListener(
 
       case 'RestoreLastStylesRollbackSnapshot':
         RestoreLastStylesRollbackSnapshot(message, sendResponse);
+        break;
+
+      case 'GetEditorOnboardingDone':
+        GetEditorOnboardingDone(message, sendResponse);
+        break;
+      case 'SetEditorOnboardingDone':
+        SetEditorOnboardingDone(message, sendResponse);
+        break;
+      case 'GetGoogleFontsCache':
+        GetGoogleFontsCache(message, sendResponse);
+        break;
+      case 'SetGoogleFontsCache':
+        SetGoogleFontsCache(message, sendResponse);
         break;
     }
 

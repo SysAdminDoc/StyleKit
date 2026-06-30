@@ -1,6 +1,7 @@
 import {
   StylebotOptions,
   StylebotCommands,
+  GoogleFontsCache,
   ReadabilitySettings,
   StyleMap,
   StylesRollbackReason,
@@ -124,6 +125,24 @@ export type GetThumbnail = {
   styleId?: number;
 };
 
+export type GetEditorOnboardingDone = {
+  name: 'GetEditorOnboardingDone';
+};
+
+export type SetEditorOnboardingDone = {
+  name: 'SetEditorOnboardingDone';
+  value: boolean;
+};
+
+export type GetGoogleFontsCache = {
+  name: 'GetGoogleFontsCache';
+};
+
+export type SetGoogleFontsCache = {
+  name: 'SetGoogleFontsCache';
+  value: GoogleFontsCache;
+};
+
 type BackgroundPageMessage =
   | SetStyle
   | EnableStyle
@@ -147,6 +166,10 @@ type BackgroundPageMessage =
   | RunGoogleDriveSync
   | GetLastStylesRollbackSnapshot
   | RestoreLastStylesRollbackSnapshot
-  | GetThumbnail;
+  | GetThumbnail
+  | GetEditorOnboardingDone
+  | SetEditorOnboardingDone
+  | GetGoogleFontsCache
+  | SetGoogleFontsCache;
 
 export default BackgroundPageMessage;
