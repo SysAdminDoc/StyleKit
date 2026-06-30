@@ -62,18 +62,21 @@ export const toggleGrayscale = ({
 export const applyStyles = (
   { dispatch }: { dispatch: Dispatch },
   defaultStyle: Style | undefined,
-  styles: Style[]
+  styles: Style[],
+  userOriginApplied = false
 ): void => {
-  styles.forEach(style => {
-    if (style.enabled) {
-      injectCSSIntoDocument(
-        appendImportantToDeclarations(style.css),
-        style.url
-      );
-    } else {
-      injectCSSIntoDocument('', style.url);
-    }
-  });
+  if (!userOriginApplied) {
+    styles.forEach(style => {
+      if (style.enabled) {
+        injectCSSIntoDocument(
+          appendImportantToDeclarations(style.css),
+          style.url
+        );
+      } else {
+        injectCSSIntoDocument('', style.url);
+      }
+    });
+  }
 
   if (defaultStyle) {
     if (defaultStyle.readability) {

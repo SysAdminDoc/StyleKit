@@ -26,13 +26,15 @@ const injectCss = (
       if (response) {
         const { styles, defaultStyle } = response;
 
-        styles.forEach(style => {
-          if (style.enabled) {
-            injectCSSIntoDocument(style.css, style.url).catch(e =>
-              console.warn('StyleKit: failed to inject CSS for', style.url, e)
-            );
-          }
-        });
+        if (!response.userOriginApplied) {
+          styles.forEach(style => {
+            if (style.enabled) {
+              injectCSSIntoDocument(style.css, style.url).catch(e =>
+                console.warn('StyleKit: failed to inject CSS for', style.url, e)
+              );
+            }
+          });
+        }
 
         if (defaultStyle && defaultStyle.readability) {
           applyReadability();
@@ -50,13 +52,13 @@ const run = () => {
   if (window === window.top) {
     injectCss({
       name: 'GetStylesForPage',
-      important: true,
+      preferUserOrigin: true,
     });
   } else {
     injectCss({
       name: 'GetStylesForIframe',
       url: window.location.href,
-      important: true,
+      preferUserOrigin: true,
     });
   }
 };

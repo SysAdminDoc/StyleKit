@@ -2,6 +2,7 @@ import { getCachedThumb, setCachedThumb } from './preloader';
 
 import {
   set,
+  get,
   disable,
   enable,
   getAll,
@@ -45,6 +46,8 @@ import {
   SetEditorOnboardingDone as SetEditorOnboardingDoneType,
   GetGoogleFontsCache as GetGoogleFontsCacheType,
   SetGoogleFontsCache as SetGoogleFontsCacheType,
+  ApplyPreviewStyleToTab as ApplyPreviewStyleToTabType,
+  RemovePreviewStyleFromTab as RemovePreviewStyleFromTabType,
   GetCommandsResponse,
   GetAllOptionsResponse,
   GetAllStylesResponse,
@@ -63,6 +66,12 @@ import {
   SetGoogleFontsCacheResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
+import {
+  applyUserOriginPreviewToTab,
+  applyUserOriginStylesToFrame,
+  removeUserOriginPreviewFromTab,
+  replaceUserOriginCss,
+} from './style-applier';
 
 import {
   get as getReadabilitySettings,
@@ -86,8 +95,25 @@ export const EnableStyle = async (message: EnableStyleType): Promise<void> => {
   return applyStylesToAllTabs();
 };
 
-export const SetStyle = (message: SetStyleType): Promise<void> =>
-  set(message.url, message.css, message.readability);
+export const SetStyle = async (
+  message: SetStyleType,
+  sender?: chrome.runtime.MessageSender
+): Promise<void> => {
+  const previousStyle = await get(message.url);
+  await set(message.url, message.css, message.readability);
+
+  if (sender?.tab?.id !== undefined) {
+    await replaceUserOriginCss(
+      {
+        tabId: sender.tab.id,
+        frameId: sender.frameId ?? 0,
+      },
+      message.url,
+      previousStyle?.css,
+      message.css
+    );
+  }
+};
 
 export const GetAllStyles = async (
   sendResponse: (response: GetAllStylesResponse) => void
@@ -111,10 +137,23 @@ export const SetAllStyles = async (
 
 export const GetStylesForIframe = async (
   message: GetStylesForIframeType,
+  sender: chrome.runtime.MessageSender,
   sendResponse: (response: GetStylesForPageResponse) => void
 ): Promise<void> => {
   const styles = await getAll();
   const pageStyles = getStylesForPage(message.url, styles, message.important);
+  const tabId = sender.tab?.id;
+
+  if (message.preferUserOrigin && tabId !== undefined) {
+    const rawPageStyles = message.important
+      ? getStylesForPage(message.url, styles, false)
+      : pageStyles;
+    pageStyles.userOriginApplied = await applyUserOriginStylesToFrame(
+      tabId,
+      sender.frameId ?? 0,
+      rawPageStyles.styles
+    );
+  }
 
   sendResponse(pageStyles);
 };
@@ -132,6 +171,17 @@ export const GetStylesForPage = async (
 
   const styles = await getAll();
   const response = getStylesForPage(tab.url, styles, message.important);
+
+  if (message.preferUserOrigin && tab.id !== undefined) {
+    const rawResponse = message.important
+      ? getStylesForPage(tab.url, styles, false)
+      : response;
+    response.userOriginApplied = await applyUserOriginStylesToFrame(
+      tab.id,
+      sender.frameId ?? 0,
+      rawResponse.styles
+    );
+  }
 
   updateIcon(tab, response.styles, response.defaultStyle);
   sendResponse(response);
@@ -300,5 +350,43 @@ export const SetGoogleFontsCache = async (
   sendResponse: (response: SetGoogleFontsCacheResponse) => void
 ): Promise<void> => {
   await chrome.storage.local.set({ [GOOGLE_FONTS_CACHE_KEY]: message.value });
+  sendResponse();
+};
+
+export const ApplyPreviewStyleToTab = async (
+  message: ApplyPreviewStyleToTabType,
+  sendResponse: () => void
+): Promise<void> => {
+  const applied = await applyUserOriginPreviewToTab(
+    message.tabId,
+    message.id,
+    message.css
+  );
+
+  if (!applied) {
+    await chrome.tabs
+      .sendMessage(message.tabId, {
+        name: 'PreviewStyle',
+        id: message.id,
+        css: message.css,
+      })
+      .catch(() => undefined);
+  }
+
+  sendResponse();
+};
+
+export const RemovePreviewStyleFromTab = async (
+  message: RemovePreviewStyleFromTabType,
+  sendResponse: () => void
+): Promise<void> => {
+  await removeUserOriginPreviewFromTab(message.tabId, message.id);
+  await chrome.tabs
+    .sendMessage(message.tabId, {
+      name: 'RemovePreviewStyle',
+      id: message.id,
+    })
+    .catch(() => undefined);
+
   sendResponse();
 };

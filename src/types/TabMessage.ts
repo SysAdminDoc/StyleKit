@@ -24,6 +24,7 @@ export type ApplyStylesToTab = {
   name: 'ApplyStylesToTab';
   defaultStyle?: Style;
   styles: Style[];
+  userOriginApplied?: boolean;
 };
 
 export type TabUpdated = {

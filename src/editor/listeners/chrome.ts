@@ -57,7 +57,12 @@ const initChromeListener = (store: Store<State>): void => {
       } else if (message.name === 'ToggleReadabilityForTab') {
         toggleReadability({ state, dispatch });
       } else if (message.name === 'ApplyStylesToTab') {
-        applyStyles({ dispatch }, message.defaultStyle, message.styles);
+        applyStyles(
+          { dispatch },
+          message.defaultStyle,
+          message.styles,
+          message.userOriginApplied
+        );
       } else if (message.name === 'PreviewStyle') {
         const id = `stylekit-preview-${message.id}`;
         let el = document.getElementById(id) as HTMLStyleElement | null;

@@ -16,6 +16,7 @@ import BackgroundPageUtils from './utils';
 import { getCachedStyles, setCachedStyles } from './cache';
 import { StyleIndex } from './style-index';
 import { setAllStylesInStorage } from './style-storage';
+import { applyUserOriginStylesToFrame } from './style-applier';
 
 const LAST_STYLES_ROLLBACK_SNAPSHOT_KEY = 'styles-rollback-last';
 const STYLE_TOMBSTONES_KEY = 'style-tombstones';
@@ -82,14 +83,20 @@ export const applyStylesToAllTabs = async (): Promise<void> => {
   const allStyles = await getAll();
   const tabs = await chrome.tabs.query({});
 
-  tabs.forEach(tab => {
+  await Promise.all(tabs.map(async tab => {
     if (tab && tab.url && tab.id) {
       const { styles, defaultStyle } = getStylesForPage(tab.url, allStyles);
+      const userOriginApplied = await applyUserOriginStylesToFrame(
+        tab.id,
+        0,
+        styles
+      );
 
       const message: ApplyStylesToTab = {
         name: 'ApplyStylesToTab',
         defaultStyle,
         styles,
+        userOriginApplied,
       };
 
       chrome.tabs.sendMessage(tab.id, message).catch(e => console.warn('StyleKit: failed to send styles to tab', tab.id, e));
@@ -98,7 +105,7 @@ export const applyStylesToAllTabs = async (): Promise<void> => {
         updateIcon(tab, styles, defaultStyle);
       }
     }
-  });
+  }));
 };
 
 export const getAll = async (): Promise<StyleMap> => {

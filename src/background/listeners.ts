@@ -29,6 +29,8 @@ import {
   SetEditorOnboardingDone,
   GetGoogleFontsCache,
   SetGoogleFontsCache,
+  ApplyPreviewStyleToTab,
+  RemovePreviewStyleFromTab,
 } from './messages';
 
 import { get as getOption } from './options';
@@ -112,6 +114,8 @@ const ASYNC_MESSAGES = new Set([
   'GetGoogleFontsCache',
   'GetLastStylesRollbackSnapshot',
   'RestoreLastStylesRollbackSnapshot',
+  'ApplyPreviewStyleToTab',
+  'RemovePreviewStyleFromTab',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -151,7 +155,7 @@ chrome.runtime.onMessage.addListener(
         break;
 
       case 'SetStyle':
-        SetStyle(message);
+        SetStyle(message, sender);
         break;
       case 'MoveStyle':
         MoveStyle(message);
@@ -166,7 +170,7 @@ chrome.runtime.onMessage.addListener(
         GetStylesForPage(message, sender, sendResponse);
         break;
       case 'GetStylesForIframe':
-        GetStylesForIframe(message, sendResponse);
+        GetStylesForIframe(message, sender, sendResponse);
         break;
       case 'EnableStyle':
         EnableStyle(message);
@@ -216,6 +220,12 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'SetGoogleFontsCache':
         SetGoogleFontsCache(message, sendResponse);
+        break;
+      case 'ApplyPreviewStyleToTab':
+        ApplyPreviewStyleToTab(message, sendResponse);
+        break;
+      case 'RemovePreviewStyleFromTab':
+        RemovePreviewStyleFromTab(message, sendResponse);
         break;
     }
 

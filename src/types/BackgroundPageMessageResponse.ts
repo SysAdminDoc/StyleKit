@@ -24,6 +24,7 @@ export type GetAllStylesResponse = {
 export type GetStylesForPageResponse = {
   styles: Array<Style>;
   defaultStyle?: Style;
+  userOriginApplied?: boolean;
 };
 
 export type GetCommandsResponse = StylebotCommands;

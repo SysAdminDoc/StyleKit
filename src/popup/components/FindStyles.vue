@@ -494,10 +494,28 @@ export default defineComponent({
 
     removePreview(): void {
       if (!this.tab?.id || this.previewingId === null) return;
-      chrome.tabs
-        .sendMessage(this.tab.id, {
-          name: 'RemovePreviewStyle',
-          id: String(this.previewingId),
+      this.removePreviewById(String(this.previewingId));
+    },
+
+    applyPreviewById(id: string, css: string): void {
+      if (!this.tab?.id) return;
+      chrome.runtime
+        .sendMessage({
+          name: 'ApplyPreviewStyleToTab',
+          tabId: this.tab.id,
+          id,
+          css,
+        })
+        .catch(() => { /* fire-and-forget */ });
+    },
+
+    removePreviewById(id: string): void {
+      if (!this.tab?.id) return;
+      chrome.runtime
+        .sendMessage({
+          name: 'RemovePreviewStyleFromTab',
+          tabId: this.tab.id,
+          id,
         })
         .catch(() => { /* fire-and-forget */ });
     },
@@ -518,9 +536,7 @@ export default defineComponent({
         try {
           const css = await this.fetchCss(style);
           if (!css) return;
-          chrome.tabs
-            .sendMessage(this.tab.id, { name: 'PreviewStyle', id: String(style.i), css })
-            .catch(() => { /* fire-and-forget */ });
+          this.applyPreviewById(String(style.i), css);
           this.previewingId = style.i;
         } catch (e) {
           console.error('Hover preview error:', e);
@@ -555,9 +571,7 @@ export default defineComponent({
       try {
         const css = await this.fetchCss(style);
         if (!css) return;
-        chrome.tabs
-          .sendMessage(this.tab.id, { name: 'PreviewStyle', id: String(style.i), css })
-          .catch(() => { /* fire-and-forget */ });
+        this.applyPreviewById(String(style.i), css);
         this.previewingId = style.i;
       } catch (e) {
         console.error('Preview error:', e);
@@ -640,11 +654,7 @@ export default defineComponent({
 
         // Instantly inject into the live tab without requiring a refresh
         if (this.tab?.id) {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'PreviewStyle',
-            id: `usw-installed-${this.domain}`,
-            css: preview.mergedCss,
-          }).catch(() => { /* fire-and-forget */ });
+          this.applyPreviewById(`usw-installed-${this.domain}`, preview.mergedCss);
         }
 
         // Clear hover preview — installed style is now injected permanently
@@ -687,16 +697,9 @@ export default defineComponent({
 
       if (this.tab?.id) {
         if (mergedCss) {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'PreviewStyle',
-            id: `usw-installed-${domain}`,
-            css: mergedCss,
-          }).catch(() => { /* fire-and-forget */ });
+          this.applyPreviewById(`usw-installed-${domain}`, mergedCss);
         } else {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'RemovePreviewStyle',
-            id: `usw-installed-${domain}`,
-          }).catch(() => { /* fire-and-forget */ });
+          this.removePreviewById(`usw-installed-${domain}`);
         }
       }
     },
@@ -766,11 +769,7 @@ export default defineComponent({
         } as SetStyle);
 
         if (this.tab?.id) {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'PreviewStyle',
-            id: `usw-installed-${entry.domain}`,
-            css: mergedCss,
-          }).catch(() => {});
+          this.applyPreviewById(`usw-installed-${entry.domain}`, mergedCss);
         }
 
         // Remove from updatable
@@ -823,16 +822,9 @@ export default defineComponent({
       // Instantly update or remove the injected style in the live tab
       if (this.tab?.id) {
         if (mergedCss) {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'PreviewStyle',
-            id: `usw-installed-${domain}`,
-            css: mergedCss,
-          }).catch(() => { /* fire-and-forget */ });
+          this.applyPreviewById(`usw-installed-${domain}`, mergedCss);
         } else {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'RemovePreviewStyle',
-            id: `usw-installed-${domain}`,
-          }).catch(() => { /* fire-and-forget */ });
+          this.removePreviewById(`usw-installed-${domain}`);
         }
       }
 

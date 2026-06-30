@@ -45,12 +45,14 @@ export type GetStylesForPage = {
   name: 'GetStylesForPage';
   tab?: chrome.tabs.Tab;
   important?: boolean;
+  preferUserOrigin?: boolean;
 };
 
 export type GetStylesForIframe = {
   name: 'GetStylesForIframe';
   url: string;
   important?: boolean;
+  preferUserOrigin?: boolean;
 };
 
 export type GetAllOptions = {
@@ -143,6 +145,19 @@ export type SetGoogleFontsCache = {
   value: GoogleFontsCache;
 };
 
+export type ApplyPreviewStyleToTab = {
+  name: 'ApplyPreviewStyleToTab';
+  tabId: number;
+  id: string;
+  css: string;
+};
+
+export type RemovePreviewStyleFromTab = {
+  name: 'RemovePreviewStyleFromTab';
+  tabId: number;
+  id: string;
+};
+
 type BackgroundPageMessage =
   | SetStyle
   | EnableStyle
@@ -170,6 +185,8 @@ type BackgroundPageMessage =
   | GetEditorOnboardingDone
   | SetEditorOnboardingDone
   | GetGoogleFontsCache
-  | SetGoogleFontsCache;
+  | SetGoogleFontsCache
+  | ApplyPreviewStyleToTab
+  | RemovePreviewStyleFromTab;
 
 export default BackgroundPageMessage;

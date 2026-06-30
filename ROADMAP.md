@@ -169,13 +169,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
 
 ## Research-Driven Additions
 
-- [ ] P1 - Move saved-style application to USER-origin CSS insertion
-  Why: StyleKit currently appends DOM `<style>` tags and blanket `!important` rules, while MV3 supports browser-managed CSS insertion with `origin: 'USER'` for stronger cascade behavior.
-  Evidence: `src/inject-css/index.ts`; `src/editor/listeners/common.ts`; `src/css/inject-style.ts`; `src/background/styles.ts`; Chrome `scripting.insertCSS` docs; Stylus injection architecture
-  Touches: background style application, content-script injection fallback, preview/remove paths, manifest permissions, style removal tests
-  Acceptance: Saved styles and previews use `chrome.scripting.insertCSS/removeCSS` with USER origin where supported, fall back to DOM style injection only when necessary, remove applied CSS reliably, and no longer require blanket `!important` for normal cascade wins.
-  Complexity: L
-
 - [ ] P1 - Add frame-aware style matching and injection guards
   Why: `inject-css/index.js` runs in `all_frames`, and iframe URL matching needs explicit tests to avoid styling unrelated ad/sandbox frames or missing `about:blank`/`srcdoc` cases.
   Evidence: `src/extension/manifest.json`; `src/inject-css/index.ts`; `src/background/utils.ts`; `src/background/style-index.ts`; Chrome content-script frame docs; Stylus iframe/CSP issue history
