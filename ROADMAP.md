@@ -125,13 +125,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
 
 ## Research-Driven Additions
 
-- [ ] P1 - Minimize web-accessible resources
-  Why: Manifest exposes chunks and Monaco assets to `<all_urls>`; Chrome and MDN describe web-accessible resources as fingerprinting and misuse surface.
-  Evidence: `src/extension/manifest.json`; Chrome web_accessible_resources docs; MDN web_accessible_resources security notes
-  Touches: `src/extension/manifest.json`, `src/extension/manifest-firefox.json`, `vite.config.ts`, Monaco/editor loaders, manifest tests
-  Acceptance: Only resources loaded by page-facing content scripts remain web-accessible; Chrome uses `use_dynamic_url` where compatible; a test fails if broad wildcard resources are added without an allowlist update.
-  Complexity: M
-
 - [ ] P1 - Add schema-backed import validation and dry-run previews
   Why: URL, JSON, Gist, and UserStyles.world imports use separate validation paths, and URL import accepts `text/html` as CSS preview input.
   Evidence: `src/options/components/styles/StyleImportFromUrl.vue`; `src/options/components/sync/TheGistBackup.vue`; `src/popup/components/FindStyles.vue`; `src/utils/usercss.ts`

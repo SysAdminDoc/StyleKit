@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "StyleKit",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "author": "SysAdminDoc",
   "description": "__MSG_extension_description__",
   "default_locale": "en",
@@ -81,13 +81,9 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "chunks/*",
-        "monaco-editor/*",
-        "monaco-editor/iframe/*",
-        "monaco-editor/iframe/node_modules/*",
         "editor/index.css",
-        "readability/index.css",
-        "readability/index.js"
+        "monaco-editor/iframe/index.html",
+        "readability/index.css"
       ],
       "matches": [
         "<all_urls>"

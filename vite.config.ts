@@ -4,6 +4,11 @@ import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, cpSync } from 'fs';
 import cssnano from 'cssnano';
+import {
+  collectImportedWebAccessibleResources,
+  createWebAccessibleResourceRules,
+} from './src/extension/web-accessible-resources';
+import type { BundleGraph } from './src/extension/web-accessible-resources';
 
 const outDir = process.env.BROWSER === 'firefox' ? 'firefox-dist' : 'dist';
 const remValuePattern = /(-?\d*\.?\d+)rem\b/g;
@@ -64,8 +69,14 @@ function localePlugin() {
 
 // Copy static assets and manifest
 function copyAssetsPlugin() {
+  let importedWebAccessibleResources: string[] = [];
+
   return {
     name: 'copy-assets',
+    generateBundle(_options: unknown, bundle: BundleGraph) {
+      importedWebAccessibleResources =
+        collectImportedWebAccessibleResources(bundle);
+    },
     closeBundle() {
       // Copy manifest
       const manifestPath = resolve(__dirname, 'src/extension/manifest.json');
@@ -82,6 +93,10 @@ function copyAssetsPlugin() {
       // Update version from package.json
       const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'));
       manifest.version = pkg.version;
+      manifest.web_accessible_resources = createWebAccessibleResourceRules(
+        importedWebAccessibleResources,
+        process.env.BROWSER !== 'firefox'
+      );
 
       writeFileSync(resolve(__dirname, outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 

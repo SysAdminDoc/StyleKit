@@ -1,7 +1,7 @@
 # StyleKit
 
 ![License](https://img.shields.io/github/license/SysAdminDoc/StyleKit)
-![Version](https://img.shields.io/badge/version-1.1.4-blue)
+![Version](https://img.shields.io/badge/version-1.1.5-blue)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-green)
 ![Firefox](https://img.shields.io/badge/Firefox-Supported-orange)
 ![No Tracking](https://img.shields.io/badge/Analytics-None-brightgreen)
@@ -69,12 +69,13 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **Grayscale mode** -- reduce eye strain
 - **15+ language translations**
 - **Two-click delete confirmation** -- prevents accidental style deletion
+- **Narrow extension resource exposure** -- content-script assets are allowlisted exactly and Chrome builds use dynamic web-accessible URLs
 
 ## Installation
 
 ### From Release
 
-1. Download `StyleKit-v1.1.4-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
+1. Download `StyleKit-v1.1.5-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
 2. Unzip the file
 3. Open `chrome://extensions`
 4. Enable **Developer mode**
@@ -106,7 +107,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (12/12 suites, 85 tests)
+npm test               # Run tests (13/13 suites, 87 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 ```
