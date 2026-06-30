@@ -6,6 +6,7 @@ import {
   StylebotOptions,
   StylebotCommands,
   GoogleDriveSyncMetadata,
+  GoogleDriveSyncReport,
   StylesRollbackReason,
   StylesRollbackSnapshot,
 } from '@stylekit/types';
@@ -37,6 +38,7 @@ type State = {
 
   googleDriveSyncEnabled: boolean;
   googleDriveSyncMetadata: GoogleDriveSyncMetadata | undefined;
+  googleDriveSyncReport: GoogleDriveSyncReport | null;
   lastStylesRollbackSnapshot: StylesRollbackSnapshot | null;
 };
 
@@ -59,6 +61,7 @@ export default createStore<State>({
     commands: defaultCommands,
     googleDriveSyncEnabled: false,
     googleDriveSyncMetadata: undefined,
+    googleDriveSyncReport: null,
     lastStylesRollbackSnapshot: null,
   },
 
@@ -228,9 +231,10 @@ export default createStore<State>({
       }
     },
 
-    async syncWithGoogleDrive({ dispatch }): Promise<string | null> {
+    async syncWithGoogleDrive({ state, dispatch }): Promise<string | null> {
       try {
-        await runGoogleDriveSync();
+        const report = await runGoogleDriveSync();
+        state.googleDriveSyncReport = report;
         await dispatch('getGoogleDriveSyncMetadata');
         await dispatch('getAllStyles');
         await dispatch('getLastStylesRollbackSnapshot');

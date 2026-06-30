@@ -246,8 +246,8 @@ export const RunGoogleDriveSync = async (
   _message: RunGoogleDriveSyncType,
   sendResponse: (response: RunGoogleDriveSyncResponse) => void
 ): Promise<void> => {
-  await runGoogleDriveSync();
-  sendResponse();
+  const report = await runGoogleDriveSync();
+  sendResponse(report);
 };
 
 export const GetLastStylesRollbackSnapshot = async (

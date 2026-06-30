@@ -6,6 +6,7 @@ import {
   ReadabilitySettings,
   Timestamp,
   StylesRollbackSnapshot,
+  GoogleDriveSyncReport,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -30,7 +31,7 @@ export type GetReadabilitySettingsResponse = ReadabilitySettings;
 
 export type GetImportCssResponse = string;
 export type GetThumbnailResponse = string;
-export type RunGoogleDriveSyncResponse = void;
+export type RunGoogleDriveSyncResponse = GoogleDriveSyncReport;
 export type SetAllStylesResponse = void;
 export type GetLastStylesRollbackSnapshotResponse =
   StylesRollbackSnapshot | null;

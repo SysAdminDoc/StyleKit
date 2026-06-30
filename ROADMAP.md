@@ -125,13 +125,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
 
 ## Research-Driven Additions
 
-- [ ] P1 - Add sync tombstones and conflict reporting
-  Why: Google Drive merge retains deletions because deleted styles have no timestamp, so removed styles can come back after multi-device sync.
-  Evidence: `src/sync/google-drive/merge-styles.ts`; `CLAUDE.md` known issue; Stylus cloud sync feature set
-  Touches: `src/types`, Google Drive sync modules, Gist export/import schema, options sync UI, migration tests
-  Acceptance: Deletions sync as tombstones, conflicting CSS edits are reported with local/remote modified times, and tests cover local-delete/remote-keep and simultaneous-edit cases.
-  Complexity: L
-
 - [ ] P1 - Move large style libraries to IndexedDB with migration
   Why: `chrome.storage.local` is convenient but JSON-object rewrites are brittle for large style collections; Chrome documents storage quota/performance costs, and roadmap already anticipates `idb` for style storage over 5MB.
   Evidence: `src/background/styles.ts`; `src/background/cache.ts`; Chrome storage quota docs; existing ROADMAP idb note

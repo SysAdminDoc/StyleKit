@@ -15,6 +15,7 @@ import {
   StylesRollbackSnapshot,
   GetLastStylesRollbackSnapshot,
   RestoreLastStylesRollbackSnapshot,
+  GoogleDriveSyncReport,
 } from '@stylekit/types';
 import {
   createImportPreview,
@@ -93,7 +94,7 @@ export const setCommands = (commands: StylebotCommands): void => {
   chrome.runtime.sendMessage(message);
 };
 
-export const runGoogleDriveSync = async (): Promise<void> => {
+export const runGoogleDriveSync = async (): Promise<GoogleDriveSyncReport> => {
   const message: RunGoogleDriveSync = {
     name: 'RunGoogleDriveSync',
   };

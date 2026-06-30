@@ -2,8 +2,11 @@ import type { StyleMap, StylesRollbackSnapshot } from '@stylekit/types';
 
 type StorageData = Record<string, unknown>;
 
-const makeStyleMap = (css: string): StyleMap => ({
-  'https://example.com': {
+const makeStyleMap = (
+  css: string,
+  url = 'https://example.com'
+): StyleMap => ({
+  [url]: {
     css,
     enabled: true,
     readability: false,
@@ -95,5 +98,35 @@ describe('style rollback snapshots', () => {
 
     expect(restoredSnapshot?.reason).toBe('gist-import');
     expect(storageData.styles).toEqual(originalStyles);
+  });
+
+  it('records tombstones when setAll removes existing styles', async () => {
+    const { getStyleTombstones, setAll } = await importStylesModule();
+    storageData.styles = {
+      ...makeStyleMap('body { color: red; }', 'https://keep.example.com'),
+      ...makeStyleMap('body { color: blue; }', 'https://delete.example.com'),
+    };
+
+    await setAll(
+      makeStyleMap('body { color: red; }', 'https://keep.example.com')
+    );
+
+    expect(await getStyleTombstones()).toEqual({
+      'https://delete.example.com': {
+        deletedTime: expect.any(String),
+      },
+    });
+  });
+
+  it('does not record tombstones for sync-applied replacements', async () => {
+    const { getStyleTombstones, setAll } = await importStylesModule();
+    storageData.styles = makeStyleMap(
+      'body { color: red; }',
+      'https://delete.example.com'
+    );
+
+    await setAll({}, { recordTombstones: false });
+
+    expect(await getStyleTombstones()).toEqual({});
   });
 });

@@ -1,6 +1,9 @@
 import { compareAsc } from 'date-fns';
 
-import { StyleMap, GoogleDriveSyncMetadata } from '@stylekit/types';
+import {
+  GoogleDriveSyncMetadata,
+  GoogleDriveSyncReport,
+} from '@stylekit/types';
 import { getCurrentTimestamp } from '@stylekit/utils';
 
 import mergeStyles from './merge-styles';
@@ -17,13 +20,31 @@ import {
   writeSyncFile,
 } from './sync-file';
 import {
+  createGoogleDriveSyncPayload,
+  StyleSyncState,
+} from './sync-payload';
+import {
   setAll as setAllStyles,
   getAll as getAllStyles,
+  getStyleTombstones,
+  setStyleTombstones,
   createStylesRollbackSnapshot,
 } from '../../background/styles';
 
-const getStylesBlob = (styles: StyleMap) =>
-  new Blob([JSON.stringify(styles)], { type: 'application/json' });
+const EMPTY_REPORT: GoogleDriveSyncReport = {
+  conflicts: [],
+  tombstonesApplied: 0,
+};
+
+const getLocalSyncState = async (): Promise<StyleSyncState> => ({
+  styles: await getAllStyles(),
+  tombstones: await getStyleTombstones(),
+});
+
+const getStylesBlob = ({ styles, tombstones }: StyleSyncState) =>
+  new Blob([JSON.stringify(createGoogleDriveSyncPayload(styles, tombstones))], {
+    type: 'application/json',
+  });
 
 /**
  * Copy local styles to remote and update sync metadata
@@ -31,9 +52,9 @@ const getStylesBlob = (styles: StyleMap) =>
 const writeToRemote = async (
   accessToken: string,
   syncMetadata: GoogleDriveSyncMetadata,
-  styles: StyleMap
+  state: StyleSyncState
 ) => {
-  const blob = getStylesBlob(styles);
+  const blob = getStylesBlob(state);
   const updatedSyncMetadata = await writeSyncFile(
     accessToken,
     blob,
@@ -48,10 +69,11 @@ const writeToRemote = async (
  */
 const writeToLocal = async (
   syncMetadata: GoogleDriveSyncMetadata,
-  styles: StyleMap
+  state: StyleSyncState
 ) => {
   await createStylesRollbackSnapshot('google-drive-sync');
-  await setAllStyles(styles);
+  await setStyleTombstones(state.tombstones);
+  await setAllStyles(state.styles, { recordTombstones: false });
 
   return setGoogleDriveSyncMetadata({
     ...syncMetadata,
@@ -64,14 +86,27 @@ const writeToLocal = async (
  */
 const merge = async (
   accessToken: string,
-  syncMetadata: GoogleDriveSyncMetadata
-) => {
-  const localStyles = await getAllStyles();
-  const remoteStyles = await downloadSyncFile(accessToken, syncMetadata.id);
-  const mergedStyles = mergeStyles(localStyles, remoteStyles);
+  syncMetadata: GoogleDriveSyncMetadata,
+  lastSyncTime?: string
+): Promise<GoogleDriveSyncReport> => {
+  const localState = await getLocalSyncState();
+  const remoteState = await downloadSyncFile(accessToken, syncMetadata.id);
+  const merged = mergeStyles({
+    localStyles: localState.styles,
+    remoteStyles: remoteState.styles,
+    localTombstones: localState.tombstones,
+    remoteTombstones: remoteState.tombstones,
+    lastSyncTime,
+  });
+  const mergedState = {
+    styles: merged.styles,
+    tombstones: merged.tombstones,
+  };
 
-  await writeToLocal(syncMetadata, mergedStyles);
-  await writeToRemote(accessToken, syncMetadata, mergedStyles);
+  await writeToLocal(syncMetadata, mergedState);
+  await writeToRemote(accessToken, syncMetadata, mergedState);
+
+  return merged.report;
 };
 
 /**
@@ -83,8 +118,8 @@ const merge = async (
  *    - Else, write remote styles to local
  * 4) If local styles' modified timestamp > remote sync timestamp, write local styles to remote.
  */
-const runSync = async (accessToken: string): Promise<void> => {
-  const styles = await getAllStyles();
+const runSync = async (accessToken: string): Promise<GoogleDriveSyncReport> => {
+  const localState = await getLocalSyncState();
   const remoteSyncMetadata = await getSyncFileMetadata(accessToken);
 
   console.debug('syncing with google drive...');
@@ -92,9 +127,10 @@ const runSync = async (accessToken: string): Promise<void> => {
   if (!remoteSyncMetadata) {
     console.debug('did not find remote sync file, updating remote...');
 
-    const blob = getStylesBlob(styles);
+    const blob = getStylesBlob(localState);
     const newSyncMetadata = await writeSyncFile(accessToken, blob);
-    return setGoogleDriveSyncMetadata(newSyncMetadata);
+    await setGoogleDriveSyncMetadata(newSyncMetadata);
+    return EMPTY_REPORT;
   }
 
   const localSyncMetadata = await getGoogleDriveSyncMetadata();
@@ -124,44 +160,51 @@ const runSync = async (accessToken: string): Promise<void> => {
         'both local and remote were updated since last sync, merging local and remote...'
       );
 
-      return merge(accessToken, remoteSyncMetadata);
+      return merge(
+        accessToken,
+        remoteSyncMetadata,
+        localSyncMetadata.modifiedTime
+      );
     }
 
     console.debug('remote was updated since last sync, updating local...');
-    const remoteStyles = await downloadSyncFile(
+    const remoteState = await downloadSyncFile(
       accessToken,
       remoteSyncMetadata.id
     );
 
-    return writeToLocal(remoteSyncMetadata, remoteStyles);
+    await writeToLocal(remoteSyncMetadata, remoteState);
+    return EMPTY_REPORT;
   }
 
   // check if local styles were modified v/s remote
   if (compareAsc(localStylesModifiedTime, remoteSyncTime) > 0) {
     console.debug('local was updated since last sync, updating remote...');
-    return writeToRemote(accessToken, remoteSyncMetadata, styles);
+    await writeToRemote(accessToken, remoteSyncMetadata, localState);
+    return EMPTY_REPORT;
   }
 
-  return setGoogleDriveSyncMetadata({
+  await setGoogleDriveSyncMetadata({
     ...remoteSyncMetadata,
     modifiedTime: getCurrentTimestamp(),
   });
+  return EMPTY_REPORT;
 };
 
 /**
  * Run sync with automatic token refresh on 401 errors.
  * Gets a fresh access token and retries once if auth fails.
  */
-export const runGoogleDriveSync = async (): Promise<void> => {
+export const runGoogleDriveSync = async (): Promise<GoogleDriveSyncReport> => {
   let accessToken = await getAccessToken();
 
   try {
-    await runSync(accessToken);
+    return await runSync(accessToken);
   } catch (error) {
     if (error instanceof SyncError && error.statusCode === 401) {
       console.debug('Access token expired, re-authenticating...');
       accessToken = await getAccessToken();
-      await runSync(accessToken);
+      return await runSync(accessToken);
     } else {
       throw error;
     }

@@ -1,37 +1,178 @@
-import { without } from 'lodash';
 import { compareAsc } from 'date-fns';
-import { StyleMap } from '@stylekit/types';
+import {
+  GoogleDriveSyncReport,
+  StyleMap,
+  StyleSyncConflict,
+  StyleSyncTombstoneMap,
+  StyleWithoutUrl,
+  Timestamp,
+} from '@stylekit/types';
 
-const compareModifiedTime = (t1: string, t2: string) => {
-  return compareAsc(new Date(t1), new Date(t2));
+export type MergeStylesInput = {
+  localStyles: StyleMap;
+  remoteStyles: StyleMap;
+  localTombstones?: StyleSyncTombstoneMap;
+  remoteTombstones?: StyleSyncTombstoneMap;
+  lastSyncTime?: Timestamp;
 };
 
-/**
- * Merge local and remote styles by comparing modifiedTime for each style.
- *
- * A few caveats:
- * - Conflicts in css for an individual style are not handled to keep logic simple.
- * - If a style is removed in either local or remote, it is retained since we don't record deletion timestamp.
- */
-export default (local: StyleMap, remote: StyleMap): StyleMap => {
+export type MergeStylesResult = {
+  styles: StyleMap;
+  tombstones: StyleSyncTombstoneMap;
+  report: GoogleDriveSyncReport;
+};
+
+type MergeEvent = {
+  source: 'local' | 'remote';
+  kind: 'style' | 'tombstone';
+  time: Timestamp;
+};
+
+const compareModifiedTime = (t1: string, t2: string) =>
+  compareAsc(new Date(t1), new Date(t2));
+
+const normalizeStyle = (style: StyleWithoutUrl): StyleWithoutUrl => ({
+  css: style.css,
+  enabled: style.enabled,
+  readability: style.readability ?? false,
+  modifiedTime: style.modifiedTime,
+});
+
+const styleChanged = (
+  local: StyleWithoutUrl,
+  remote: StyleWithoutUrl
+): boolean =>
+  JSON.stringify(normalizeStyle(local)) !== JSON.stringify(normalizeStyle(remote));
+
+const eventRank = (event: MergeEvent): number =>
+  event.kind === 'tombstone' ? 2 : 1;
+
+const newestEvent = (events: MergeEvent[]): MergeEvent =>
+  events.reduce((newest, event) => {
+    const compared = compareModifiedTime(event.time, newest.time);
+    if (compared > 0) return event;
+    if (compared === 0 && eventRank(event) > eventRank(newest)) return event;
+    return newest;
+  });
+
+const changedAfterLastSync = (
+  time: Timestamp,
+  lastSyncTime?: Timestamp
+): boolean =>
+  Boolean(lastSyncTime && compareModifiedTime(time, lastSyncTime) > 0);
+
+const getConflict = (
+  url: string,
+  local: StyleWithoutUrl | undefined,
+  remote: StyleWithoutUrl | undefined,
+  selected: MergeEvent,
+  lastSyncTime?: Timestamp
+): StyleSyncConflict | null => {
+  if (!local || !remote || !styleChanged(local, remote)) return null;
+  if (
+    !changedAfterLastSync(local.modifiedTime, lastSyncTime) ||
+    !changedAfterLastSync(remote.modifiedTime, lastSyncTime)
+  ) {
+    return null;
+  }
+
+  return {
+    url,
+    localModifiedTime: local.modifiedTime,
+    remoteModifiedTime: remote.modifiedTime,
+    resolvedWith: selected.source,
+  };
+};
+
+export default ({
+  localStyles,
+  remoteStyles,
+  localTombstones = {},
+  remoteTombstones = {},
+  lastSyncTime,
+}: MergeStylesInput): MergeStylesResult => {
   const styles: StyleMap = {};
-  const urls = Object.keys(local);
+  const tombstones: StyleSyncTombstoneMap = {};
+  const conflicts: StyleSyncConflict[] = [];
+  let tombstonesApplied = 0;
+
+  const urls = new Set([
+    ...Object.keys(localStyles),
+    ...Object.keys(remoteStyles),
+    ...Object.keys(localTombstones),
+    ...Object.keys(remoteTombstones),
+  ]);
 
   urls.forEach(url => {
-    if (
-      remote[url] &&
-      compareModifiedTime(remote[url].modifiedTime, local[url].modifiedTime) > 0
-    ) {
-      styles[url] = remote[url];
-    } else {
-      styles[url] = local[url];
+    const events: MergeEvent[] = [];
+    const local = localStyles[url];
+    const remote = remoteStyles[url];
+    const localTombstone = localTombstones[url];
+    const remoteTombstone = remoteTombstones[url];
+
+    if (local) {
+      events.push({
+        source: 'local',
+        kind: 'style',
+        time: local.modifiedTime,
+      });
+    }
+
+    if (remote) {
+      events.push({
+        source: 'remote',
+        kind: 'style',
+        time: remote.modifiedTime,
+      });
+    }
+
+    if (localTombstone) {
+      events.push({
+        source: 'local',
+        kind: 'tombstone',
+        time: localTombstone.deletedTime,
+      });
+    }
+
+    if (remoteTombstone) {
+      events.push({
+        source: 'remote',
+        kind: 'tombstone',
+        time: remoteTombstone.deletedTime,
+      });
+    }
+
+    if (events.length === 0) return;
+
+    const selected = newestEvent(events);
+    const conflict = getConflict(url, local, remote, selected, lastSyncTime);
+
+    if (conflict) {
+      conflicts.push(conflict);
+    }
+
+    if (selected.kind === 'tombstone') {
+      tombstones[url] = { deletedTime: selected.time };
+      if (local || remote) {
+        tombstonesApplied += 1;
+      }
+      return;
+    }
+
+    const selectedStyle =
+      selected.source === 'local' ? localStyles[url] : remoteStyles[url];
+
+    if (selectedStyle) {
+      styles[url] = selectedStyle;
     }
   });
 
-  const remainingUrls = without(Object.keys(remote), ...urls);
-  remainingUrls.forEach(url => {
-    styles[url] = remote[url];
-  });
-
-  return styles;
+  return {
+    styles,
+    tombstones,
+    report: {
+      conflicts,
+      tombstonesApplied,
+    },
+  };
 };

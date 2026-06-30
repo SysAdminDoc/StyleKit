@@ -5,6 +5,7 @@ import { isSafeCssContentType } from '../utils/style-import';
 import {
   Style,
   StyleMap,
+  StyleSyncTombstoneMap,
   StyleWithoutUrl,
   ApplyStylesToTab,
   StylesRollbackReason,
@@ -16,9 +17,43 @@ import { getCachedStyles, setCachedStyles } from './cache';
 import { StyleIndex } from './style-index';
 
 const LAST_STYLES_ROLLBACK_SNAPSHOT_KEY = 'styles-rollback-last';
+const STYLE_TOMBSTONES_KEY = 'style-tombstones';
 
 const cloneStyles = (styles: StyleMap): StyleMap =>
   JSON.parse(JSON.stringify(styles));
+
+const cloneTombstones = (
+  tombstones: StyleSyncTombstoneMap
+): StyleSyncTombstoneMap => JSON.parse(JSON.stringify(tombstones));
+
+export const getStyleTombstones =
+  async (): Promise<StyleSyncTombstoneMap> => {
+    const items = await chrome.storage.local.get(STYLE_TOMBSTONES_KEY);
+    return items[STYLE_TOMBSTONES_KEY] || {};
+  };
+
+export const setStyleTombstones = async (
+  tombstones: StyleSyncTombstoneMap
+): Promise<void> => {
+  await chrome.storage.local.set({
+    [STYLE_TOMBSTONES_KEY]: cloneTombstones(tombstones),
+  });
+};
+
+const recordDeletedStyleUrls = async (
+  deletedUrls: string[],
+  deletedTime = getCurrentTimestamp()
+): Promise<void> => {
+  if (deletedUrls.length === 0) return;
+
+  const tombstones = await getStyleTombstones();
+
+  deletedUrls.forEach(url => {
+    tombstones[url] = { deletedTime };
+  });
+
+  await setStyleTombstones(tombstones);
+};
 
 export const updateIcon = (
   tab: chrome.tabs.Tab,
@@ -173,7 +208,18 @@ export const getStylesForPage = (
   return { styles, defaultStyle };
 };
 
-export const setAll = async (styles: StyleMap): Promise<void> => {
+export const setAll = async (
+  styles: StyleMap,
+  options: { recordTombstones?: boolean } = {}
+): Promise<void> => {
+  const shouldRecordTombstones = options.recordTombstones !== false;
+
+  if (shouldRecordTombstones) {
+    const currentStyles = await getAll();
+    const deletedUrls = Object.keys(currentStyles).filter(url => !styles[url]);
+    await recordDeletedStyleUrls(deletedUrls);
+  }
+
   setCachedStyles(styles);
   indexBuiltForStyles = null;
   await chrome.storage.local.set({
@@ -193,6 +239,7 @@ export const set = async (
   const styles = await getAll();
 
   if (!css) {
+    await recordDeletedStyleUrls([url]);
     delete styles[url];
   } else {
     styles[url] = {
@@ -253,6 +300,7 @@ export const move = async (src: string, dest: string): Promise<void> => {
 
   if (styles[src]) {
     styles[dest] = JSON.parse(JSON.stringify(styles[src]));
+    await recordDeletedStyleUrls([src]);
     delete styles[src];
 
     return setAll(styles);

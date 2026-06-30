@@ -53,6 +53,26 @@ export type StyleMap = {
   [url: string]: Omit<Style, 'url'>;
 };
 
+export type StyleSyncTombstone = {
+  deletedTime: Timestamp;
+};
+
+export type StyleSyncTombstoneMap = {
+  [url: string]: StyleSyncTombstone;
+};
+
+export type StyleSyncConflict = {
+  url: string;
+  localModifiedTime: Timestamp;
+  remoteModifiedTime: Timestamp;
+  resolvedWith: 'local' | 'remote';
+};
+
+export type GoogleDriveSyncReport = {
+  conflicts: StyleSyncConflict[];
+  tombstonesApplied: number;
+};
+
 export type StylesRollbackReason =
   | 'json-import'
   | 'gist-import'
