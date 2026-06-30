@@ -1,5 +1,6 @@
 import { StyleMap, StylebotOptions } from '@stylekit/types';
 import { defaultOptions } from '@stylekit/settings';
+import { getAllStylesFromStorage } from './style-storage';
 
 let cachedStyles: StyleMap | null = null;
 let cachedOptions: StylebotOptions | null = null;
@@ -9,8 +10,7 @@ export const getCachedStyles = async (): Promise<StyleMap> => {
     return cachedStyles;
   }
 
-  const items = await chrome.storage.local.get('styles');
-  cachedStyles = items['styles'] || {};
+  cachedStyles = await getAllStylesFromStorage();
   return cachedStyles as StyleMap;
 };
 

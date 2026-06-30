@@ -15,6 +15,7 @@ import {
 import BackgroundPageUtils from './utils';
 import { getCachedStyles, setCachedStyles } from './cache';
 import { StyleIndex } from './style-index';
+import { setAllStylesInStorage } from './style-storage';
 
 const LAST_STYLES_ROLLBACK_SNAPSHOT_KEY = 'styles-rollback-last';
 const STYLE_TOMBSTONES_KEY = 'style-tombstones';
@@ -222,9 +223,8 @@ export const setAll = async (
 
   setCachedStyles(styles);
   indexBuiltForStyles = null;
+  await setAllStylesInStorage(styles);
   await chrome.storage.local.set({
-    styles,
-
     'styles-metadata': {
       modifiedTime: getCurrentTimestamp(),
     },

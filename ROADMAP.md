@@ -125,13 +125,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
 
 ## Research-Driven Additions
 
-- [ ] P1 - Move large style libraries to IndexedDB with migration
-  Why: `chrome.storage.local` is convenient but JSON-object rewrites are brittle for large style collections; Chrome documents storage quota/performance costs, and roadmap already anticipates `idb` for style storage over 5MB.
-  Evidence: `src/background/styles.ts`; `src/background/cache.ts`; Chrome storage quota docs; existing ROADMAP idb note
-  Touches: storage adapter, background cache, import/export/sync adapters, migration tests
-  Acceptance: Existing `chrome.storage.local.styles` migrates once into IndexedDB, style CRUD uses an adapter, export/sync behavior is unchanged, and rollback to old storage is possible if migration fails.
-  Complexity: L
-
 - [ ] P2 - Replace deprecated Bootstrap Vue package
   Why: `bootstrap-vue-3@0.5.1` is deprecated and points users to `bootstrap-vue-next`, while StyleKit already carries declaration shims for missing package types.
   Evidence: `package.json`; `shims.vue.d.ts`; npm metadata for `bootstrap-vue-3` and `bootstrap-vue-next`
