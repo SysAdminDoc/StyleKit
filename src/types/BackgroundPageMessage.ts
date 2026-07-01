@@ -159,6 +159,20 @@ export type RemovePreviewStyleFromTab = {
   id: string;
 };
 
+export type GetUserstylesIndex = {
+  name: 'GetUserstylesIndex';
+};
+
+export type GetUserstylesProviderHealth = {
+  name: 'GetUserstylesProviderHealth';
+};
+
+export type ReportUserstylesProviderError = {
+  name: 'ReportUserstylesProviderError';
+  operation: string;
+  errorMessage: string;
+};
+
 type BackgroundPageMessage =
   | SetStyle
   | EnableStyle
@@ -188,6 +202,9 @@ type BackgroundPageMessage =
   | GetGoogleFontsCache
   | SetGoogleFontsCache
   | ApplyPreviewStyleToTab
-  | RemovePreviewStyleFromTab;
+  | RemovePreviewStyleFromTab
+  | GetUserstylesIndex
+  | GetUserstylesProviderHealth
+  | ReportUserstylesProviderError;
 
 export default BackgroundPageMessage;

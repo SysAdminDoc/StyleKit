@@ -49,6 +49,7 @@ import {
   SetGoogleFontsCache as SetGoogleFontsCacheType,
   ApplyPreviewStyleToTab as ApplyPreviewStyleToTabType,
   RemovePreviewStyleFromTab as RemovePreviewStyleFromTabType,
+  ReportUserstylesProviderError as ReportUserstylesProviderErrorType,
   GetCommandsResponse,
   GetAllOptionsResponse,
   GetAllStylesResponse,
@@ -65,6 +66,8 @@ import {
   SetEditorOnboardingDoneResponse,
   GetGoogleFontsCacheResponse,
   SetGoogleFontsCacheResponse,
+  GetUserstylesIndexResponse,
+  GetUserstylesProviderHealthResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 import {
@@ -73,6 +76,11 @@ import {
   removeUserOriginPreviewFromTab,
   replaceUserOriginCss,
 } from './style-applier';
+import {
+  getUserstylesIndex,
+  getUserstylesProviderHealth,
+  recordUserstylesProviderFailure,
+} from './userstyles-provider';
 
 import {
   get as getReadabilitySettings,
@@ -395,4 +403,29 @@ export const RemovePreviewStyleFromTab = async (
     .catch(() => undefined);
 
   sendResponse();
+};
+
+export const GetUserstylesIndex = async (
+  sendResponse: (response: GetUserstylesIndexResponse) => void
+): Promise<void> => {
+  const response = await getUserstylesIndex();
+  sendResponse(response);
+};
+
+export const GetUserstylesProviderHealth = async (
+  sendResponse: (response: GetUserstylesProviderHealthResponse) => void
+): Promise<void> => {
+  const response = await getUserstylesProviderHealth();
+  sendResponse(response);
+};
+
+export const ReportUserstylesProviderError = async (
+  message: ReportUserstylesProviderErrorType,
+  sendResponse: (response: GetUserstylesProviderHealthResponse) => void
+): Promise<void> => {
+  const response = await recordUserstylesProviderFailure(
+    message.operation,
+    message.errorMessage
+  );
+  sendResponse(response);
 };

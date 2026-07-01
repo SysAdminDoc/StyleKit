@@ -169,13 +169,6 @@ Roadmap for StyleKit, the modernized Stylebot fork: Vue 3 + Vuex 4 + Vite 8 + Mo
 
 ## Research-Driven Additions
 
-- [ ] P1 - Add UserStyles.world provider health and degraded-state cache
-  Why: StyleKit's popup depends on UserStyles.world, and upstream issues show API/CORS/outage failures that currently collapse into generic error states.
-  Evidence: `src/popup/components/FindStyles.vue`; `src/background/preloader.ts`; userstyles-world issues #385/#386/#377
-  Touches: popup search/install/update flow, background preloader, thumbnail/result cache, diagnostics export, locale strings
-  Acceptance: Search shows clear provider status, cached last-good results remain available when the provider fails, retries use backoff, install/update failures never corrupt installed styles, and diagnostics identify provider errors without leaking CSS or tokens.
-  Complexity: M
-
 - [ ] P2 - Add opt-in shadow-root styling support
   Why: Document-level style tags do not cross site shadow roots, so styles can silently miss modern web components even when the top-page URL matches.
   Evidence: `src/css/inject-style.ts`; `src/inject-css/index.ts`; web.dev constructable stylesheet guidance; VisBug/shadow-DOM inspection precedent

@@ -1,7 +1,7 @@
 # Research - StyleKit
 
 ## Executive Summary
-StyleKit is a local-first Chrome/Firefox WebExtension for visual website restyling: it combines Stylebot-style point-and-click editing, Monaco code editing, UserStyles.world discovery, Google Drive/Gist backup, rollback snapshots, readability mode, and beginner-friendly copy. Its strongest current shape is fast casual CSS customization with a privacy promise and a modern Vue/Vite MV3 stack. The highest-value direction is to keep hardening privileged extension boundaries and style application semantics before adding more marketplace or collaboration features. Priority opportunities: add shadow-root injection coverage, make UserStyles.world outages recoverable, preserve full UserCSS metadata/variables, script packaging/E2E checks, replace deprecated UI dependencies, and add manual dependency/Sass/a11y ratchets.
+StyleKit is a local-first Chrome/Firefox WebExtension for visual website restyling: it combines Stylebot-style point-and-click editing, Monaco code editing, UserStyles.world discovery, Google Drive/Gist backup, rollback snapshots, readability mode, and beginner-friendly copy. Its strongest current shape is fast casual CSS customization with a privacy promise and a modern Vue/Vite MV3 stack. The highest-value direction is to keep hardening privileged extension boundaries and style application semantics before adding more marketplace or collaboration features. Priority opportunities: add shadow-root injection coverage, preserve full UserCSS metadata/variables, script packaging/E2E checks, replace deprecated UI dependencies, and add manual dependency/Sass/a11y ratchets.
 
 ## Product Map
 - Core workflows: inspect/select page elements, edit CSS visually, edit raw CSS in Monaco, preview/install UserStyles.world styles, import/export or sync styles, restore the last bulk-change rollback snapshot.
@@ -21,7 +21,7 @@ StyleKit is a local-first Chrome/Firefox WebExtension for visual website restyli
 
 ## Security, Privacy, and Reliability
 - Verified: `npm audit --json` is clean on 2026-06-29; the prior `RESEARCH.md` vulnerability claim is stale and should not guide new work.
-- Verified current in v1.1.10: package/README/source manifest versions, README install text, changelog date, and test counts align with 19 suites/114 tests.
+- Verified current in v1.1.11: package/README/source manifest versions, README install text, changelog date, and test counts align with 20 suites/119 tests.
 - Verified resolved in v1.1.4: `src/background/index.ts` restricts `chrome.storage.local` to trusted contexts, and editor onboarding/Google Fonts cache now route through typed background messages instead of direct content-script `storage.local` calls.
 - Verified resolved in v1.1.5: `src/extension/manifest.json` no longer exposes broad `chunks/*` or Monaco globs; `vite.config.ts` derives exact content-script imports for built web-accessible resources, and Chrome builds set `use_dynamic_url`.
 - Verified resolved in v1.1.6: JSON, Gist, URL, `@import`, and UserStyles.world imports share schema/content-type validation and add/change/remove previews through `src/utils/style-import.ts`.
@@ -29,7 +29,7 @@ StyleKit is a local-first Chrome/Firefox WebExtension for visual website restyli
 - Verified resolved in v1.1.8: saved styles read/write through `src/background/style-storage.ts`, migrate legacy `chrome.storage.local.styles` into IndexedDB, preserve the old chrome-storage object as rollback source, and fall back when IndexedDB is unavailable.
 - Verified resolved in v1.1.9: `src/background/style-applier.ts` applies saved styles and popup previews with `chrome.scripting.insertCSS/removeCSS` at USER origin, removes stale/replaced CSS, and keeps DOM style injection as a fallback when scripting CSS is unavailable.
 - Verified resolved in v1.1.10: `src/background/styles.ts` resolves frame match URLs explicitly, child frames match their own URLs, `about:blank`/`about:srcdoc` use a valid parent referrer, and unmatchable frames return no CSS with a blocked reason.
-- Verified: UserStyles.world issue traffic shows API/CORS/outage risk, while `src/popup/components/FindStyles.vue` and `src/background/preloader.ts` mostly surface generic errors and cache thumbnails/results opportunistically.
+- Verified resolved in v1.1.11: `src/background/userstyles-provider.ts` centralizes UserStyles.world index health, last-good cache, sanitized provider diagnostics, and retry backoff; `src/popup/components/FindStyles.vue` shows degraded status and keeps cached results available without mutating installed styles on failed CSS/update fetches.
 - Verified: UI surfaces contain many custom icon/title-only controls, two-click destructive buttons, overlays, toasts, and custom modals, but tests cover utilities/store behavior rather than focus management, accessible names, announcements, or rendered extension flows.
 
 ## Architecture Assessment
@@ -37,8 +37,8 @@ StyleKit is a local-first Chrome/Firefox WebExtension for visual website restyli
 - Style storage now has an IndexedDB adapter boundary, but future sync/gallery features still need finer-grained CRUD paths rather than full-map replacement for every bulk operation.
 - UserCSS support is partial. `src/utils/usercss.ts` extracts simple metadata and unwraps `@-moz-document`, but it does not preserve variables, update URLs, namespaces, preprocessor mode, full match scopes, or round-trip exports; existing roadmap already calls for full UserCSS.
 - Style application still needs an explicit shadow-root model. USER-origin insertion and frame URL guards now cover normal documents and opaque child frames, but open shadow roots still need targeted cleanup and tests.
-- Gallery integration needs a provider abstraction. UserStyles.world search/install/update, preloading, thumbnails, local cache, and future Greasy Fork/USO archive support should use one health/status/cache contract.
-- Testing gaps are clear: `npm test` passes 19 suites/114 tests and `npm run lint` passes, but there are no browser-loaded extension smoke tests, provider-outage tests, a11y checks, or package-artifact verification.
+- Gallery integration now has a first provider health/cache boundary for UserStyles.world in `src/background/userstyles-provider.ts`; future Greasy Fork/USO archive support should extend that status/cache contract rather than adding popup-only fetch paths.
+- Testing gaps are clear: `npm test` passes 20 suites/119 tests and `npm run lint` passes, and this pass added provider-outage tests plus a manual rendered popup smoke; there are still no committed browser-loaded extension smoke tests, a11y checks, or package-artifact verification scripts.
 - Documentation gaps are concrete: `.github/ISSUE_TEMPLATE/*.md` still says Stylebot, source package READMEs still reference Stylebot/bootstrap-vue, and release docs/changelog are not synchronized with `package.json` and actual code.
 
 ## Rejected Ideas

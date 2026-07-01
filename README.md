@@ -1,7 +1,7 @@
 # StyleKit
 
 ![License](https://img.shields.io/github/license/SysAdminDoc/StyleKit)
-![Version](https://img.shields.io/badge/version-1.1.10-blue)
+![Version](https://img.shields.io/badge/version-1.1.11-blue)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-green)
 ![Firefox](https://img.shields.io/badge/Firefox-Supported-orange)
 ![No Tracking](https://img.shields.io/badge/Analytics-None-brightgreen)
@@ -41,6 +41,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **Install with one click** -- styles are saved and applied immediately
 - **Toggle installed styles** -- enable/disable individual installed styles
 - **Auto-load mode** -- thumbnails pre-fetched in the background for instant popup loading
+- **Provider health cache** -- UserStyles.world outages show degraded status, retry timing, and last-good cached results
 - **Restricted page detection** -- shows "Not available on this page" on chrome:// and system pages
 
 ### Site Recipes & Snippets
@@ -78,7 +79,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 
 ### From Release
 
-1. Download `StyleKit-v1.1.10-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
+1. Download `StyleKit-v1.1.11-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
 2. Unzip the file
 3. Open `chrome://extensions`
 4. Enable **Developer mode**
@@ -110,7 +111,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (19/19 suites, 114 tests)
+npm test               # Run tests (20/20 suites, 119 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 ```

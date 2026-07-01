@@ -57,8 +57,12 @@
 
       <!-- Error -->
       <div v-else-if="error" class="find-styles-status find-styles-error">
-        <span>{{ t('style_search_error') }}</span>
-        <button class="find-styles-retry" @click="search">Retry</button>
+        <span>{{ providerStatusText || t('style_search_error') }}</span>
+        <button
+          class="find-styles-retry"
+          :disabled="!providerCanRetry"
+          @click="search"
+        >{{ providerRetryText }}</button>
       </div>
 
       <template v-else>
@@ -76,6 +80,14 @@
             type="text"
             placeholder="Filter by name..."
           />
+        </div>
+
+        <div
+          v-if="providerStatusText"
+          class="find-styles-provider-status"
+          :class="{ degraded: providerHealth?.status !== 'ok' }"
+        >
+          {{ providerStatusText }}
         </div>
 
         <!-- No results -->
@@ -152,7 +164,14 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { SetStyle, OpenStylebotInCodeMode, StyleMap } from '@stylekit/types';
+import {
+  GetUserstylesIndexResponse,
+  OpenStylebotInCodeMode,
+  SetStyle,
+  StyleMap,
+  UserstylesIndexEntry,
+  UserstylesProviderHealth,
+} from '@stylekit/types';
 import { getCurrentTimestamp } from '@stylekit/utils';
 import { convertUserCssToRaw } from '../../utils/usercss';
 import {
@@ -164,22 +183,8 @@ import {
 } from '../../utils/style-import';
 
 const STORAGE_KEY = 'stylekit-usw-installs';
-const INDEX_SESSION_KEY = 'stylekit-usw-index';
 const THUMB_LOCAL_KEY = 'stylekit-usw-thumbs';
-const INDEX_TTL_MS = 60 * 60 * 1000;
-
-interface UserstyleEntry {
-  i: number;
-  n: string;
-  c: string;
-  u: number;
-  t: number;
-  w: number;
-  r: number;
-  an: string;
-  sn: string; // screenshot URL
-  source: 'usw';
-}
+type UserstyleEntry = UserstylesIndexEntry;
 
 interface InstalledEntry {
   domain: string;
@@ -220,6 +225,8 @@ export default defineComponent({
     updatingIds: Set<number>;
     pendingInstallId: number | null;
     pendingInstallSummary: string;
+    providerHealth: UserstylesProviderHealth | null;
+    providerFromCache: boolean;
   } {
     return {
       showSearch: false,
@@ -241,6 +248,8 @@ export default defineComponent({
       updatingIds: new Set(),
       pendingInstallId: null,
       pendingInstallSummary: '',
+      providerHealth: null,
+      providerFromCache: false,
     };
   },
 
@@ -264,6 +273,40 @@ export default defineComponent({
       return Object.entries(this.installedMap)
         .filter(([, entry]) => entry.domain === this.domain)
         .map(([id, entry]) => ({ id: Number(id), ...entry }));
+    },
+
+    providerCanRetry(): boolean {
+      return (
+        !this.providerHealth?.nextRetryAt ||
+        Date.now() >= this.providerHealth.nextRetryAt
+      );
+    },
+
+    providerRetryText(): string {
+      if (this.providerCanRetry) return 'Retry';
+      return `Retry in ${this.formatProviderRetryDelay(
+        this.providerHealth?.nextRetryAt
+      )}`;
+    },
+
+    providerStatusText(): string {
+      const health = this.providerHealth;
+      if (!health) return '';
+
+      if (health.status === 'ok') {
+        return this.providerFromCache ? 'Using cached UserStyles.world index' : '';
+      }
+
+      const retry =
+        health.nextRetryAt && !this.providerCanRetry
+          ? ` Retry in ${this.formatProviderRetryDelay(health.nextRetryAt)}.`
+          : '';
+
+      if (health.usingCache) {
+        return `UserStyles.world is unavailable; showing cached results.${retry}`;
+      }
+
+      return `UserStyles.world is unavailable.${retry}`;
     },
   },
 
@@ -320,6 +363,63 @@ export default defineComponent({
       await chrome.storage.local.set({ [STORAGE_KEY]: map });
     },
 
+    getProviderIndex(): Promise<GetUserstylesIndexResponse> {
+      return new Promise((resolve, reject) => {
+        try {
+          chrome.runtime.sendMessage(
+            { name: 'GetUserstylesIndex' },
+            (response: GetUserstylesIndexResponse) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+                return;
+              }
+
+              if (!response) {
+                reject(new Error('No UserStyles.world provider response'));
+                return;
+              }
+
+              resolve(response);
+            }
+          );
+        } catch (error) {
+          reject(error);
+        }
+      });
+    },
+
+    getProviderDiagnosticMessage(operation: string, error: unknown): string {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (/^HTTP \d+$/.test(errorMessage)) return errorMessage;
+      if (errorMessage === 'Style source returned HTML instead of CSS') {
+        return errorMessage;
+      }
+      if (errorMessage === 'CSS is empty') return errorMessage;
+      if (operation.startsWith('style-')) return `${operation} failed`;
+      return errorMessage;
+    },
+
+    reportProviderError(operation: string, error: unknown): void {
+      const errorMessage = this.getProviderDiagnosticMessage(operation, error);
+      chrome.runtime
+        .sendMessage({
+          name: 'ReportUserstylesProviderError',
+          operation,
+          errorMessage,
+        })
+        .catch(() => { /* diagnostics only */ });
+    },
+
+    formatProviderRetryDelay(nextRetryAt?: number): string {
+      if (!nextRetryAt) return '0s';
+      const remainingSeconds = Math.max(
+        0,
+        Math.ceil((nextRetryAt - Date.now()) / 1000)
+      );
+      if (remainingSeconds < 60) return `${remainingSeconds}s`;
+      return `${Math.ceil(remainingSeconds / 60)}m`;
+    },
+
     getMergedCssForDomain(domain: string, map: Record<number, InstalledEntry>): string {
       return Object.values(map)
         .filter(e => e.domain === domain && e.enabled !== false)
@@ -341,39 +441,15 @@ export default defineComponent({
       try {
         await this.loadInstalledMap();
 
-                // Use session-cached index if fresh (defensive: session may not be available)
-        let index: UserstyleEntry[];
-        try {
-          const sessionResult = await chrome.storage.session.get(INDEX_SESSION_KEY);
-          const sessionCache = sessionResult[INDEX_SESSION_KEY] as
-            | { data: UserstyleEntry[]; ts: number }
-            | undefined;
-          if (sessionCache && Date.now() - sessionCache.ts < INDEX_TTL_MS) {
-            index = sessionCache.data;
-          } else {
-            const res = await fetch('https://userstyles.world/api/index/uso-format', {
-              referrerPolicy: 'no-referrer',
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const json = await res.json();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            index = (json.data || []).map((e: any) => ({ ...e, source: 'usw' as const }));
-            try {
-              await chrome.storage.session.set({
-                [INDEX_SESSION_KEY]: { data: index, ts: Date.now() },
-              });
-            } catch { /* session storage unavailable */ }
-          }
-        } catch {
-          // Session storage unavailable — fetch index directly
-          const res = await fetch('https://userstyles.world/api/index/uso-format', {
-            referrerPolicy: 'no-referrer',
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const json = await res.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          index = (json.data || []).map((e: any) => ({ ...e, source: 'usw' as const }));
+        const providerResponse = await this.getProviderIndex();
+        this.providerHealth = providerResponse.health;
+        this.providerFromCache = providerResponse.fromCache;
+
+        if (providerResponse.error && providerResponse.data.length === 0) {
+          throw new Error(providerResponse.error);
         }
+
+        const index = providerResponse.data;
 
         const dom = this.domain.toLowerCase().replace(/^www\./, '');
         this.allResults = index
@@ -478,18 +554,23 @@ export default defineComponent({
       const cached = this.previewCssCache.get(style.i);
       if (cached !== undefined) return cached;
 
-      const url = `https://userstyles.world/api/style/${style.i}.user.css`;
+      try {
+        const url = `https://userstyles.world/api/style/${style.i}.user.css`;
 
-      const res = await fetch(url, { referrerPolicy: 'no-referrer' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      if (!isSafeCssContentType(res.headers.get('content-type'))) {
-        throw new Error('Style source returned HTML instead of CSS');
+        const res = await fetch(url, { referrerPolicy: 'no-referrer' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!isSafeCssContentType(res.headers.get('content-type'))) {
+          throw new Error('Style source returned HTML instead of CSS');
+        }
+        const sourceCode = await res.text();
+        const css = convertUserCssToRaw(sourceCode);
+        assertValidImportCss(css);
+        if (css) this.previewCssCache.set(style.i, css);
+        return css;
+      } catch (error) {
+        this.reportProviderError('style-css', error);
+        throw error;
       }
-      const sourceCode = await res.text();
-      const css = convertUserCssToRaw(sourceCode);
-      assertValidImportCss(css);
-      if (css) this.previewCssCache.set(style.i, css);
-      return css;
     },
 
     removePreview(): void {
@@ -731,7 +812,9 @@ export default defineComponent({
               this.updatableIds = new Set([...this.updatableIds, Number(id)]);
             }
           }
-        } catch { /* silent */ }
+        } catch (error) {
+          this.reportProviderError('style-update-head', error);
+        }
       }
     },
 
@@ -744,8 +827,10 @@ export default defineComponent({
       try {
         const url = `https://userstyles.world/api/style/${entry.uswId}.user.css`;
         const res = await fetch(url, { referrerPolicy: 'no-referrer' });
-        if (!res.ok) return;
-        if (!isSafeCssContentType(res.headers.get('content-type'))) return;
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!isSafeCssContentType(res.headers.get('content-type'))) {
+          throw new Error('Style source returned HTML instead of CSS');
+        }
 
         const sourceCode = await res.text();
         const css = convertUserCssToRaw(sourceCode);
@@ -777,6 +862,7 @@ export default defineComponent({
         next.delete(id);
         this.updatableIds = next;
       } catch (e) {
+        this.reportProviderError('style-update', e);
         console.error('Update style error:', e);
       } finally {
         const next = new Set(this.updatingIds);
@@ -1069,6 +1155,24 @@ export default defineComponent({
   &:hover {
     background: rgba(243, 139, 168, 0.2);
     border-color: #f38ba8;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+}
+
+.find-styles-provider-status {
+  padding: 7px 10px;
+  font-size: 11px;
+  color: #89b4fa;
+  background: rgba(137, 180, 250, 0.08);
+  border-bottom: 1px solid #313244;
+
+  &.degraded {
+    color: #fab387;
+    background: rgba(250, 179, 135, 0.08);
   }
 }
 

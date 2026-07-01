@@ -7,6 +7,8 @@ import {
   Timestamp,
   StylesRollbackSnapshot,
   GoogleDriveSyncReport,
+  GetUserstylesIndexResponse,
+  UserstylesProviderHealth,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -45,6 +47,7 @@ export type GetEditorOnboardingDoneResponse = boolean;
 export type SetEditorOnboardingDoneResponse = void;
 export type GetGoogleFontsCacheResponse = GoogleFontsCache | null;
 export type SetGoogleFontsCacheResponse = void;
+export type GetUserstylesProviderHealthResponse = UserstylesProviderHealth;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -62,6 +65,8 @@ type BackgroundPageMessageResponse =
   | GetEditorOnboardingDoneResponse
   | SetEditorOnboardingDoneResponse
   | GetGoogleFontsCacheResponse
-  | SetGoogleFontsCacheResponse;
+  | SetGoogleFontsCacheResponse
+  | GetUserstylesProviderHealthResponse
+  | GetUserstylesIndexResponse;
 
 export default BackgroundPageMessageResponse;

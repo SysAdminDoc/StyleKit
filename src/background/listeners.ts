@@ -31,6 +31,9 @@ import {
   SetGoogleFontsCache,
   ApplyPreviewStyleToTab,
   RemovePreviewStyleFromTab,
+  GetUserstylesIndex,
+  GetUserstylesProviderHealth,
+  ReportUserstylesProviderError,
 } from './messages';
 
 import { get as getOption } from './options';
@@ -116,6 +119,9 @@ const ASYNC_MESSAGES = new Set([
   'RestoreLastStylesRollbackSnapshot',
   'ApplyPreviewStyleToTab',
   'RemovePreviewStyleFromTab',
+  'GetUserstylesIndex',
+  'GetUserstylesProviderHealth',
+  'ReportUserstylesProviderError',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -226,6 +232,15 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'RemovePreviewStyleFromTab':
         RemovePreviewStyleFromTab(message, sendResponse);
+        break;
+      case 'GetUserstylesIndex':
+        GetUserstylesIndex(sendResponse);
+        break;
+      case 'GetUserstylesProviderHealth':
+        GetUserstylesProviderHealth(sendResponse);
+        break;
+      case 'ReportUserstylesProviderError':
+        ReportUserstylesProviderError(message, sendResponse);
         break;
     }
 

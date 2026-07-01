@@ -148,6 +148,38 @@ export type GoogleDriveSyncMetadata = {
   webContentLink: string;
 };
 
+export type UserstylesIndexEntry = {
+  i: number;
+  n: string;
+  c: string;
+  u: number;
+  t: number;
+  w: number;
+  r: number;
+  an: string;
+  sn: string;
+  source: 'usw';
+};
+
+export type UserstylesProviderHealth = {
+  provider: 'userstyles.world';
+  status: 'ok' | 'degraded' | 'offline';
+  checkedAt: number;
+  lastSuccessAt?: number;
+  failureCount: number;
+  nextRetryAt?: number;
+  lastOperation?: string;
+  lastError?: string;
+  usingCache: boolean;
+};
+
+export type GetUserstylesIndexResponse = {
+  data: UserstylesIndexEntry[];
+  health: UserstylesProviderHealth;
+  fromCache: boolean;
+  error?: string;
+};
+
 export * from './TabMessage';
 export * from './BackgroundPageMessage';
 export * from './BackgroundPageMessageResponse';

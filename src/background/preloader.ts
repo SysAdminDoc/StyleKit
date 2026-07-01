@@ -1,48 +1,6 @@
-const INDEX_SESSION_KEY = 'stylekit-usw-index';
+import { getUserstylesIndex, matchesUserstylesDomain } from './userstyles-provider';
+
 const THUMB_LOCAL_KEY = 'stylekit-usw-thumbs';
-const INDEX_TTL_MS = 60 * 60 * 1000; // 1 hour
-
-interface USWEntry {
-  i: number;
-  n: string;
-  c: string;
-  w: number;
-  t: number;
-  sn: string;
-}
-
-async function fetchIndex(): Promise<USWEntry[]> {
-  const res = await fetch('https://userstyles.world/api/index/uso-format', {
-    referrerPolicy: 'no-referrer',
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  return json.data || [];
-}
-
-async function getIndex(): Promise<USWEntry[]> {
-  const stored = await chrome.storage.session.get(INDEX_SESSION_KEY);
-  const cached = stored[INDEX_SESSION_KEY] as
-    | { data: USWEntry[]; ts: number }
-    | undefined;
-  if (cached && Date.now() - cached.ts < INDEX_TTL_MS) {
-    return cached.data;
-  }
-  const data = await fetchIndex();
-  await chrome.storage.session.set({ [INDEX_SESSION_KEY]: { data, ts: Date.now() } });
-  return data;
-}
-
-function matchesDomain(entry: USWEntry, dom: string): boolean {
-  const cat = (entry.c || '').toLowerCase().replace(/^www\./, '');
-  if (!cat) return false;
-  if (cat === dom) return true;
-  if (dom.endsWith('.' + cat) || cat.endsWith('.' + dom)) return true;
-  const domCore = dom.replace(/\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/, '');
-  const catCore = cat.replace(/\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/, '');
-  if (domCore === catCore) return true;
-  return domCore.split('.').some(part => part === catCore || part === cat);
-}
 
 async function fetchDataUrl(url: string): Promise<string> {
   try {
@@ -82,11 +40,11 @@ export async function preloadForDomain(domain: string): Promise<void> {
   if (!domain || domain.startsWith('chrome') || domain.startsWith('edge')) return;
 
   try {
-    const index = await getIndex();
+    const { data: index } = await getUserstylesIndex();
 
     const dom = domain.toLowerCase().replace(/^www\./, '');
     const matches = index
-      .filter(e => matchesDomain(e, dom))
+      .filter(e => matchesUserstylesDomain(e, dom))
       .sort((a, b) => b.w - a.w || b.t - a.t)
       .slice(0, 150);
 
