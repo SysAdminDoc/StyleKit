@@ -1,6 +1,6 @@
 {
   "name": "stylekit",
-  "version": "1.1.11",
+  "version": "1.1.12",
   "description": "Customize any website's appearance instantly",
   "homepage": "https://github.com/SysAdminDoc/StyleKit#readme",
   "bugs": {
@@ -51,7 +51,8 @@
     "@vue/eslint-config-typescript": "^13.0.0",
     "@vue/test-utils": "^2.4.0",
     "bootstrap": "^5.3.0",
-    "bootstrap-vue-3": "^0.5.1",
+    "bootstrap-icons": "^1.13.1",
+    "bootstrap-vue-next": "^0.45.7",
     "cross-env": "^7.0.3",
     "cssnano": "^7.0.0",
     "date-fns": "^3.0.0",

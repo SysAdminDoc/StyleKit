@@ -1,5 +1,5 @@
 <template>
-  <b-btn
+  <b-button
     class="stylebot-inspector"
     :class="{ active }"
     :disabled="disabled"
@@ -8,7 +8,7 @@
     @click="toggle"
   >
     <inspector-icon />
-  </b-btn>
+  </b-button>
 </template>
 
 <script lang="ts">

@@ -1,5 +1,5 @@
 <template>
-  <b-btn
+  <b-button
     class="app-btn"
     :size="size"
     :title="title"
@@ -8,7 +8,7 @@
     @click="$emit('click')"
   >
     <slot />
-  </b-btn>
+  </b-button>
 </template>
 
 <script lang="ts">

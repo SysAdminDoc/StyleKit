@@ -1,7 +1,7 @@
 # Research - StyleKit
 
 ## Executive Summary
-StyleKit is a local-first Chrome/Firefox WebExtension for visual website restyling: it combines Stylebot-style point-and-click editing, Monaco code editing, UserStyles.world discovery, Google Drive/Gist backup, rollback snapshots, readability mode, and beginner-friendly copy. Its strongest current shape is fast casual CSS customization with a privacy promise and a modern Vue/Vite MV3 stack. The highest-value direction is to keep hardening privileged extension boundaries and style application semantics before adding more marketplace or collaboration features. Priority opportunities: add shadow-root injection coverage, preserve full UserCSS metadata/variables, script packaging/E2E checks, replace deprecated UI dependencies, and add manual dependency/Sass/a11y ratchets.
+StyleKit is a local-first Chrome/Firefox WebExtension for visual website restyling: it combines Stylebot-style point-and-click editing, Monaco code editing, UserStyles.world discovery, Google Drive/Gist backup, rollback snapshots, readability mode, and beginner-friendly copy. Its strongest current shape is fast casual CSS customization with a privacy promise and a modern Vue/Vite MV3 stack. The highest-value direction is to keep hardening privileged extension boundaries and style application semantics before adding more marketplace or collaboration features. Priority opportunities: add shadow-root injection coverage, preserve full UserCSS metadata/variables, script packaging/E2E checks, and add manual dependency/Sass/a11y ratchets.
 
 ## Product Map
 - Core workflows: inspect/select page elements, edit CSS visually, edit raw CSS in Monaco, preview/install UserStyles.world styles, import/export or sync styles, restore the last bulk-change rollback snapshot.
@@ -21,7 +21,7 @@ StyleKit is a local-first Chrome/Firefox WebExtension for visual website restyli
 
 ## Security, Privacy, and Reliability
 - Verified: `npm audit --json` is clean on 2026-06-29; the prior `RESEARCH.md` vulnerability claim is stale and should not guide new work.
-- Verified current in v1.1.11: package/README/source manifest versions, README install text, changelog date, and test counts align with 20 suites/119 tests.
+- Verified current in v1.1.12: package/README/source manifest versions, README install text, changelog date, and test counts align with 20 suites/119 tests.
 - Verified resolved in v1.1.4: `src/background/index.ts` restricts `chrome.storage.local` to trusted contexts, and editor onboarding/Google Fonts cache now route through typed background messages instead of direct content-script `storage.local` calls.
 - Verified resolved in v1.1.5: `src/extension/manifest.json` no longer exposes broad `chunks/*` or Monaco globs; `vite.config.ts` derives exact content-script imports for built web-accessible resources, and Chrome builds set `use_dynamic_url`.
 - Verified resolved in v1.1.6: JSON, Gist, URL, `@import`, and UserStyles.world imports share schema/content-type validation and add/change/remove previews through `src/utils/style-import.ts`.
@@ -30,6 +30,7 @@ StyleKit is a local-first Chrome/Firefox WebExtension for visual website restyli
 - Verified resolved in v1.1.9: `src/background/style-applier.ts` applies saved styles and popup previews with `chrome.scripting.insertCSS/removeCSS` at USER origin, removes stale/replaced CSS, and keeps DOM style injection as a fallback when scripting CSS is unavailable.
 - Verified resolved in v1.1.10: `src/background/styles.ts` resolves frame match URLs explicitly, child frames match their own URLs, `about:blank`/`about:srcdoc` use a valid parent referrer, and unmatchable frames return no CSS with a blocked reason.
 - Verified resolved in v1.1.11: `src/background/userstyles-provider.ts` centralizes UserStyles.world index health, last-good cache, sanitized provider diagnostics, and retry backoff; `src/popup/components/FindStyles.vue` shows degraded status and keeps cached results available without mutating installed styles on failed CSS/update fetches.
+- Verified resolved in v1.1.12: `bootstrap-vue-3` is replaced by `bootstrap-vue-next@0.45.7`, the obsolete declaration shim is removed, legacy `b-btn` aliases are converted to `b-button`, and `src/shared/components/BIcon.vue` preserves the old `<b-icon>` API through MIT-licensed `bootstrap-icons`.
 - Verified: UI surfaces contain many custom icon/title-only controls, two-click destructive buttons, overlays, toasts, and custom modals, but tests cover utilities/store behavior rather than focus management, accessible names, announcements, or rendered extension flows.
 
 ## Architecture Assessment

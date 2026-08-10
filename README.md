@@ -1,7 +1,7 @@
 # StyleKit
 
 ![License](https://img.shields.io/github/license/SysAdminDoc/StyleKit)
-![Version](https://img.shields.io/badge/version-1.1.11-blue)
+![Version](https://img.shields.io/badge/version-1.1.12-blue)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-green)
 ![Firefox](https://img.shields.io/badge/Firefox-Supported-orange)
 ![No Tracking](https://img.shields.io/badge/Analytics-None-brightgreen)
@@ -79,7 +79,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 
 ### From Release
 
-1. Download `StyleKit-v1.1.11-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
+1. Download `StyleKit-v1.1.12-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
 2. Unzip the file
 3. Open `chrome://extensions`
 4. Enable **Developer mode**
@@ -130,7 +130,7 @@ npm run lint:fix       # Auto-fix lint issues
 
 - **Vue 3** + Vuex 4 + TypeScript
 - **Vite 8** (multi-entry Rollup build)
-- **Bootstrap 5** + bootstrap-vue-3
+- **Bootstrap 5** + bootstrap-vue-next
 - **Monaco Editor** (embedded iframe)
 - **Vitest** + jsdom for testing
 - **PostCSS** (cssnano, rem-to-pixel)

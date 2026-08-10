@@ -8,13 +8,13 @@
       </div>
 
       <div class="delete-style-dialog-footer">
-        <b-btn variant="outline-secondary" class="mr-2" @click="$emit('close')">
+        <b-button variant="outline-secondary" class="mr-2" @click="$emit('close')">
           {{ t('cancel') }}
-        </b-btn>
+        </b-button>
 
-        <b-btn variant="outline-danger" @click="deleteStyle">
+        <b-button variant="outline-danger" @click="deleteStyle">
           {{ t('delete') }}
-        </b-btn>
+        </b-button>
       </div>
     </div>
   </div>
