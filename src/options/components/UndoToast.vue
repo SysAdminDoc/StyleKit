@@ -31,7 +31,7 @@ export default defineComponent({
 
   data() {
     return {
-      _timer: null as ReturnType<typeof setTimeout> | null,
+      timer: null as ReturnType<typeof setTimeout> | null,
     };
   },
 
@@ -52,15 +52,15 @@ export default defineComponent({
   methods: {
     startTimer() {
       this.clearTimer();
-      this._timer = setTimeout(() => {
+      this.timer = setTimeout(() => {
         this.$emit('expire');
       }, this.duration);
     },
 
     clearTimer() {
-      if (this._timer) {
-        clearTimeout(this._timer);
-        this._timer = null;
+      if (this.timer) {
+        clearTimeout(this.timer);
+        this.timer = null;
       }
     },
 

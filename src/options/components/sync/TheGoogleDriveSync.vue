@@ -12,6 +12,38 @@
       </a>
     </b-alert>
 
+    <b-alert
+      v-if="hasSyncConflicts"
+      show
+      variant="warning"
+      class="mb-2"
+    >
+      <div class="sync-report-title">
+        Google Drive resolved {{ syncConflictCount }} conflicting style
+        {{ syncConflictCount === 1 ? 'edit' : 'edits' }} by newest modified
+        time.
+      </div>
+      <ul class="sync-conflict-list">
+        <li v-for="conflict in syncConflicts" :key="conflict.url">
+          <span>{{ conflict.url }}</span>
+          <small>
+            local {{ conflict.localModifiedTime }} · remote
+            {{ conflict.remoteModifiedTime }} · kept {{ conflict.resolvedWith }}
+          </small>
+        </li>
+      </ul>
+    </b-alert>
+
+    <b-alert
+      v-if="syncedDeletionCount > 0"
+      show
+      variant="info"
+      class="mb-2"
+    >
+      Applied {{ syncedDeletionCount }} synced
+      {{ syncedDeletionCount === 1 ? 'deletion' : 'deletions' }}.
+    </b-alert>
+
     <b-row no-gutters class="description mb-1">
       <div v-if="googleDriveSyncLastModifiedTime && !syncInProgress">
         {{
@@ -87,6 +119,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { formatDistanceToNow } from 'date-fns';
+import type { StyleSyncConflict } from '@stylekit/types';
 
 import AppButton from '../AppButton.vue';
 
@@ -146,6 +179,22 @@ export default defineComponent({
 
       return '';
     },
+
+    syncConflicts(): StyleSyncConflict[] {
+      return this.$store.state.googleDriveSyncReport?.conflicts || [];
+    },
+
+    syncConflictCount(): number {
+      return this.syncConflicts.length;
+    },
+
+    hasSyncConflicts(): boolean {
+      return this.syncConflictCount > 0;
+    },
+
+    syncedDeletionCount(): number {
+      return this.$store.state.googleDriveSyncReport?.tombstonesApplied || 0;
+    },
   },
 
   methods: {
@@ -169,5 +218,28 @@ export default defineComponent({
 <style lang="scss" scoped>
 .description {
   font-size: 15px;
+}
+
+.sync-report-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.sync-conflict-list {
+  margin: 0;
+  padding-left: 18px;
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  span {
+    display: block;
+    font-weight: 600;
+  }
+
+  small {
+    color: #585b70;
+  }
 }
 </style>

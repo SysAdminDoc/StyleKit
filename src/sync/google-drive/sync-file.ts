@@ -1,8 +1,12 @@
 import { getCurrentTimestamp } from '@stylekit/utils';
-import { GoogleDriveSyncMetadata, StyleMap } from '@stylekit/types';
+import { GoogleDriveSyncMetadata } from '@stylekit/types';
 
 import { AccessToken } from './get-access-token';
 import { syncFetch, withRetry } from './retry';
+import {
+  parseGoogleDriveSyncPayload,
+  StyleSyncState,
+} from './sync-payload';
 
 const GOOGLE_DRIVE_FILE_GET_API = `https://www.googleapis.com/drive/v3/files`;
 const GOOGLE_DRIVE_FILE_UPLOAD_API = `https://www.googleapis.com/upload/drive/v3/files`;
@@ -155,7 +159,7 @@ export const getSyncFileMetadata = async (
 export const downloadSyncFile = async (
   accessToken: string,
   id: string
-): Promise<StyleMap> => {
+): Promise<StyleSyncState> => {
   return withRetry(async () => {
     const url = `${GOOGLE_DRIVE_FILE_GET_API}/${id}?alt=media`;
     const response = await syncFetch(url, {
@@ -163,7 +167,7 @@ export const downloadSyncFile = async (
       headers: getAuthorizationHeaders(accessToken),
     });
 
-    return await response.json();
+    return parseGoogleDriveSyncPayload(await response.json());
   });
 };
 

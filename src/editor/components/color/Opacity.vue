@@ -32,7 +32,7 @@ import CssProperty from '../CssProperty.vue';
 import CssPropertyValue from '../CssPropertyValue.vue';
 
 export default defineComponent({
-  name: 'Opacity',
+  name: 'OpacityControl',
 
   components: {
     CssProperty,

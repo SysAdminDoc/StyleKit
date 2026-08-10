@@ -9,6 +9,7 @@ import {
   GetStylesForPage,
   GetStylesForIframe,
   GetStylesForPageResponse,
+  TabMessage,
 } from '@stylekit/types';
 
 const MAX_INJECT_COUNT = 10;
@@ -25,13 +26,15 @@ const injectCss = (
       if (response) {
         const { styles, defaultStyle } = response;
 
-        styles.forEach(style => {
-          if (style.enabled) {
-            injectCSSIntoDocument(style.css, style.url).catch(e =>
-              console.warn('StyleKit: failed to inject CSS for', style.url, e)
-            );
-          }
-        });
+        if (!response.userOriginApplied) {
+          styles.forEach(style => {
+            if (style.enabled) {
+              injectCSSIntoDocument(style.css, style.url).catch(e =>
+                console.warn('StyleKit: failed to inject CSS for', style.url, e)
+              );
+            }
+          });
+        }
 
         if (defaultStyle && defaultStyle.readability) {
           applyReadability();
@@ -49,20 +52,21 @@ const run = () => {
   if (window === window.top) {
     injectCss({
       name: 'GetStylesForPage',
-      important: true,
+      preferUserOrigin: true,
     });
   } else {
     injectCss({
       name: 'GetStylesForIframe',
       url: window.location.href,
-      important: true,
+      parentUrl: document.referrer || undefined,
+      preferUserOrigin: true,
     });
   }
 };
 
 run();
 
-chrome.runtime.onMessage.addListener((message: any) => {
+chrome.runtime.onMessage.addListener((message: TabMessage) => {
   if (message.name === 'PreviewStyle') {
     const id = `stylekit-preview-${message.id}`;
     let el = document.getElementById(id) as HTMLStyleElement | null;

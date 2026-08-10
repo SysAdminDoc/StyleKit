@@ -23,6 +23,17 @@ import {
   GetImportCss,
   GetThumbnail,
   RunGoogleDriveSync,
+  GetLastStylesRollbackSnapshot,
+  RestoreLastStylesRollbackSnapshot,
+  GetEditorOnboardingDone,
+  SetEditorOnboardingDone,
+  GetGoogleFontsCache,
+  SetGoogleFontsCache,
+  ApplyPreviewStyleToTab,
+  RemovePreviewStyleFromTab,
+  GetUserstylesIndex,
+  GetUserstylesProviderHealth,
+  ReportUserstylesProviderError,
 } from './messages';
 
 import { get as getOption } from './options';
@@ -70,7 +81,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, _, tab) => {
     };
 
     if (!tab.url?.includes('chrome-extension://')) {
-      chrome.tabs.sendMessage(tabId, message).catch(_e => undefined);
+      chrome.tabs.sendMessage(tabId, message).catch(() => undefined);
     }
   }
 });
@@ -99,6 +110,18 @@ const ASYNC_MESSAGES = new Set([
   'GetImportCss',
   'GetThumbnail',
   'RunGoogleDriveSync',
+  'SetAllStyles',
+  'SetEditorOnboardingDone',
+  'GetEditorOnboardingDone',
+  'SetGoogleFontsCache',
+  'GetGoogleFontsCache',
+  'GetLastStylesRollbackSnapshot',
+  'RestoreLastStylesRollbackSnapshot',
+  'ApplyPreviewStyleToTab',
+  'RemovePreviewStyleFromTab',
+  'GetUserstylesIndex',
+  'GetUserstylesProviderHealth',
+  'ReportUserstylesProviderError',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -138,7 +161,7 @@ chrome.runtime.onMessage.addListener(
         break;
 
       case 'SetStyle':
-        SetStyle(message);
+        SetStyle(message, sender);
         break;
       case 'MoveStyle':
         MoveStyle(message);
@@ -147,13 +170,13 @@ chrome.runtime.onMessage.addListener(
         GetAllStyles(sendResponse);
         break;
       case 'SetAllStyles':
-        SetAllStyles(message);
+        SetAllStyles(message, sendResponse);
         break;
       case 'GetStylesForPage':
         GetStylesForPage(message, sender, sendResponse);
         break;
       case 'GetStylesForIframe':
-        GetStylesForIframe(message, sendResponse);
+        GetStylesForIframe(message, sender, sendResponse);
         break;
       case 'EnableStyle':
         EnableStyle(message);
@@ -182,6 +205,42 @@ chrome.runtime.onMessage.addListener(
 
       case 'RunGoogleDriveSync':
         RunGoogleDriveSync(message, sendResponse);
+        break;
+
+      case 'GetLastStylesRollbackSnapshot':
+        GetLastStylesRollbackSnapshot(message, sendResponse);
+        break;
+
+      case 'RestoreLastStylesRollbackSnapshot':
+        RestoreLastStylesRollbackSnapshot(message, sendResponse);
+        break;
+
+      case 'GetEditorOnboardingDone':
+        GetEditorOnboardingDone(message, sendResponse);
+        break;
+      case 'SetEditorOnboardingDone':
+        SetEditorOnboardingDone(message, sendResponse);
+        break;
+      case 'GetGoogleFontsCache':
+        GetGoogleFontsCache(message, sendResponse);
+        break;
+      case 'SetGoogleFontsCache':
+        SetGoogleFontsCache(message, sendResponse);
+        break;
+      case 'ApplyPreviewStyleToTab':
+        ApplyPreviewStyleToTab(message, sendResponse);
+        break;
+      case 'RemovePreviewStyleFromTab':
+        RemovePreviewStyleFromTab(message, sendResponse);
+        break;
+      case 'GetUserstylesIndex':
+        GetUserstylesIndex(sendResponse);
+        break;
+      case 'GetUserstylesProviderHealth':
+        GetUserstylesProviderHealth(sendResponse);
+        break;
+      case 'ReportUserstylesProviderError':
+        ReportUserstylesProviderError(message, sendResponse);
         break;
     }
 

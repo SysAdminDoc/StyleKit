@@ -21,6 +21,9 @@
 
       <div v-if="preview" class="import-preview mb-3">
         <div class="preview-label">Preview ({{ previewLines }} lines)</div>
+        <div v-if="importPreviewSummary" class="preview-summary">
+          Import preview: {{ importPreviewSummary }}
+        </div>
         <pre class="preview-code">{{ preview }}</pre>
       </div>
 
@@ -48,14 +51,31 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, PropType } from 'vue';
+import { getCurrentTimestamp } from '@stylekit/utils';
+import { StyleMap } from '@stylekit/types';
+
 import AppButton from '../AppButton.vue';
+import {
+  assertValidImportCss,
+  createImportPreview,
+  createSingleStyleImport,
+  getImportDiffText,
+  isSafeCssContentType,
+} from '../../../utils/style-import';
 
 export default defineComponent({
   name: 'StyleImportFromUrl',
 
   components: {
     AppButton,
+  },
+
+  props: {
+    existingStyles: {
+      type: Object as PropType<StyleMap>,
+      default: () => ({}),
+    },
   },
 
   data(): {
@@ -78,6 +98,26 @@ export default defineComponent({
     previewLines(): number {
       return this.preview.split('\n').length;
     },
+
+    importPreviewSummary(): string {
+      if (!this.preview || !this.targetUrl) return '';
+
+      try {
+        const parsed = createSingleStyleImport(
+          this.targetUrl,
+          this.preview,
+          getCurrentTimestamp()
+        );
+        const preview = createImportPreview(
+          this.existingStyles,
+          parsed.styles,
+          'merge'
+        );
+        return getImportDiffText(preview.diff);
+      } catch {
+        return '';
+      }
+    },
   },
 
   methods: {
@@ -94,31 +134,39 @@ export default defineComponent({
         }
 
         const contentType = response.headers.get('content-type') || '';
-        if (contentType && !contentType.includes('css') && !contentType.includes('text/plain') && !contentType.includes('text/html')) {
-          this.error = `Unexpected content type: ${contentType}. Expected CSS.`;
+        if (!isSafeCssContentType(contentType)) {
+          this.error = `Unexpected content type: ${contentType}. Expected CSS or plain text.`;
           return;
         }
 
         const text = await response.text();
-        if (!text.trim()) {
-          this.error = 'URL returned empty content';
-          return;
-        }
+        assertValidImportCss(text);
 
         this.preview = text;
       } catch (e) {
-        this.error =
-          'Failed to fetch CSS. The URL may be invalid or blocked by CORS.';
+        this.error = e instanceof Error
+          ? e.message
+          : 'Failed to fetch CSS. The URL may be invalid or blocked by CORS.';
       } finally {
         this.fetching = false;
       }
     },
 
     importStyle(): void {
-      this.$emit('import', {
-        url: this.targetUrl,
-        css: this.preview,
-      });
+      try {
+        createSingleStyleImport(
+          this.targetUrl,
+          this.preview,
+          getCurrentTimestamp()
+        );
+
+        this.$emit('import', {
+          url: this.targetUrl,
+          css: this.preview,
+        });
+      } catch (e) {
+        this.error = e instanceof Error ? e.message : 'Invalid CSS import';
+      }
     },
   },
 });
@@ -182,6 +230,14 @@ export default defineComponent({
   padding: 6px 10px;
   border-bottom: 1px solid #45475a;
   background: #181825;
+}
+
+.preview-summary {
+  color: #fab387;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-bottom: 1px solid #45475a;
+  background: rgba(250, 179, 135, 0.08);
 }
 
 .preview-code {

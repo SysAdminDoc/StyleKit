@@ -1,7 +1,7 @@
 # StyleKit
 
 ![License](https://img.shields.io/github/license/SysAdminDoc/StyleKit)
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.12-blue)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-green)
 ![Firefox](https://img.shields.io/badge/Firefox-Supported-orange)
 ![No Tracking](https://img.shields.io/badge/Analytics-None-brightgreen)
@@ -41,6 +41,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **Install with one click** -- styles are saved and applied immediately
 - **Toggle installed styles** -- enable/disable individual installed styles
 - **Auto-load mode** -- thumbnails pre-fetched in the background for instant popup loading
+- **Provider health cache** -- UserStyles.world outages show degraded status, retry timing, and last-good cached results
 - **Restricted page detection** -- shows "Not available on this page" on chrome:// and system pages
 
 ### Site Recipes & Snippets
@@ -51,6 +52,8 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 ### Sync & Backup
 - **Google Drive sync** -- automatic bidirectional sync across devices
 - **GitHub Gist backup** -- export/import via private Gist with Bearer token auth
+- **Rollback restore** -- JSON imports, Gist imports, and Google Drive sync overwrites save a local snapshot that can be restored from the Sync tab
+- **Import dry runs** -- JSON, Gist, URL, and UserStyles.world imports validate schema/content and show add/change/remove counts before replacing styles
 - **JSON export** -- versioned format with metadata (`{version, app, exportedAt, styles}`)
 - **CSS export** -- all styles as a single `.css` file with URL comments
 - **JSON import** -- validates structure, supports both versioned and legacy formats
@@ -68,12 +71,15 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **Grayscale mode** -- reduce eye strain
 - **15+ language translations**
 - **Two-click delete confirmation** -- prevents accidental style deletion
+- **Narrow extension resource exposure** -- content-script assets are allowlisted exactly and Chrome builds use dynamic web-accessible URLs
+- **USER-origin CSS application** -- saved styles and previews use browser-managed USER-origin CSS insertion when available, with DOM fallback for restricted pages
+- **Frame-aware matching** -- child frames match their own URL, while `about:blank` and `srcdoc` frames inherit the parent referrer only when it is valid
 
 ## Installation
 
 ### From Release
 
-1. Download `StyleKit-v1.1.0-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
+1. Download `StyleKit-v1.1.12-chrome.zip` from [Releases](https://github.com/SysAdminDoc/StyleKit/releases)
 2. Unzip the file
 3. Open `chrome://extensions`
 4. Enable **Developer mode**
@@ -84,6 +90,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 ```bash
 git clone https://github.com/SysAdminDoc/StyleKit.git
 cd StyleKit
+nvm use
 npm install
 npm run build
 ```
@@ -101,9 +108,10 @@ Load from `firefox-dist/`.
 ## Development
 
 ```bash
+nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (8/8 suites, 76 tests)
+npm test               # Run tests (20/20 suites, 119 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 ```
@@ -121,8 +129,8 @@ npm run lint:fix       # Auto-fix lint issues
 ## Tech Stack
 
 - **Vue 3** + Vuex 4 + TypeScript
-- **Vite 5** (multi-entry Rollup build)
-- **Bootstrap 5** + bootstrap-vue-3
+- **Vite 8** (multi-entry Rollup build)
+- **Bootstrap 5** + bootstrap-vue-next
 - **Monaco Editor** (embedded iframe)
 - **Vitest** + jsdom for testing
 - **PostCSS** (cssnano, rem-to-pixel)
@@ -156,8 +164,9 @@ Your styles are stored locally in `chrome.storage.local`. Cloud sync (Google Dri
 StyleKit includes comprehensive security hardening:
 
 - **Sender validation** on all background message handlers
+- **Trusted local storage** restricted to extension pages and the background service worker
 - **`textContent`** for all CSS injection (never `innerHTML`)
-- **Origin-restricted `postMessage`** (never wildcard `*`)
+- **Origin- and source-restricted Monaco `postMessage`** (never wildcard `*`)
 - **URL validation** for thumbnail fetches and CSS imports (HTTPS only)
 - **RegExp safety** with try/catch to prevent ReDoS
 - **Content-type validation** on CSS imports

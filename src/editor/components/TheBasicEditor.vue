@@ -2,7 +2,7 @@
   <div class="stylebot-basic-editor">
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn" @click="layout = !layout">
+        <b-button class="collapse-btn" @click="layout = !layout">
           <div class="section-header-inner">
             <b-icon icon="bounding-box" class="section-icon" />
             <div class="section-header-text">
@@ -11,7 +11,7 @@
             </div>
             <b-icon :icon="layout ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
           </div>
-        </b-btn>
+        </b-button>
       </b-col>
       <b-collapse v-model="layout" class="collapse-content">
         <b-col cols="12" class="px-2 pt-1">
@@ -22,7 +22,7 @@
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn" @click="text = !text">
+        <b-button class="collapse-btn" @click="text = !text">
           <div class="section-header-inner">
             <b-icon icon="fonts" class="section-icon" />
             <div class="section-header-text">
@@ -31,7 +31,7 @@
             </div>
             <b-icon :icon="text ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
           </div>
-        </b-btn>
+        </b-button>
       </b-col>
       <b-collapse v-model="text" class="collapse-content">
         <b-col cols="12" class="px-2 pt-1">
@@ -42,7 +42,7 @@
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn" @click="colors = !colors">
+        <b-button class="collapse-btn" @click="colors = !colors">
           <div class="section-header-inner">
             <b-icon icon="droplet" class="section-icon" />
             <div class="section-header-text">
@@ -51,7 +51,7 @@
             </div>
             <b-icon :icon="colors ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
           </div>
-        </b-btn>
+        </b-button>
       </b-col>
       <b-collapse v-model="colors" class="collapse-content">
         <b-col cols="12" class="px-2 pt-1">
@@ -62,7 +62,7 @@
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn" @click="border = !border">
+        <b-button class="collapse-btn" @click="border = !border">
           <div class="section-header-inner">
             <b-icon icon="square" class="section-icon" />
             <div class="section-header-text">
@@ -71,7 +71,7 @@
             </div>
             <b-icon :icon="border ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
           </div>
-        </b-btn>
+        </b-button>
       </b-col>
       <b-collapse v-model="border" class="collapse-content">
         <b-col cols="12" class="px-2 pt-1">
@@ -82,7 +82,7 @@
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn" @click="snippets = !snippets">
+        <b-button class="collapse-btn" @click="snippets = !snippets">
           <div class="section-header-inner">
             <b-icon icon="lightning" class="section-icon" />
             <div class="section-header-text">
@@ -91,7 +91,7 @@
             </div>
             <b-icon :icon="snippets ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
           </div>
-        </b-btn>
+        </b-button>
       </b-col>
       <b-collapse v-model="snippets" class="collapse-content">
         <b-col cols="12" class="px-2 pt-1">
@@ -102,7 +102,7 @@
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn" @click="variables = !variables">
+        <b-button class="collapse-btn" @click="variables = !variables">
           <div class="section-header-inner">
             <b-icon icon="braces" class="section-icon" />
             <div class="section-header-text">
@@ -111,7 +111,7 @@
             </div>
             <b-icon :icon="variables ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
           </div>
-        </b-btn>
+        </b-button>
       </b-col>
       <b-collapse v-model="variables" class="collapse-content">
         <b-col cols="12" class="px-2 pt-1">
@@ -122,7 +122,7 @@
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn" @click="computedStyles = !computedStyles">
+        <b-button class="collapse-btn" @click="computedStyles = !computedStyles">
           <div class="section-header-inner">
             <b-icon icon="eye" class="section-icon" />
             <div class="section-header-text">
@@ -131,7 +131,7 @@
             </div>
             <b-icon :icon="computedStyles ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
           </div>
-        </b-btn>
+        </b-button>
       </b-col>
       <b-collapse v-model="computedStyles" class="collapse-content">
         <b-col cols="12" class="px-2 pt-1">
@@ -142,7 +142,7 @@
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn" @click="recipes = !recipes">
+        <b-button class="collapse-btn" @click="recipes = !recipes">
           <div class="section-header-inner">
             <b-icon icon="star" class="section-icon" />
             <div class="section-header-text">
@@ -151,7 +151,7 @@
             </div>
             <b-icon :icon="recipes ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
           </div>
-        </b-btn>
+        </b-button>
       </b-col>
       <b-collapse v-model="recipes" class="collapse-content">
         <b-col cols="12" class="px-2 pt-1">
@@ -162,7 +162,7 @@
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-btn class="collapse-btn" @click="mediaQueries = !mediaQueries">
+        <b-button class="collapse-btn" @click="mediaQueries = !mediaQueries">
           <div class="section-header-inner">
             <b-icon icon="aspect-ratio" class="section-icon" />
             <div class="section-header-text">
@@ -171,7 +171,7 @@
             </div>
             <b-icon :icon="mediaQueries ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
           </div>
-        </b-btn>
+        </b-button>
       </b-col>
       <b-collapse v-model="mediaQueries" class="collapse-content">
         <b-col cols="12" class="px-2 pt-1">

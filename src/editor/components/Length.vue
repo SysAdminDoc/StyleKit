@@ -32,7 +32,7 @@ import { Declaration } from 'postcss';
 import DropdownHackToSupportShadowDom from './DropdownHackToSupportShadowDom.vue';
 
 export default defineComponent({
-  name: 'Length',
+  name: 'LengthControl',
 
   components: {
     DropdownHackToSupportShadowDom,

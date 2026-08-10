@@ -2,8 +2,13 @@ import {
   Style,
   StylebotOptions,
   StylebotCommands,
+  GoogleFontsCache,
   ReadabilitySettings,
   Timestamp,
+  StylesRollbackSnapshot,
+  GoogleDriveSyncReport,
+  GetUserstylesIndexResponse,
+  UserstylesProviderHealth,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -21,6 +26,10 @@ export type GetAllStylesResponse = {
 export type GetStylesForPageResponse = {
   styles: Array<Style>;
   defaultStyle?: Style;
+  userOriginApplied?: boolean;
+  frameMatchUrl?: string;
+  frameMatchSource?: 'top-frame' | 'frame-url' | 'parent-url' | 'blocked';
+  frameBlockedReason?: string;
 };
 
 export type GetCommandsResponse = StylebotCommands;
@@ -28,7 +37,17 @@ export type GetReadabilitySettingsResponse = ReadabilitySettings;
 
 export type GetImportCssResponse = string;
 export type GetThumbnailResponse = string;
-export type RunGoogleDriveSyncResponse = void;
+export type RunGoogleDriveSyncResponse = GoogleDriveSyncReport;
+export type SetAllStylesResponse = void;
+export type GetLastStylesRollbackSnapshotResponse =
+  StylesRollbackSnapshot | null;
+export type RestoreLastStylesRollbackSnapshotResponse =
+  StylesRollbackSnapshot | null;
+export type GetEditorOnboardingDoneResponse = boolean;
+export type SetEditorOnboardingDoneResponse = void;
+export type GetGoogleFontsCacheResponse = GoogleFontsCache | null;
+export type SetGoogleFontsCacheResponse = void;
+export type GetUserstylesProviderHealthResponse = UserstylesProviderHealth;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -39,6 +58,15 @@ type BackgroundPageMessageResponse =
   | GetReadabilitySettingsResponse
   | GetImportCssResponse
   | GetThumbnailResponse
-  | RunGoogleDriveSyncResponse;
+  | RunGoogleDriveSyncResponse
+  | SetAllStylesResponse
+  | GetLastStylesRollbackSnapshotResponse
+  | RestoreLastStylesRollbackSnapshotResponse
+  | GetEditorOnboardingDoneResponse
+  | SetEditorOnboardingDoneResponse
+  | GetGoogleFontsCacheResponse
+  | SetGoogleFontsCacheResponse
+  | GetUserstylesProviderHealthResponse
+  | GetUserstylesIndexResponse;
 
 export default BackgroundPageMessageResponse;

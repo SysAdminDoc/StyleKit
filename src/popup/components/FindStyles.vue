@@ -57,8 +57,12 @@
 
       <!-- Error -->
       <div v-else-if="error" class="find-styles-status find-styles-error">
-        <span>{{ t('style_search_error') }}</span>
-        <button class="find-styles-retry" @click="search">Retry</button>
+        <span>{{ providerStatusText || t('style_search_error') }}</span>
+        <button
+          class="find-styles-retry"
+          :disabled="!providerCanRetry"
+          @click="search"
+        >{{ providerRetryText }}</button>
       </div>
 
       <template v-else>
@@ -76,6 +80,14 @@
             type="text"
             placeholder="Filter by name..."
           />
+        </div>
+
+        <div
+          v-if="providerStatusText"
+          class="find-styles-provider-status"
+          :class="{ degraded: providerHealth?.status !== 'ok' }"
+        >
+          {{ providerStatusText }}
         </div>
 
         <!-- No results -->
@@ -122,6 +134,12 @@
                   <span v-if="style.w" class="find-style-installs">
                     {{ formatNumber(style.w) }}/wk
                   </span>
+                  <span
+                    v-if="pendingInstallId === style.i"
+                    class="find-style-import-summary"
+                  >
+                    {{ pendingInstallSummary }}
+                  </span>
                 </div>
               </div>
 
@@ -133,7 +151,7 @@
                   @click="installStyle(style)"
                 >
                   <span v-if="installingIds.has(style.i)" class="find-style-spinner-sm"></span>
-                  <template v-else>Install</template>
+                  <template v-else>{{ pendingInstallId === style.i ? 'Apply' : 'Install' }}</template>
                 </button>
               </div>
             </div>
@@ -146,26 +164,27 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { SetStyle, OpenStylebotInCodeMode } from '@stylekit/types';
+import {
+  GetUserstylesIndexResponse,
+  OpenStylebotInCodeMode,
+  SetStyle,
+  StyleMap,
+  UserstylesIndexEntry,
+  UserstylesProviderHealth,
+} from '@stylekit/types';
+import { getCurrentTimestamp } from '@stylekit/utils';
 import { convertUserCssToRaw } from '../../utils/usercss';
+import {
+  assertValidImportCss,
+  createImportPreview,
+  createSingleStyleImport,
+  getImportDiffText,
+  isSafeCssContentType,
+} from '../../utils/style-import';
 
 const STORAGE_KEY = 'stylekit-usw-installs';
-const INDEX_SESSION_KEY = 'stylekit-usw-index';
 const THUMB_LOCAL_KEY = 'stylekit-usw-thumbs';
-const INDEX_TTL_MS = 60 * 60 * 1000;
-
-interface UserstyleEntry {
-  i: number;
-  n: string;
-  c: string;
-  u: number;
-  t: number;
-  w: number;
-  r: number;
-  an: string;
-  sn: string; // screenshot URL
-  source: 'usw';
-}
+type UserstyleEntry = UserstylesIndexEntry;
 
 interface InstalledEntry {
   domain: string;
@@ -204,6 +223,10 @@ export default defineComponent({
     confirmDeleteId: number | null;
     updatableIds: Set<number>;
     updatingIds: Set<number>;
+    pendingInstallId: number | null;
+    pendingInstallSummary: string;
+    providerHealth: UserstylesProviderHealth | null;
+    providerFromCache: boolean;
   } {
     return {
       showSearch: false,
@@ -223,6 +246,10 @@ export default defineComponent({
       confirmDeleteId: null,
       updatableIds: new Set(),
       updatingIds: new Set(),
+      pendingInstallId: null,
+      pendingInstallSummary: '',
+      providerHealth: null,
+      providerFromCache: false,
     };
   },
 
@@ -246,6 +273,40 @@ export default defineComponent({
       return Object.entries(this.installedMap)
         .filter(([, entry]) => entry.domain === this.domain)
         .map(([id, entry]) => ({ id: Number(id), ...entry }));
+    },
+
+    providerCanRetry(): boolean {
+      return (
+        !this.providerHealth?.nextRetryAt ||
+        Date.now() >= this.providerHealth.nextRetryAt
+      );
+    },
+
+    providerRetryText(): string {
+      if (this.providerCanRetry) return 'Retry';
+      return `Retry in ${this.formatProviderRetryDelay(
+        this.providerHealth?.nextRetryAt
+      )}`;
+    },
+
+    providerStatusText(): string {
+      const health = this.providerHealth;
+      if (!health) return '';
+
+      if (health.status === 'ok') {
+        return this.providerFromCache ? 'Using cached UserStyles.world index' : '';
+      }
+
+      const retry =
+        health.nextRetryAt && !this.providerCanRetry
+          ? ` Retry in ${this.formatProviderRetryDelay(health.nextRetryAt)}.`
+          : '';
+
+      if (health.usingCache) {
+        return `UserStyles.world is unavailable; showing cached results.${retry}`;
+      }
+
+      return `UserStyles.world is unavailable.${retry}`;
     },
   },
 
@@ -302,6 +363,63 @@ export default defineComponent({
       await chrome.storage.local.set({ [STORAGE_KEY]: map });
     },
 
+    getProviderIndex(): Promise<GetUserstylesIndexResponse> {
+      return new Promise((resolve, reject) => {
+        try {
+          chrome.runtime.sendMessage(
+            { name: 'GetUserstylesIndex' },
+            (response: GetUserstylesIndexResponse) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+                return;
+              }
+
+              if (!response) {
+                reject(new Error('No UserStyles.world provider response'));
+                return;
+              }
+
+              resolve(response);
+            }
+          );
+        } catch (error) {
+          reject(error);
+        }
+      });
+    },
+
+    getProviderDiagnosticMessage(operation: string, error: unknown): string {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (/^HTTP \d+$/.test(errorMessage)) return errorMessage;
+      if (errorMessage === 'Style source returned HTML instead of CSS') {
+        return errorMessage;
+      }
+      if (errorMessage === 'CSS is empty') return errorMessage;
+      if (operation.startsWith('style-')) return `${operation} failed`;
+      return errorMessage;
+    },
+
+    reportProviderError(operation: string, error: unknown): void {
+      const errorMessage = this.getProviderDiagnosticMessage(operation, error);
+      chrome.runtime
+        .sendMessage({
+          name: 'ReportUserstylesProviderError',
+          operation,
+          errorMessage,
+        })
+        .catch(() => { /* diagnostics only */ });
+    },
+
+    formatProviderRetryDelay(nextRetryAt?: number): string {
+      if (!nextRetryAt) return '0s';
+      const remainingSeconds = Math.max(
+        0,
+        Math.ceil((nextRetryAt - Date.now()) / 1000)
+      );
+      if (remainingSeconds < 60) return `${remainingSeconds}s`;
+      return `${Math.ceil(remainingSeconds / 60)}m`;
+    },
+
     getMergedCssForDomain(domain: string, map: Record<number, InstalledEntry>): string {
       return Object.values(map)
         .filter(e => e.domain === domain && e.enabled !== false)
@@ -323,39 +441,15 @@ export default defineComponent({
       try {
         await this.loadInstalledMap();
 
-                // Use session-cached index if fresh (defensive: session may not be available)
-        let index: UserstyleEntry[];
-        try {
-          const sessionResult = await chrome.storage.session.get(INDEX_SESSION_KEY);
-          const sessionCache = sessionResult[INDEX_SESSION_KEY] as
-            | { data: UserstyleEntry[]; ts: number }
-            | undefined;
-          if (sessionCache && Date.now() - sessionCache.ts < INDEX_TTL_MS) {
-            index = sessionCache.data;
-          } else {
-            const res = await fetch('https://userstyles.world/api/index/uso-format', {
-              referrerPolicy: 'no-referrer',
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const json = await res.json();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            index = (json.data || []).map((e: any) => ({ ...e, source: 'usw' as const }));
-            try {
-              await chrome.storage.session.set({
-                [INDEX_SESSION_KEY]: { data: index, ts: Date.now() },
-              });
-            } catch { /* session storage unavailable */ }
-          }
-        } catch {
-          // Session storage unavailable — fetch index directly
-          const res = await fetch('https://userstyles.world/api/index/uso-format', {
-            referrerPolicy: 'no-referrer',
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const json = await res.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          index = (json.data || []).map((e: any) => ({ ...e, source: 'usw' as const }));
+        const providerResponse = await this.getProviderIndex();
+        this.providerHealth = providerResponse.health;
+        this.providerFromCache = providerResponse.fromCache;
+
+        if (providerResponse.error && providerResponse.data.length === 0) {
+          throw new Error(providerResponse.error);
         }
+
+        const index = providerResponse.data;
 
         const dom = this.domain.toLowerCase().replace(/^www\./, '');
         this.allResults = index
@@ -460,22 +554,49 @@ export default defineComponent({
       const cached = this.previewCssCache.get(style.i);
       if (cached !== undefined) return cached;
 
-      const url = `https://userstyles.world/api/style/${style.i}.user.css`;
+      try {
+        const url = `https://userstyles.world/api/style/${style.i}.user.css`;
 
-      const res = await fetch(url, { referrerPolicy: 'no-referrer' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const sourceCode = await res.text();
-      const css = convertUserCssToRaw(sourceCode);
-      if (css) this.previewCssCache.set(style.i, css);
-      return css;
+        const res = await fetch(url, { referrerPolicy: 'no-referrer' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!isSafeCssContentType(res.headers.get('content-type'))) {
+          throw new Error('Style source returned HTML instead of CSS');
+        }
+        const sourceCode = await res.text();
+        const css = convertUserCssToRaw(sourceCode);
+        assertValidImportCss(css);
+        if (css) this.previewCssCache.set(style.i, css);
+        return css;
+      } catch (error) {
+        this.reportProviderError('style-css', error);
+        throw error;
+      }
     },
 
     removePreview(): void {
       if (!this.tab?.id || this.previewingId === null) return;
-      chrome.tabs
-        .sendMessage(this.tab.id, {
-          name: 'RemovePreviewStyle',
-          id: String(this.previewingId),
+      this.removePreviewById(String(this.previewingId));
+    },
+
+    applyPreviewById(id: string, css: string): void {
+      if (!this.tab?.id) return;
+      chrome.runtime
+        .sendMessage({
+          name: 'ApplyPreviewStyleToTab',
+          tabId: this.tab.id,
+          id,
+          css,
+        })
+        .catch(() => { /* fire-and-forget */ });
+    },
+
+    removePreviewById(id: string): void {
+      if (!this.tab?.id) return;
+      chrome.runtime
+        .sendMessage({
+          name: 'RemovePreviewStyleFromTab',
+          tabId: this.tab.id,
+          id,
         })
         .catch(() => { /* fire-and-forget */ });
     },
@@ -496,9 +617,7 @@ export default defineComponent({
         try {
           const css = await this.fetchCss(style);
           if (!css) return;
-          chrome.tabs
-            .sendMessage(this.tab.id, { name: 'PreviewStyle', id: String(style.i), css })
-            .catch(() => { /* fire-and-forget */ });
+          this.applyPreviewById(String(style.i), css);
           this.previewingId = style.i;
         } catch (e) {
           console.error('Hover preview error:', e);
@@ -533,15 +652,46 @@ export default defineComponent({
       try {
         const css = await this.fetchCss(style);
         if (!css) return;
-        chrome.tabs
-          .sendMessage(this.tab.id, { name: 'PreviewStyle', id: String(style.i), css })
-          .catch(() => { /* fire-and-forget */ });
+        this.applyPreviewById(String(style.i), css);
         this.previewingId = style.i;
       } catch (e) {
         console.error('Preview error:', e);
       } finally {
         this.setBusy(style.i, false);
       }
+    },
+
+    getDomainStylePreview(map: Record<number, InstalledEntry>): {
+      mergedCss: string;
+      summary: string;
+    } {
+      const mergedCss = this.getMergedCssForDomain(this.domain, map);
+      const incomingStyles = createSingleStyleImport(
+        this.domain,
+        mergedCss,
+        getCurrentTimestamp()
+      ).styles;
+      const currentMergedCss = this.getMergedCssForDomain(
+        this.domain,
+        this.installedMap
+      );
+      const currentStyles: StyleMap = currentMergedCss
+        ? createSingleStyleImport(
+            this.domain,
+            currentMergedCss,
+            incomingStyles[this.domain].modifiedTime
+          ).styles
+        : {};
+      const preview = createImportPreview(
+        currentStyles,
+        incomingStyles,
+        'merge'
+      );
+
+      return {
+        mergedCss,
+        summary: getImportDiffText(preview.diff),
+      };
     },
 
     async installStyle(style: UserstyleEntry): Promise<void> {
@@ -563,31 +713,37 @@ export default defineComponent({
           ...this.installedMap,
           [style.i]: { domain: this.domain, css, name: style.n, uswId: style.i, installedAt: Date.now() },
         };
+
+        const preview = this.getDomainStylePreview(newMap);
+
+        if (this.pendingInstallId !== style.i) {
+          this.pendingInstallId = style.i;
+          this.pendingInstallSummary = preview.summary;
+          return;
+        }
+
         await this.saveInstalledMap(newMap);
         this.installedMap = newMap;
 
         // Merge all installed styles for this domain into one SetStyle call
-        const mergedCss = this.getMergedCssForDomain(this.domain, newMap);
         chrome.runtime.sendMessage({
           name: 'SetStyle',
           url: this.domain,
-          css: mergedCss,
+          css: preview.mergedCss,
           readability: false,
         } as SetStyle);
 
         // Instantly inject into the live tab without requiring a refresh
         if (this.tab?.id) {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'PreviewStyle',
-            id: `usw-installed-${this.domain}`,
-            css: mergedCss,
-          }).catch(() => { /* fire-and-forget */ });
+          this.applyPreviewById(`usw-installed-${this.domain}`, preview.mergedCss);
         }
 
         // Clear hover preview — installed style is now injected permanently
         if (this.previewingId === style.i) {
           this.previewingId = null;
         }
+        this.pendingInstallId = null;
+        this.pendingInstallSummary = '';
         this.$emit('style-installed', this.domain);
       } catch (e) {
         console.error('Install style error:', e);
@@ -622,16 +778,9 @@ export default defineComponent({
 
       if (this.tab?.id) {
         if (mergedCss) {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'PreviewStyle',
-            id: `usw-installed-${domain}`,
-            css: mergedCss,
-          }).catch(() => { /* fire-and-forget */ });
+          this.applyPreviewById(`usw-installed-${domain}`, mergedCss);
         } else {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'RemovePreviewStyle',
-            id: `usw-installed-${domain}`,
-          }).catch(() => { /* fire-and-forget */ });
+          this.removePreviewById(`usw-installed-${domain}`);
         }
       }
     },
@@ -663,7 +812,9 @@ export default defineComponent({
               this.updatableIds = new Set([...this.updatableIds, Number(id)]);
             }
           }
-        } catch { /* silent */ }
+        } catch (error) {
+          this.reportProviderError('style-update-head', error);
+        }
       }
     },
 
@@ -676,10 +827,14 @@ export default defineComponent({
       try {
         const url = `https://userstyles.world/api/style/${entry.uswId}.user.css`;
         const res = await fetch(url, { referrerPolicy: 'no-referrer' });
-        if (!res.ok) return;
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!isSafeCssContentType(res.headers.get('content-type'))) {
+          throw new Error('Style source returned HTML instead of CSS');
+        }
 
         const sourceCode = await res.text();
         const css = convertUserCssToRaw(sourceCode);
+        assertValidImportCss(css);
         if (!css?.trim()) return;
 
         const newMap: Record<number, InstalledEntry> = {
@@ -699,11 +854,7 @@ export default defineComponent({
         } as SetStyle);
 
         if (this.tab?.id) {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'PreviewStyle',
-            id: `usw-installed-${entry.domain}`,
-            css: mergedCss,
-          }).catch(() => {});
+          this.applyPreviewById(`usw-installed-${entry.domain}`, mergedCss);
         }
 
         // Remove from updatable
@@ -711,6 +862,7 @@ export default defineComponent({
         next.delete(id);
         this.updatableIds = next;
       } catch (e) {
+        this.reportProviderError('style-update', e);
         console.error('Update style error:', e);
       } finally {
         const next = new Set(this.updatingIds);
@@ -740,6 +892,10 @@ export default defineComponent({
       delete newMap[id];
       await this.saveInstalledMap(newMap);
       this.installedMap = newMap;
+      if (this.pendingInstallId === id) {
+        this.pendingInstallId = null;
+        this.pendingInstallSummary = '';
+      }
 
       const mergedCss = this.getMergedCssForDomain(domain, newMap);
       chrome.runtime.sendMessage({
@@ -752,16 +908,9 @@ export default defineComponent({
       // Instantly update or remove the injected style in the live tab
       if (this.tab?.id) {
         if (mergedCss) {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'PreviewStyle',
-            id: `usw-installed-${domain}`,
-            css: mergedCss,
-          }).catch(() => { /* fire-and-forget */ });
+          this.applyPreviewById(`usw-installed-${domain}`, mergedCss);
         } else {
-          chrome.tabs.sendMessage(this.tab.id, {
-            name: 'RemovePreviewStyle',
-            id: `usw-installed-${domain}`,
-          }).catch(() => { /* fire-and-forget */ });
+          this.removePreviewById(`usw-installed-${domain}`);
         }
       }
 
@@ -1007,6 +1156,24 @@ export default defineComponent({
     background: rgba(243, 139, 168, 0.2);
     border-color: #f38ba8;
   }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+}
+
+.find-styles-provider-status {
+  padding: 7px 10px;
+  font-size: 11px;
+  color: #89b4fa;
+  background: rgba(137, 180, 250, 0.08);
+  border-bottom: 1px solid #313244;
+
+  &.degraded {
+    color: #fab387;
+    background: rgba(250, 179, 135, 0.08);
+  }
 }
 
 .find-styles-spinner {
@@ -1148,6 +1315,12 @@ export default defineComponent({
 }
 
 /* ── Action buttons ─────────────────────────────────────────── */
+.find-style-import-summary {
+  color: #fab387;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .find-style-actions {
   display: flex;
   gap: 2px;

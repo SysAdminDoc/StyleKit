@@ -22,6 +22,10 @@ export type StylebotLayout = {
 
 export type StylebotColorPalette = 'basic' | 'material';
 export type StylebotFonts = Array<string>;
+export type GoogleFontsCache = {
+  fonts: string[];
+  ts: number;
+};
 
 export type StylebotOptions = {
   contextMenu: boolean;
@@ -47,6 +51,38 @@ export type StyleWithoutUrl = Omit<Style, 'url'>;
 
 export type StyleMap = {
   [url: string]: Omit<Style, 'url'>;
+};
+
+export type StyleSyncTombstone = {
+  deletedTime: Timestamp;
+};
+
+export type StyleSyncTombstoneMap = {
+  [url: string]: StyleSyncTombstone;
+};
+
+export type StyleSyncConflict = {
+  url: string;
+  localModifiedTime: Timestamp;
+  remoteModifiedTime: Timestamp;
+  resolvedWith: 'local' | 'remote';
+};
+
+export type GoogleDriveSyncReport = {
+  conflicts: StyleSyncConflict[];
+  tombstonesApplied: number;
+};
+
+export type StylesRollbackReason =
+  | 'json-import'
+  | 'gist-import'
+  | 'google-drive-sync';
+
+export type StylesRollbackSnapshot = {
+  id: Timestamp;
+  createdAt: Timestamp;
+  reason: StylesRollbackReason;
+  styles: StyleMap;
 };
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/filter
@@ -110,6 +146,38 @@ export type GoogleDriveSyncMetadata = {
   modifiedTime: string;
   webViewLink: string;
   webContentLink: string;
+};
+
+export type UserstylesIndexEntry = {
+  i: number;
+  n: string;
+  c: string;
+  u: number;
+  t: number;
+  w: number;
+  r: number;
+  an: string;
+  sn: string;
+  source: 'usw';
+};
+
+export type UserstylesProviderHealth = {
+  provider: 'userstyles.world';
+  status: 'ok' | 'degraded' | 'offline';
+  checkedAt: number;
+  lastSuccessAt?: number;
+  failureCount: number;
+  nextRetryAt?: number;
+  lastOperation?: string;
+  lastError?: string;
+  usingCache: boolean;
+};
+
+export type GetUserstylesIndexResponse = {
+  data: UserstylesIndexEntry[];
+  health: UserstylesProviderHealth;
+  fromCache: boolean;
+  error?: string;
 };
 
 export * from './TabMessage';

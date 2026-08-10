@@ -1,20 +1,24 @@
 import { getCurrentTimestamp } from '@stylekit/utils';
+import {
+  getAllStylesFromStorage,
+  setAllStylesInStorage,
+} from './style-storage';
 
 const StylesModifiedTimeUpdate = async (): Promise<void> => {
-  const items = await chrome.storage.local.get('styles');
+  const styles = await getAllStylesFromStorage();
+  let changed = false;
 
-  if (items['styles']) {
-    const styles = items['styles'];
+  for (const url in styles) {
+    const style = styles[url];
 
-    for (const url in styles) {
-      const style = styles[url];
-
-      if (!style.modifiedTime) {
-        styles[url].modifiedTime = getCurrentTimestamp();
-      }
+    if (!style.modifiedTime) {
+      styles[url].modifiedTime = getCurrentTimestamp();
+      changed = true;
     }
+  }
 
-    await chrome.storage.local.set({ styles });
+  if (changed) {
+    await setAllStylesInStorage(styles);
   }
 };
 

@@ -46,7 +46,7 @@ import StyleEditor from './StyleEditor.vue';
 import StyleDeleteButton from './StyleDeleteButton.vue';
 
 export default defineComponent({
-  name: 'Style',
+  name: 'OptionsStyleItem',
 
   components: {
     AppButton,

@@ -117,10 +117,6 @@ export default defineComponent({
     };
   },
 
-  created() {
-    this.searchHighlighter = new Highlighter({ onSelect: () => {} });
-  },
-
   computed: {
     disabled(): boolean {
       return !this.$store.state.visible;
@@ -135,6 +131,10 @@ export default defineComponent({
       const match = this.activeSelector.match(/(:{1,2}[\w-]+)$/);
       return match ? match[1] : '';
     },
+  },
+
+  created() {
+    this.searchHighlighter = new Highlighter({ onSelect: () => {} });
   },
 
   methods: {

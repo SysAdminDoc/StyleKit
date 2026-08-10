@@ -28,6 +28,19 @@
       <a :href="gistUrl" target="_blank" rel="noopener">{{ gistUrl }}</a>
     </div>
 
+    <div v-if="pendingImport" class="gist-import-preview mb-3">
+      <div class="preview-title">Gist import preview</div>
+      <div class="preview-summary">
+        {{ pendingImportSummary }}. Existing styles are unchanged until applied.
+      </div>
+      <div class="preview-actions">
+        <app-button size="sm" variant="primary" @click="applyPendingImport">
+          Apply Gist Import
+        </app-button>
+        <app-button size="sm" @click="pendingImport = null">Cancel</app-button>
+      </div>
+    </div>
+
     <div class="gist-actions">
       <app-button
         variant="primary"
@@ -50,6 +63,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import AppButton from '../AppButton.vue';
+import type { StyleImportPreview } from '../../../utils/style-import';
+import {
+  createImportPreview,
+  createStyleImportEnvelope,
+  getImportDiffText,
+  parseStyleImportPayload,
+} from '../../utils';
 
 export default defineComponent({
   name: 'TheGistBackup',
@@ -68,6 +88,7 @@ export default defineComponent({
     exporting: boolean;
     importing: boolean;
     confirmOverwrite: boolean;
+    pendingImport: StyleImportPreview | null;
   } {
     return {
       token: '',
@@ -79,7 +100,14 @@ export default defineComponent({
       exporting: false,
       importing: false,
       confirmOverwrite: false,
+      pendingImport: null,
     };
+  },
+
+  computed: {
+    pendingImportSummary(): string {
+      return this.pendingImport ? getImportDiffText(this.pendingImport.diff) : '';
+    },
   },
 
   async created() {
@@ -112,7 +140,7 @@ export default defineComponent({
 
       try {
         const styles = this.$store.state.styles;
-        const content = JSON.stringify(styles, null, 2);
+        const content = JSON.stringify(createStyleImportEnvelope(styles), null, 2);
 
         const body: Record<string, unknown> = {
           description: 'StyleKit CSS Styles Backup',
@@ -190,23 +218,38 @@ export default defineComponent({
           throw new Error('stylekit-styles.json not found in Gist');
         }
 
-        const parsed = JSON.parse(file.content);
-        // Support versioned format: { version, styles }
-        const styles = parsed?.version && parsed?.styles ? parsed.styles : parsed;
+        const parsed = parseStyleImportPayload(JSON.parse(file.content));
+        this.pendingImport = createImportPreview(
+          this.$store.state.styles,
+          parsed.styles,
+          'replace'
+        );
 
-        if (!styles || typeof styles !== 'object' || Array.isArray(styles)) {
-          throw new Error('Invalid format: expected a StyleKit styles object');
-        }
-
-        this.$store.dispatch('setAllStyles', styles);
-
-        this.status = 'Imported successfully';
-        this.statusType = 'success';
+        this.status = 'Gist import validated';
+        this.statusType = 'warning';
       } catch (e) {
         this.status = `Import failed: ${e instanceof Error ? e.message : 'Unknown error'}`;
         this.statusType = 'error';
       } finally {
         this.importing = false;
+      }
+    },
+
+    async applyPendingImport(): Promise<void> {
+      if (!this.pendingImport) return;
+
+      try {
+        await this.$store.dispatch('setAllStyles', {
+          styles: this.pendingImport.styles,
+          rollbackReason: 'gist-import',
+        });
+
+        this.pendingImport = null;
+        this.status = 'Imported successfully';
+        this.statusType = 'success';
+      } catch (e) {
+        this.status = `Import failed: ${e instanceof Error ? e.message : 'Unknown error'}`;
+        this.statusType = 'error';
       }
     },
   },
@@ -264,6 +307,30 @@ export default defineComponent({
 }
 
 .gist-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.gist-import-preview {
+  padding: 10px;
+  border: 1px solid rgba(250, 179, 135, 0.35);
+  border-radius: 6px;
+  background: rgba(250, 179, 135, 0.08);
+}
+
+.preview-title {
+  color: #cdd6f4;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.preview-summary {
+  color: #fab387;
+  font-size: 12px;
+  margin: 3px 0 8px;
+}
+
+.preview-actions {
   display: flex;
   gap: 8px;
 }

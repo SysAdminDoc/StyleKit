@@ -2,16 +2,21 @@ import { getCachedThumb, setCachedThumb } from './preloader';
 
 import {
   set,
+  get,
   disable,
   enable,
   getAll,
   setAll,
   move,
   getStylesForPage,
+  getStylesForFrame,
   updateIcon,
   setReadability,
   getImportCss,
   applyStylesToAllTabs,
+  createStylesRollbackSnapshot,
+  getLastStylesRollbackSnapshot,
+  restoreLastStylesRollbackSnapshot,
 } from './styles';
 
 import {
@@ -36,6 +41,15 @@ import {
   GetImportCss as GetImportCssType,
   GetThumbnail as GetThumbnailType,
   RunGoogleDriveSync as RunGoogleDriveSyncType,
+  GetLastStylesRollbackSnapshot as GetLastStylesRollbackSnapshotType,
+  RestoreLastStylesRollbackSnapshot as RestoreLastStylesRollbackSnapshotType,
+  GetEditorOnboardingDone as GetEditorOnboardingDoneType,
+  SetEditorOnboardingDone as SetEditorOnboardingDoneType,
+  GetGoogleFontsCache as GetGoogleFontsCacheType,
+  SetGoogleFontsCache as SetGoogleFontsCacheType,
+  ApplyPreviewStyleToTab as ApplyPreviewStyleToTabType,
+  RemovePreviewStyleFromTab as RemovePreviewStyleFromTabType,
+  ReportUserstylesProviderError as ReportUserstylesProviderErrorType,
   GetCommandsResponse,
   GetAllOptionsResponse,
   GetAllStylesResponse,
@@ -45,8 +59,28 @@ import {
   GetImportCssResponse,
   GetThumbnailResponse,
   RunGoogleDriveSyncResponse,
+  SetAllStylesResponse,
+  GetLastStylesRollbackSnapshotResponse,
+  RestoreLastStylesRollbackSnapshotResponse,
+  GetEditorOnboardingDoneResponse,
+  SetEditorOnboardingDoneResponse,
+  GetGoogleFontsCacheResponse,
+  SetGoogleFontsCacheResponse,
+  GetUserstylesIndexResponse,
+  GetUserstylesProviderHealthResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
+import {
+  applyUserOriginPreviewToTab,
+  applyUserOriginStylesToFrame,
+  removeUserOriginPreviewFromTab,
+  replaceUserOriginCss,
+} from './style-applier';
+import {
+  getUserstylesIndex,
+  getUserstylesProviderHealth,
+  recordUserstylesProviderFailure,
+} from './userstyles-provider';
 
 import {
   get as getReadabilitySettings,
@@ -54,6 +88,9 @@ import {
 } from './readability-settings';
 
 import { get as getCommands, set as setCommands } from './commands';
+
+const ONBOARDING_KEY = 'stylekit-onboarding-done';
+const GOOGLE_FONTS_CACHE_KEY = 'stylekit-google-fonts';
 
 export const DisableStyle = async (
   message: DisableStyleType
@@ -67,8 +104,25 @@ export const EnableStyle = async (message: EnableStyleType): Promise<void> => {
   return applyStylesToAllTabs();
 };
 
-export const SetStyle = (message: SetStyleType): Promise<void> =>
-  set(message.url, message.css, message.readability);
+export const SetStyle = async (
+  message: SetStyleType,
+  sender?: chrome.runtime.MessageSender
+): Promise<void> => {
+  const previousStyle = await get(message.url);
+  await set(message.url, message.css, message.readability);
+
+  if (sender?.tab?.id !== undefined) {
+    await replaceUserOriginCss(
+      {
+        tabId: sender.tab.id,
+        frameId: sender.frameId ?? 0,
+      },
+      message.url,
+      previousStyle?.css,
+      message.css
+    );
+  }
+};
 
 export const GetAllStyles = async (
   sendResponse: (response: GetAllStylesResponse) => void
@@ -78,18 +132,42 @@ export const GetAllStyles = async (
 };
 
 export const SetAllStyles = async (
-  message: SetAllStylesType
+  message: SetAllStylesType,
+  sendResponse: (response: SetAllStylesResponse) => void
 ): Promise<void> => {
+  if (message.rollbackReason) {
+    await createStylesRollbackSnapshot(message.rollbackReason);
+  }
+
   await setAll(message.styles);
-  return applyStylesToAllTabs();
+  await applyStylesToAllTabs();
+  sendResponse();
 };
 
 export const GetStylesForIframe = async (
   message: GetStylesForIframeType,
+  sender: chrome.runtime.MessageSender,
   sendResponse: (response: GetStylesForPageResponse) => void
 ): Promise<void> => {
   const styles = await getAll();
-  const pageStyles = getStylesForPage(message.url, styles, message.important);
+  const pageStyles = getStylesForFrame(
+    message.url,
+    message.parentUrl,
+    styles,
+    message.important
+  );
+  const tabId = sender.tab?.id;
+
+  if (message.preferUserOrigin && tabId !== undefined) {
+    const rawPageStyles = message.important
+      ? getStylesForFrame(message.url, message.parentUrl, styles, false)
+      : pageStyles;
+    pageStyles.userOriginApplied = await applyUserOriginStylesToFrame(
+      tabId,
+      sender.frameId ?? 0,
+      rawPageStyles.styles
+    );
+  }
 
   sendResponse(pageStyles);
 };
@@ -107,6 +185,17 @@ export const GetStylesForPage = async (
 
   const styles = await getAll();
   const response = getStylesForPage(tab.url, styles, message.important);
+
+  if (message.preferUserOrigin && tab.id !== undefined) {
+    const rawResponse = message.important
+      ? getStylesForPage(tab.url, styles, false)
+      : response;
+    response.userOriginApplied = await applyUserOriginStylesToFrame(
+      tab.id,
+      sender.frameId ?? 0,
+      rawResponse.styles
+    );
+  }
 
   updateIcon(tab, response.styles, response.defaultStyle);
   sendResponse(response);
@@ -221,6 +310,122 @@ export const RunGoogleDriveSync = async (
   _message: RunGoogleDriveSyncType,
   sendResponse: (response: RunGoogleDriveSyncResponse) => void
 ): Promise<void> => {
-  await runGoogleDriveSync();
+  const report = await runGoogleDriveSync();
+  sendResponse(report);
+};
+
+export const GetLastStylesRollbackSnapshot = async (
+  _message: GetLastStylesRollbackSnapshotType,
+  sendResponse: (response: GetLastStylesRollbackSnapshotResponse) => void
+): Promise<void> => {
+  const snapshot = await getLastStylesRollbackSnapshot();
+  sendResponse(snapshot);
+};
+
+export const RestoreLastStylesRollbackSnapshot = async (
+  _message: RestoreLastStylesRollbackSnapshotType,
+  sendResponse: (response: RestoreLastStylesRollbackSnapshotResponse) => void
+): Promise<void> => {
+  const snapshot = await restoreLastStylesRollbackSnapshot();
+
+  if (snapshot) {
+    await applyStylesToAllTabs();
+  }
+
+  sendResponse(snapshot);
+};
+
+export const GetEditorOnboardingDone = async (
+  _message: GetEditorOnboardingDoneType,
+  sendResponse: (response: GetEditorOnboardingDoneResponse) => void
+): Promise<void> => {
+  const items = await chrome.storage.local.get(ONBOARDING_KEY);
+  sendResponse(Boolean(items[ONBOARDING_KEY]));
+};
+
+export const SetEditorOnboardingDone = async (
+  message: SetEditorOnboardingDoneType,
+  sendResponse: (response: SetEditorOnboardingDoneResponse) => void
+): Promise<void> => {
+  await chrome.storage.local.set({ [ONBOARDING_KEY]: message.value });
   sendResponse();
+};
+
+export const GetGoogleFontsCache = async (
+  _message: GetGoogleFontsCacheType,
+  sendResponse: (response: GetGoogleFontsCacheResponse) => void
+): Promise<void> => {
+  const items = await chrome.storage.local.get(GOOGLE_FONTS_CACHE_KEY);
+  sendResponse(items[GOOGLE_FONTS_CACHE_KEY] || null);
+};
+
+export const SetGoogleFontsCache = async (
+  message: SetGoogleFontsCacheType,
+  sendResponse: (response: SetGoogleFontsCacheResponse) => void
+): Promise<void> => {
+  await chrome.storage.local.set({ [GOOGLE_FONTS_CACHE_KEY]: message.value });
+  sendResponse();
+};
+
+export const ApplyPreviewStyleToTab = async (
+  message: ApplyPreviewStyleToTabType,
+  sendResponse: () => void
+): Promise<void> => {
+  const applied = await applyUserOriginPreviewToTab(
+    message.tabId,
+    message.id,
+    message.css
+  );
+
+  if (!applied) {
+    await chrome.tabs
+      .sendMessage(message.tabId, {
+        name: 'PreviewStyle',
+        id: message.id,
+        css: message.css,
+      })
+      .catch(() => undefined);
+  }
+
+  sendResponse();
+};
+
+export const RemovePreviewStyleFromTab = async (
+  message: RemovePreviewStyleFromTabType,
+  sendResponse: () => void
+): Promise<void> => {
+  await removeUserOriginPreviewFromTab(message.tabId, message.id);
+  await chrome.tabs
+    .sendMessage(message.tabId, {
+      name: 'RemovePreviewStyle',
+      id: message.id,
+    })
+    .catch(() => undefined);
+
+  sendResponse();
+};
+
+export const GetUserstylesIndex = async (
+  sendResponse: (response: GetUserstylesIndexResponse) => void
+): Promise<void> => {
+  const response = await getUserstylesIndex();
+  sendResponse(response);
+};
+
+export const GetUserstylesProviderHealth = async (
+  sendResponse: (response: GetUserstylesProviderHealthResponse) => void
+): Promise<void> => {
+  const response = await getUserstylesProviderHealth();
+  sendResponse(response);
+};
+
+export const ReportUserstylesProviderError = async (
+  message: ReportUserstylesProviderErrorType,
+  sendResponse: (response: GetUserstylesProviderHealthResponse) => void
+): Promise<void> => {
+  const response = await recordUserstylesProviderFailure(
+    message.operation,
+    message.errorMessage
+  );
+  sendResponse(response);
 };

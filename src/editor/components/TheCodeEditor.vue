@@ -6,7 +6,12 @@
 import { defineComponent } from 'vue';
 
 import { getRule, addEmptyRule, removeEmptyRules } from '@stylekit/css';
-import { IframeMessage, ParentUpdateCssMessage } from '@stylekit/monaco-editor';
+import {
+  getExtensionMessageOrigin,
+  isExpectedExtensionWindowMessage,
+  isIframeMessage,
+} from '../../monaco-editor/messages';
+import type { ParentUpdateCssMessage } from '../../monaco-editor/messages';
 
 import CodeEditorIframe from './code/CodeEditorIframe.vue';
 
@@ -95,7 +100,7 @@ export default defineComponent({
         selector: this.activeSelector,
       };
 
-      contentWindow.postMessage(message, chrome.runtime.getURL('/'));
+      contentWindow.postMessage(message, getExtensionMessageOrigin());
     },
 
     startRetryingSendCss(): void {
@@ -128,10 +133,17 @@ export default defineComponent({
       }
     },
 
-    handleMessage(message: {
-      source: Window | MessagePort | ServiceWorker | null;
-      data: IframeMessage;
-    }): void {
+    handleMessage(message: MessageEvent): void {
+      if (
+        !isExpectedExtensionWindowMessage(
+          message,
+          this.getIframeContentWindow()
+        ) ||
+        !isIframeMessage(message.data)
+      ) {
+        return;
+      }
+
       switch (message.data.type) {
         case 'stylebotMonacoIframeLoaded':
           this.handleIframeLoaded();

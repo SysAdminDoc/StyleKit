@@ -5,10 +5,11 @@ import { t } from '@stylekit/i18n';
 
 import { State } from '../store';
 import TheStylebotApp from '../components/TheStylebotApp.vue';
+import BIcon from '../../shared/components/BIcon.vue';
 
 import '../index.scss';
 
-import { BootstrapVue3 } from 'bootstrap-vue-3';
+import { createBootstrap } from 'bootstrap-vue-next';
 
 const injectCss = (shadowRoot: ShadowRoot): void => {
   // Reset all inherited CSS properties at the shadow host boundary so that
@@ -103,9 +104,10 @@ const initEditor = (store: Store<State>): void => {
     },
   });
 
-  app.use(BootstrapVue3);
+  app.use(createBootstrap());
+  app.component('BIcon', BIcon);
   app.use(store);
-  app.component('vue-draggable-resizable', VueDraggableResizable);
+  app.component('VueDraggableResizable', VueDraggableResizable);
   app.config.globalProperties.t = t;
 
   app.mount(stylebotApp);

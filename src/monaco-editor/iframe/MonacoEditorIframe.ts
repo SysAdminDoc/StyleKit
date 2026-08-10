@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import CustomLight from './themes/CustomLight';
 import CustomDark from './themes/CustomDark';
-import { IframeMessage, ParentUpdateCssMessage } from '@stylekit/monaco-editor';
+import {
+  getExtensionMessageOrigin,
+  isExpectedExtensionWindowMessage,
+  isParentUpdateCssMessage,
+} from '../messages';
+import type { IframeMessage } from '../messages';
 
 declare global {
   interface Window {
@@ -128,7 +133,7 @@ class MonacoEditorIframe {
   }
 
   postMessage(message: IframeMessage): void {
-    window.parent.postMessage(message, chrome.runtime.getURL('/'));
+    window.parent.postMessage(message, getExtensionMessageOrigin());
   }
 
   handleStylebotCssUpdate(css: string, selector?: string): void {
@@ -203,8 +208,11 @@ class MonacoEditorIframe {
 
     window.addEventListener(
       'message',
-      (message: { data: ParentUpdateCssMessage }) => {
-        if (message.data.type === 'stylebotCssUpdate') {
+      (message: MessageEvent) => {
+        if (
+          isExpectedExtensionWindowMessage(message, window.parent) &&
+          isParentUpdateCssMessage(message.data)
+        ) {
           this.handleStylebotCssUpdate(message.data.css, message.data.selector);
         }
       }

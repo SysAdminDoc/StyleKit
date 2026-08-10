@@ -61,7 +61,7 @@ export default defineComponent({
 
 <style lang="scss">
 @import 'bootstrap/scss/bootstrap';
-@import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
+@import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';
 @import './scss/dark-mode';
 
 .main {

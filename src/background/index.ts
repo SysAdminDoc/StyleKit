@@ -10,6 +10,10 @@ chrome.storage.session.setAccessLevel({
   accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
 });
 
+chrome.storage.local.setAccessLevel({
+  accessLevel: 'TRUSTED_CONTEXTS',
+});
+
 (async () => {
   await DefaultShortcutUpdate();
   await StylesMetadataUpdate();

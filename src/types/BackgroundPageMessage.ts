@@ -1,8 +1,10 @@
 import {
   StylebotOptions,
   StylebotCommands,
+  GoogleFontsCache,
   ReadabilitySettings,
   StyleMap,
+  StylesRollbackReason,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -30,6 +32,7 @@ export type SetAllStyles = {
   name: 'SetAllStyles';
   styles: StyleMap;
   shouldPersist?: boolean;
+  rollbackReason?: StylesRollbackReason;
 };
 
 export type MoveStyle = {
@@ -42,12 +45,15 @@ export type GetStylesForPage = {
   name: 'GetStylesForPage';
   tab?: chrome.tabs.Tab;
   important?: boolean;
+  preferUserOrigin?: boolean;
 };
 
 export type GetStylesForIframe = {
   name: 'GetStylesForIframe';
   url: string;
+  parentUrl?: string;
   important?: boolean;
+  preferUserOrigin?: boolean;
 };
 
 export type GetAllOptions = {
@@ -108,10 +114,63 @@ export type RunGoogleDriveSync = {
   name: 'RunGoogleDriveSync';
 };
 
+export type GetLastStylesRollbackSnapshot = {
+  name: 'GetLastStylesRollbackSnapshot';
+};
+
+export type RestoreLastStylesRollbackSnapshot = {
+  name: 'RestoreLastStylesRollbackSnapshot';
+};
+
 export type GetThumbnail = {
   name: 'GetThumbnail';
   url: string;
   styleId?: number;
+};
+
+export type GetEditorOnboardingDone = {
+  name: 'GetEditorOnboardingDone';
+};
+
+export type SetEditorOnboardingDone = {
+  name: 'SetEditorOnboardingDone';
+  value: boolean;
+};
+
+export type GetGoogleFontsCache = {
+  name: 'GetGoogleFontsCache';
+};
+
+export type SetGoogleFontsCache = {
+  name: 'SetGoogleFontsCache';
+  value: GoogleFontsCache;
+};
+
+export type ApplyPreviewStyleToTab = {
+  name: 'ApplyPreviewStyleToTab';
+  tabId: number;
+  id: string;
+  css: string;
+};
+
+export type RemovePreviewStyleFromTab = {
+  name: 'RemovePreviewStyleFromTab';
+  tabId: number;
+  id: string;
+};
+
+export type GetUserstylesIndex = {
+  name: 'GetUserstylesIndex';
+};
+
+export type GetUserstylesProviderHealth = {
+  name: 'GetUserstylesProviderHealth';
+};
+
+export type ReportUserstylesProviderError = {
+  name: 'ReportUserstylesProviderError';
+  operation: string;
+  errorMessage: string;
 };
 
 type BackgroundPageMessage =
@@ -135,6 +194,17 @@ type BackgroundPageMessage =
   | SetReadabilitySettings
   | GetImportCss
   | RunGoogleDriveSync
-  | GetThumbnail;
+  | GetLastStylesRollbackSnapshot
+  | RestoreLastStylesRollbackSnapshot
+  | GetThumbnail
+  | GetEditorOnboardingDone
+  | SetEditorOnboardingDone
+  | GetGoogleFontsCache
+  | SetGoogleFontsCache
+  | ApplyPreviewStyleToTab
+  | RemovePreviewStyleFromTab
+  | GetUserstylesIndex
+  | GetUserstylesProviderHealth
+  | ReportUserstylesProviderError;
 
 export default BackgroundPageMessage;
