@@ -1,4 +1,4 @@
-@import '../../scss/dark-palette';
+@use '../../scss/dark-palette' as *;
 
 .stylebot-dark {
   &.stylebot {

@@ -1,16 +1,18 @@
-@import 'vue3-swatches/dist/style.css';
-@import 'vue-draggable-resizable/style.css';
-@import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';
+@use 'sass:meta';
+@use 'scss/theme';
+@use 'vue3-swatches/dist/style.css' as swatches;
+@use 'vue-draggable-resizable/style.css' as draggable;
+@use 'bootstrap-vue-next/dist/bootstrap-vue-next.css' as bootstrap-vue;
 
 .stylebot-app {
   all: initial;
   display: block;
 
-  @import 'scss/theme.scss';
-
-  @import 'bootstrap/scss/bootstrap';
-
-  @import 'scss/overrides.scss';
-  @import 'scss/typography.scss';
-  @import 'scss/dark-mode.scss';
+  @include meta.load-css(
+    'bootstrap/scss/bootstrap',
+    $with: ('theme-colors': theme.$theme-colors)
+  );
+  @include meta.load-css('scss/overrides');
+  @include meta.load-css('scss/typography');
+  @include meta.load-css('scss/dark-mode');
 }

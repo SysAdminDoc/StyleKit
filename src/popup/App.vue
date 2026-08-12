@@ -149,9 +149,9 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-@import 'bootstrap/scss/bootstrap';
-@import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';
-@import './scss/dark-mode';
+@use 'bootstrap-vue-next/dist/bootstrap-vue-next.css' as bootstrap-vue;
+@use 'bootstrap/scss/bootstrap';
+@use './scss/dark-mode';
 
 body,
 span {

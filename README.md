@@ -111,7 +111,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (21/21 suites, 123 tests)
+npm test               # Run tests (22/22 suites, 125 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run dependencies:check # Report safe and compatibility-review dependency updates

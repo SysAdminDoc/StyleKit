@@ -4,10 +4,12 @@
 
 /* Modified version of https://hg.mozilla.org/mozilla-central/file/tip/toolkit/themes/shared/aboutReader.css */
 
+@use 'sass:meta';
+
 .stylebot-reader {
   --body-padding: 64px;
 
-  @import './scss/content.scss';
+  @include meta.load-css('./scss/content');
 
   --main-background: #fff;
   --main-foreground: #333;
