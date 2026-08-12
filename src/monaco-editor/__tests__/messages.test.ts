@@ -1,6 +1,8 @@
 import {
   getExtensionMessageOrigin,
+  getParentMessageOrigin,
   isExpectedExtensionWindowMessage,
+  isExpectedParentWindowMessage,
   isIframeMessage,
   isParentUpdateCssMessage,
 } from '../messages';
@@ -31,6 +33,13 @@ describe('monaco editor window messages', () => {
 
   it('normalizes the extension URL to a message origin', () => {
     expect(getExtensionMessageOrigin()).toBe(extensionOrigin);
+    expect(getParentMessageOrigin('https://example.com/editor', '')).toBe(
+      'https://example.com'
+    );
+    expect(getParentMessageOrigin('', 'https://ancestor.example/frame')).toBe(
+      'https://ancestor.example'
+    );
+    expect(getParentMessageOrigin('not a URL', '')).toBe(extensionOrigin);
   });
 
   it('accepts only known iframe message payloads', () => {
@@ -67,6 +76,7 @@ describe('monaco editor window messages', () => {
         type: 'stylebotCssUpdate',
         css: '',
         selector: '.example',
+        lintSite: 'example.com',
       })
     ).toBe(true);
 
@@ -79,6 +89,13 @@ describe('monaco editor window messages', () => {
       })
     ).toBe(false);
     expect(isParentUpdateCssMessage({ type: 'unknown', css: '' })).toBe(false);
+    expect(
+      isParentUpdateCssMessage({
+        type: 'stylebotCssUpdate',
+        css: '',
+        lintSite: 1,
+      })
+    ).toBe(false);
   });
 
   it('accepts messages only from the expected extension window source', () => {
@@ -107,6 +124,24 @@ describe('monaco editor window messages', () => {
       isExpectedExtensionWindowMessage(
         makeMessageEvent(extensionOrigin, expectedSource),
         null
+      )
+    ).toBe(false);
+  });
+
+  it('accepts iframe inbound messages only from the exact parent origin', () => {
+    const expectedSource = {} as Window;
+    expect(
+      isExpectedParentWindowMessage(
+        makeMessageEvent('https://example.com', expectedSource),
+        expectedSource,
+        'https://example.com'
+      )
+    ).toBe(true);
+    expect(
+      isExpectedParentWindowMessage(
+        makeMessageEvent(extensionOrigin, expectedSource),
+        expectedSource,
+        'https://example.com'
       )
     ).toBe(false);
   });

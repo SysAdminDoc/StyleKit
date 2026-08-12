@@ -664,9 +664,31 @@ try {
       );
     });
     await monacoTheme.selectOption('sepia');
+    const monacoLint = monacoFrame.getByLabel('CSS lint preset');
+    await monacoFrame
+      .locator('select[aria-label="CSS lint preset"][title*="stylekit.test"]')
+      .waitFor();
+    await monacoLint.selectOption('strict');
     await monacoFrame
       .locator('#container[data-stylekit-monaco-theme="sepia"]')
       .waitFor();
+    await monacoFrame
+      .locator('#container[data-stylekit-lint-preset="strict"]')
+      .waitFor();
+    await serviceWorker.evaluate(async () => {
+      const deadline = Date.now() + 5000;
+      while (Date.now() < deadline) {
+        const stored = await chrome.storage.local.get('stylekit-monaco-lint');
+        if (
+          stored['stylekit-monaco-lint']?.sitePresets?.['stylekit.test'] ===
+          'strict'
+        ) {
+          return;
+        }
+        await new Promise(resolveWait => setTimeout(resolveWait, 50));
+      }
+      throw new Error('Per-site Monaco lint preset was not persisted');
+    });
     await fixturePage.locator('#stylebot iframe').evaluate(iframe => {
       const src = iframe.getAttribute('src');
       if (!src) throw new Error('Monaco iframe source is missing');
@@ -674,8 +696,11 @@ try {
     });
     await monacoTheme.waitFor();
     assert.equal(await monacoTheme.inputValue(), 'sepia');
+    await monacoLint.waitFor();
+    assert.equal(await monacoLint.inputValue(), 'strict');
+    assert.match(await monacoLint.getAttribute('title'), /stylekit\.test/);
     console.log(
-      '✓ Opened Monaco and persisted its Sepia theme across an iframe reload'
+      '✓ Persisted Monaco Sepia and a Strict site lint override across iframe reload'
     );
   }
 

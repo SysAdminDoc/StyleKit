@@ -10,8 +10,20 @@ import {
   type MonacoTheme,
 } from '../themes';
 import {
-  getExtensionMessageOrigin,
-  isExpectedExtensionWindowMessage,
+  DEFAULT_MONACO_LINT_SETTINGS,
+  getMonacoCssOptions,
+  isMonacoLintPreset,
+  MONACO_LINT_PRESETS,
+  MONACO_LINT_STORAGE_KEY,
+  normalizeLintSite,
+  parseMonacoLintSettings,
+  resolveMonacoLintPreset,
+  type MonacoLintPreset,
+  type MonacoLintSettings,
+} from '../lint-presets';
+import {
+  getParentMessageOrigin,
+  isExpectedParentWindowMessage,
   isParentUpdateCssMessage,
 } from '../messages';
 import type { IframeMessage } from '../messages';
@@ -28,10 +40,17 @@ class MonacoEditorIframe {
   editor?: any;
   currentLanguage = 'css';
   currentTheme: MonacoTheme = 'dark';
+  lintSettings: MonacoLintSettings = {
+    ...DEFAULT_MONACO_LINT_SETTINGS,
+    sitePresets: {},
+  };
+  currentLintPreset: MonacoLintPreset = 'relaxed';
+  lintSite?: string;
+  lintSelect?: HTMLSelectElement;
 
   constructor() {
     this.loadEditor(async () => {
-      await this.loadTheme();
+      await Promise.all([this.loadTheme(), this.loadLintSettings()]);
       this.attachWindowListeners();
       this.defineThemes();
       this.initEditor();
@@ -68,50 +87,26 @@ class MonacoEditorIframe {
     }
   }
 
+  async loadLintSettings(): Promise<void> {
+    try {
+      const stored = await chrome.storage.local.get(MONACO_LINT_STORAGE_KEY);
+      this.lintSettings = parseMonacoLintSettings(
+        stored[MONACO_LINT_STORAGE_KEY]
+      );
+    } catch {
+      this.lintSettings = {
+        ...DEFAULT_MONACO_LINT_SETTINGS,
+        sitePresets: {},
+      };
+    }
+    this.currentLintPreset = resolveMonacoLintPreset(this.lintSettings);
+  }
+
   initEditor(): void {
     const container = this.getContainer();
     const editorOptions = this.getEditorOptions();
 
-    // Enable CSS validation with relaxed settings to allow modern CSS features
-    // while still catching syntax errors (missing braces, invalid values, etc.)
-    try {
-      const cssOptions = {
-        validate: true,
-        lint: {
-          compatibleVendorPrefixes: 'ignore' as const,
-          vendorPrefix: 'ignore' as const,
-          duplicateProperties: 'warning' as const,
-          emptyRules: 'warning' as const,
-          importStatement: 'ignore' as const,
-          boxModel: 'ignore' as const,
-          universalSelector: 'ignore' as const,
-          zeroUnits: 'ignore' as const,
-          fontFaceProperties: 'ignore' as const,
-          hexColorLength: 'ignore' as const,
-          argumentsInColorFunction: 'ignore' as const,
-          unknownProperties: 'ignore' as const,
-          validProperties: [],
-          ieHack: 'ignore' as const,
-          unknownVendorSpecificProperties: 'ignore' as const,
-          propertyIgnoredDueToDisplay: 'ignore' as const,
-          idSelector: 'ignore' as const,
-          unknownAtRules: 'ignore' as const,
-          float: 'ignore' as const,
-        },
-      };
-
-      if (window.monaco.languages?.css?.cssDefaults?.setOptions) {
-        window.monaco.languages.css.cssDefaults.setOptions(cssOptions);
-      } else if (
-        window.monaco.languages?.css?.cssDefaults?.setDiagnosticsOptions
-      ) {
-        window.monaco.languages.css.cssDefaults.setDiagnosticsOptions(
-          cssOptions
-        );
-      }
-    } catch (e) {
-      // Monaco version may not support CSS validation options
-    }
+    this.applyLintPreset();
 
     this.editor = window.monaco.editor.create(container, editorOptions);
     this.editor.onDidChangeModelContent(() => {
@@ -158,7 +153,7 @@ class MonacoEditorIframe {
   }
 
   postMessage(message: IframeMessage): void {
-    window.parent.postMessage(message, getExtensionMessageOrigin());
+    window.parent.postMessage(message, getParentMessageOrigin());
   }
 
   handleStylebotCssUpdate(css: string, selector?: string): void {
@@ -186,6 +181,61 @@ class MonacoEditorIframe {
         });
       }
     }
+  }
+
+  applyLintPreset(): void {
+    const cssOptions = getMonacoCssOptions(this.currentLintPreset);
+    this.getContainer().dataset.stylekitLintPreset = this.currentLintPreset;
+    try {
+      if (window.monaco.languages?.css?.cssDefaults?.setOptions) {
+        window.monaco.languages.css.cssDefaults.setOptions(cssOptions);
+      } else if (
+        window.monaco.languages?.css?.cssDefaults?.setDiagnosticsOptions
+      ) {
+        window.monaco.languages.css.cssDefaults.setDiagnosticsOptions(
+          cssOptions
+        );
+      }
+    } catch {
+      // Monaco versions without configurable CSS diagnostics keep defaults.
+    }
+  }
+
+  setLintSite(site?: string): void {
+    const normalized = normalizeLintSite(site);
+    if (normalized === this.lintSite) return;
+    this.lintSite = normalized;
+    this.currentLintPreset = resolveMonacoLintPreset(
+      this.lintSettings,
+      this.lintSite
+    );
+    this.applyLintPreset();
+    this.refreshLintControl();
+  }
+
+  async setLintSelection(value: string): Promise<void> {
+    if (this.lintSite) {
+      if (value === 'default') {
+        delete this.lintSettings.sitePresets[this.lintSite];
+      } else if (isMonacoLintPreset(value)) {
+        this.lintSettings.sitePresets[this.lintSite] = value;
+      } else {
+        return;
+      }
+    } else if (isMonacoLintPreset(value)) {
+      this.lintSettings.defaultPreset = value;
+    } else {
+      return;
+    }
+    this.currentLintPreset = resolveMonacoLintPreset(
+      this.lintSettings,
+      this.lintSite
+    );
+    this.applyLintPreset();
+    this.refreshLintControl();
+    await chrome.storage.local.set({
+      [MONACO_LINT_STORAGE_KEY]: this.lintSettings,
+    });
   }
 
   addToolbar(): void {
@@ -232,6 +282,25 @@ class MonacoEditorIframe {
     });
     toolbar.appendChild(themeSelect);
 
+    this.lintSelect = document.createElement('select');
+    this.lintSelect.setAttribute('aria-label', 'CSS lint preset');
+    Object.assign(this.lintSelect.style, {
+      background: '#313244',
+      border: '1px solid #45475a',
+      borderRadius: '3px',
+      color: '#a6adc8',
+      fontSize: '10px',
+      padding: '2px 4px',
+      cursor: 'pointer',
+      fontFamily: 'sans-serif',
+      maxWidth: '112px',
+    });
+    this.lintSelect.addEventListener('change', () => {
+      void this.setLintSelection(this.lintSelect?.value || 'default');
+    });
+    this.refreshLintControl();
+    toolbar.appendChild(this.lintSelect);
+
     const btn = document.createElement('button');
     btn.textContent = 'CSS';
     btn.title = 'Toggle CSS/SCSS syntax';
@@ -264,6 +333,29 @@ class MonacoEditorIframe {
     container.appendChild(toolbar);
   }
 
+  refreshLintControl(): void {
+    if (!this.lintSelect) return;
+    this.lintSelect.replaceChildren();
+    if (this.lintSite) {
+      const option = document.createElement('option');
+      option.value = 'default';
+      option.textContent = `Site: use ${this.lintSettings.defaultPreset}`;
+      this.lintSelect.appendChild(option);
+    }
+    MONACO_LINT_PRESETS.forEach(preset => {
+      const option = document.createElement('option');
+      option.value = preset.value;
+      option.textContent = preset.label;
+      this.lintSelect?.appendChild(option);
+    });
+    this.lintSelect.value = this.lintSite
+      ? this.lintSettings.sitePresets[this.lintSite] || 'default'
+      : this.lintSettings.defaultPreset;
+    this.lintSelect.title = this.lintSite
+      ? `CSS diagnostics override for ${this.lintSite}`
+      : 'Default CSS diagnostics preset';
+  }
+
   attachWindowListeners(): void {
     window.addEventListener('resize', () => {
       this.editor.layout();
@@ -272,9 +364,10 @@ class MonacoEditorIframe {
 
     window.addEventListener('message', (message: MessageEvent) => {
       if (
-        isExpectedExtensionWindowMessage(message, window.parent) &&
+        isExpectedParentWindowMessage(message, window.parent) &&
         isParentUpdateCssMessage(message.data)
       ) {
+        this.setLintSite(message.data.lintSite);
         this.handleStylebotCssUpdate(message.data.css, message.data.selector);
       }
     });

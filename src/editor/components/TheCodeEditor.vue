@@ -98,6 +98,7 @@ export default defineComponent({
         css: this.css,
         type: 'stylebotCssUpdate',
         selector: this.activeSelector,
+        lintSite: window.location.hostname,
       };
 
       contentWindow.postMessage(message, getExtensionMessageOrigin());
