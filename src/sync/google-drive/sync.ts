@@ -24,22 +24,33 @@ import {
   StyleSyncState,
 } from './sync-payload';
 import {
+  combineSelectiveSyncState,
+  filterSelectiveSyncState,
+} from '../selective-sync';
+import {
   setAll as setAllStyles,
   getAll as getAllStyles,
   getStyleTombstones,
   setStyleTombstones,
   createStylesRollbackSnapshot,
 } from '../../background/styles';
+import { getSelectiveSyncConfig } from '../../background/selective-sync';
 
 const EMPTY_REPORT: GoogleDriveSyncReport = {
   conflicts: [],
   tombstonesApplied: 0,
 };
 
-const getLocalSyncState = async (): Promise<StyleSyncState> => ({
+const getFullLocalSyncState = async (): Promise<StyleSyncState> => ({
   styles: await getAllStyles(),
   tombstones: await getStyleTombstones(),
 });
+
+const getLocalSyncState = async (): Promise<StyleSyncState> =>
+  filterSelectiveSyncState(
+    await getFullLocalSyncState(),
+    await getSelectiveSyncConfig()
+  );
 
 const getStylesBlob = ({ styles, tombstones }: StyleSyncState) =>
   new Blob([JSON.stringify(createGoogleDriveSyncPayload(styles, tombstones))], {
@@ -71,9 +82,15 @@ const writeToLocal = async (
   syncMetadata: GoogleDriveSyncMetadata,
   state: StyleSyncState
 ) => {
+  const selectiveSync = await getSelectiveSyncConfig();
+  const combined = combineSelectiveSyncState(
+    await getFullLocalSyncState(),
+    filterSelectiveSyncState(state, selectiveSync),
+    selectiveSync
+  );
   await createStylesRollbackSnapshot('google-drive-sync');
-  await setStyleTombstones(state.tombstones);
-  await setAllStyles(state.styles, { recordTombstones: false });
+  await setStyleTombstones(combined.tombstones);
+  await setAllStyles(combined.styles, { recordTombstones: false });
 
   return setGoogleDriveSyncMetadata({
     ...syncMetadata,
@@ -90,7 +107,10 @@ const merge = async (
   lastSyncTime?: string
 ): Promise<GoogleDriveSyncReport> => {
   const localState = await getLocalSyncState();
-  const remoteState = await downloadSyncFile(accessToken, syncMetadata.id);
+  const remoteState = filterSelectiveSyncState(
+    await downloadSyncFile(accessToken, syncMetadata.id),
+    await getSelectiveSyncConfig()
+  );
   const merged = mergeStyles({
     localStyles: localState.styles,
     remoteStyles: remoteState.styles,

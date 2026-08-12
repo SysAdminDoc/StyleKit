@@ -973,6 +973,18 @@ try {
       '✓ Persisted Monaco theme, site lint override, and Prettier-on-save formatting'
     );
 
+    const excludedStyleKey = 'https://private.example/stylekit-e2e';
+    await optionsPage.evaluate(async excludedUrl => {
+      const styles = await chrome.runtime.sendMessage({ name: 'GetAllStyles' });
+      styles[excludedUrl] = {
+        css: 'body { outline: 1px solid magenta; }',
+        enabled: true,
+        readability: false,
+        modifiedTime: new Date().toISOString(),
+      };
+      await chrome.runtime.sendMessage({ name: 'SetAllStyles', styles });
+    }, excludedStyleKey);
+    await optionsPage.reload({ waitUntil: 'domcontentloaded' });
     await optionsPage
       .locator('.navigation-item')
       .filter({ hasText: 'Sync' })
@@ -982,6 +994,21 @@ try {
     }).waitFor();
     await optionsPage
       .getByRole('heading', { name: 'WebDAV & S3 Sync' })
+      .waitFor();
+    await optionsPage
+      .getByRole('heading', { name: 'Selective sync' })
+      .waitFor();
+    const selectiveSync = optionsPage.locator('.selective-sync');
+    await selectiveSync
+      .getByRole('radio', { name: 'Sync only selected styles', exact: true })
+      .check();
+    await selectiveSync.getByLabel(`Sync style ${styleKey}`).check();
+    await selectiveSync
+      .getByRole('button', { name: 'Save sync selection', exact: true })
+      .click();
+    await selectiveSync
+      .getByRole('status')
+      .getByText('1 selected style will sync.')
       .waitFor();
     const remoteProviders = optionsPage.locator('.remote-sync-providers');
     const webDavCard = remoteProviders
@@ -1011,6 +1038,7 @@ try {
     const remotePayload = JSON.parse(remoteBackup);
     assert.equal(remotePayload.app, 'StyleKit');
     assert(remotePayload.styles[styleKey]);
+    assert.equal(remotePayload.styles[excludedStyleKey], undefined);
     assert.equal(
       fixtureServer.getRemoteAuthorization(),
       'Basic YWxpY2U6YXBwLXBhc3M='
@@ -1020,15 +1048,18 @@ try {
         const stored = await chrome.storage.local.get([
           'stylekit-remote-sync-configs',
           'stylekit-remote-sync-metadata',
+          'stylekit-selective-sync',
         ]);
         return Boolean(
           stored['stylekit-remote-sync-configs']?.webdav?.url &&
-            stored['stylekit-remote-sync-metadata']?.webdav?.lastSyncedAt
+            stored['stylekit-remote-sync-metadata']?.webdav?.lastSyncedAt &&
+            stored['stylekit-selective-sync']?.mode === 'selected' &&
+            stored['stylekit-selective-sync']?.urls?.length === 1
         );
       })
     );
     console.log(
-      '✓ Saved WebDAV credentials and created a versioned remote sync object'
+      '✓ Synced only the selected style into a versioned WebDAV object'
     );
     const collaborativePacks = optionsPage.locator('.collaborative-packs');
     await collaborativePacks

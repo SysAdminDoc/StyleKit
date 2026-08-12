@@ -271,6 +271,16 @@ export type RemoteSyncRunResponse = {
   error?: string;
 };
 
+export type SelectiveSyncConfig = {
+  mode: 'all' | 'selected';
+  urls: string[];
+};
+
+export type SelectiveSyncConfigResponse = {
+  config?: SelectiveSyncConfig;
+  error?: string;
+};
+
 export type StyleSyncTombstone = {
   deletedTime: Timestamp;
 };

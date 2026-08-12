@@ -41,6 +41,16 @@
     </b-alert>
 
     <b-row no-gutters class="mt-5 mb-1">
+      <h2>Selective sync</h2>
+    </b-row>
+
+    <b-row no-gutters class="mb-4">
+      <b-col>
+        <the-selective-sync />
+      </b-col>
+    </b-row>
+
+    <b-row no-gutters class="mt-5 mb-1">
       <h2>{{ t('sync_via_google_drive') }}</h2>
     </b-row>
 
@@ -178,6 +188,7 @@ import AppButton from './AppButton.vue';
 import TheGoogleDriveSync from './sync/TheGoogleDriveSync.vue';
 import TheGistBackup from './sync/TheGistBackup.vue';
 import TheRemoteSyncProviders from './sync/TheRemoteSyncProviders.vue';
+import TheSelectiveSync from './sync/TheSelectiveSync.vue';
 import TheCollaborativePacks from './sync/TheCollaborativePacks.vue';
 import TheTeamSpaces from './sync/TheTeamSpaces.vue';
 
@@ -198,6 +209,7 @@ export default defineComponent({
     TheGoogleDriveSync,
     TheGistBackup,
     TheRemoteSyncProviders,
+    TheSelectiveSync,
     TheCollaborativePacks,
     TheTeamSpaces,
   },

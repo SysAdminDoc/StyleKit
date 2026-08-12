@@ -15,12 +15,17 @@ import {
 import { signS3Request } from '../sync/remote/aws-signature-v4';
 import { normalizeRemoteSyncConfig } from '../sync/remote/config';
 import {
+  combineSelectiveSyncState,
+  filterSelectiveSyncState,
+} from '../sync/selective-sync';
+import {
   createStylesRollbackSnapshot,
   getAll,
   getStyleTombstones,
   setAll,
   setStyleTombstones,
 } from './styles';
+import { getSelectiveSyncConfig } from './selective-sync';
 
 const CONFIG_STORAGE_KEY = 'stylekit-remote-sync-configs';
 const METADATA_STORAGE_KEY = 'stylekit-remote-sync-metadata';
@@ -270,7 +275,9 @@ const runSyncAttempt = async (
   config: RemoteSyncConfig,
   metadata?: RemoteSyncMetadata
 ): Promise<RemoteSyncResult> => {
-  const local = await getLocalState();
+  const selectiveSync = await getSelectiveSyncConfig();
+  const localFull = await getLocalState();
+  const local = filterSelectiveSyncState(localFull, selectiveSync);
   const remote = await readRemoteObject(config);
   const syncedAt = getCurrentTimestamp();
 
@@ -291,11 +298,15 @@ const runSyncAttempt = async (
     };
   }
 
+  const remoteSelected = filterSelectiveSyncState(
+    remote.state,
+    selectiveSync
+  );
   const merged = mergeStyles({
     localStyles: local.styles,
-    remoteStyles: remote.state.styles,
+    remoteStyles: remoteSelected.styles,
     localTombstones: local.tombstones,
-    remoteTombstones: remote.state.tombstones,
+    remoteTombstones: remoteSelected.tombstones,
     lastSyncTime: metadata?.lastSyncedAt,
   });
   const mergedState: StyleSyncState = {
@@ -309,9 +320,14 @@ const runSyncAttempt = async (
     : remote.etag;
 
   if (localChanged) {
+    const combined = combineSelectiveSyncState(
+      localFull,
+      mergedState,
+      selectiveSync
+    );
     await createStylesRollbackSnapshot('remote-sync');
-    await setStyleTombstones(mergedState.tombstones);
-    await setAll(mergedState.styles, { recordTombstones: false });
+    await setStyleTombstones(combined.tombstones);
+    await setAll(combined.styles, { recordTombstones: false });
   }
   await writeProviderRecord(METADATA_STORAGE_KEY, config.provider, {
     provider: config.provider,

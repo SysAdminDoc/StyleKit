@@ -35,6 +35,8 @@ import {
   SaveRemoteSyncConfig,
   DeleteRemoteSyncConfig,
   RunRemoteSync,
+  GetSelectiveSyncConfig,
+  SetSelectiveSyncConfig,
   SetStyleShadowRoots,
   PreviewStyleSource,
   SetStyleSource,
@@ -194,6 +196,8 @@ const ASYNC_MESSAGES = new Set([
   'SaveRemoteSyncConfig',
   'DeleteRemoteSyncConfig',
   'RunRemoteSync',
+  'GetSelectiveSyncConfig',
+  'SetSelectiveSyncConfig',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -309,6 +313,12 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'RunRemoteSync':
         RunRemoteSync(message, sendResponse);
+        break;
+      case 'GetSelectiveSyncConfig':
+        GetSelectiveSyncConfig(sendResponse);
+        break;
+      case 'SetSelectiveSyncConfig':
+        SetSelectiveSyncConfig(message, sendResponse);
         break;
       case 'SetStyleShadowRoots':
         SetStyleShadowRoots(message);

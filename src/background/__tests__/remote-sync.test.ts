@@ -126,6 +126,60 @@ describe('WebDAV and S3 remote sync', () => {
     );
   });
 
+  it('preserves excluded local styles while applying a selected remote style', async () => {
+    const privateStyle = {
+      ...localStyle,
+      css: 'body { color: private; }',
+    };
+    const remoteStyle = {
+      ...localStyle,
+      css: 'body { color: green; }',
+      modifiedTime: '2026-08-12T11:00:00.000Z',
+    };
+    vi.mocked(getAll).mockResolvedValue({
+      'example.com': localStyle,
+      'private.example': privateStyle,
+    });
+    storageData['stylekit-selective-sync'] = {
+      mode: 'selected',
+      urls: ['example.com'],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify(
+              createGoogleDriveSyncPayload(
+                {
+                  'example.com': remoteStyle,
+                  'remote-private.example': privateStyle,
+                },
+                {}
+              )
+            ),
+            { status: 200, headers: { etag: '"remote"' } }
+          )
+        )
+      )
+    );
+    await saveRemoteSyncConfig({
+      provider: 'webdav',
+      url: 'https://dav.example.com/stylekit.json',
+      username: '',
+      password: '',
+    });
+
+    await runRemoteSync('webdav');
+    expect(setAll).toHaveBeenCalledWith(
+      {
+        'example.com': remoteStyle,
+        'private.example': privateStyle,
+      },
+      { recordTombstones: false }
+    );
+  });
+
   it('retries once when an optimistic upload loses an ETag race', async () => {
     const remoteStyle = {
       ...localStyle,

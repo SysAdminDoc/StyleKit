@@ -52,6 +52,7 @@ import {
   SaveRemoteSyncConfig as SaveRemoteSyncConfigType,
   DeleteRemoteSyncConfig as DeleteRemoteSyncConfigType,
   RunRemoteSync as RunRemoteSyncType,
+  SetSelectiveSyncConfig as SetSelectiveSyncConfigType,
   SetStyleShadowRoots as SetStyleShadowRootsType,
   PreviewStyleSource as PreviewStyleSourceType,
   SetStyleSource as SetStyleSourceType,
@@ -111,6 +112,7 @@ import {
   ExportTeamSpaceResponse,
   GetRemoteSyncSettingsResponse,
   RunRemoteSyncResponse,
+  GetSelectiveSyncConfigResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 import {
@@ -174,6 +176,10 @@ import {
   runRemoteSync,
   saveRemoteSyncConfig,
 } from './remote-sync';
+import {
+  getSelectiveSyncConfig,
+  setSelectiveSyncConfig,
+} from './selective-sync';
 
 import {
   get as getReadabilitySettings,
@@ -550,6 +556,25 @@ export const RunRemoteSync = async (
       error,
       level: 'error',
     });
+    sendResponse({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const GetSelectiveSyncConfig = async (
+  sendResponse: (response: GetSelectiveSyncConfigResponse) => void
+): Promise<void> => {
+  sendResponse({ config: await getSelectiveSyncConfig() });
+};
+
+export const SetSelectiveSyncConfig = async (
+  message: SetSelectiveSyncConfigType,
+  sendResponse: (response: GetSelectiveSyncConfigResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({ config: await setSelectiveSyncConfig(message.config) });
+  } catch (error) {
     sendResponse({
       error: error instanceof Error ? error.message : String(error),
     });

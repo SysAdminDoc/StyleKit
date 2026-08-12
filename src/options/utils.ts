@@ -46,6 +46,7 @@ import {
   RemoteSyncProvider,
   RemoteSyncSettings,
   RemoteSyncResult,
+  SelectiveSyncConfig,
   TeamSpaceMutation,
   GetTeamSpaces,
   CreateTeamSpace,
@@ -56,10 +57,13 @@ import {
   SaveRemoteSyncConfig,
   DeleteRemoteSyncConfig,
   RunRemoteSync,
+  GetSelectiveSyncConfig,
+  SetSelectiveSyncConfig,
   GetTeamSpacesResponse,
   ExportTeamSpaceResponse,
   GetRemoteSyncSettingsResponse,
   RunRemoteSyncResponse,
+  GetSelectiveSyncConfigResponse,
 } from '@stylekit/types';
 import postcss from 'postcss';
 import normalizeWhitespace from 'postcss-normalize-whitespace';
@@ -422,6 +426,30 @@ export const runRemoteSync = async (
     throw new Error(response.error || 'Remote sync failed');
   }
   return response.result;
+};
+
+const unwrapSelectiveSyncConfig = (
+  response: GetSelectiveSyncConfigResponse
+): SelectiveSyncConfig => {
+  if (response.error || !response.config) {
+    throw new Error(response.error || 'Selective sync settings are unavailable');
+  }
+  return response.config;
+};
+
+export const getSelectiveSyncConfig = async (): Promise<SelectiveSyncConfig> => {
+  const message: GetSelectiveSyncConfig = { name: 'GetSelectiveSyncConfig' };
+  return unwrapSelectiveSyncConfig(await chrome.runtime.sendMessage(message));
+};
+
+export const setSelectiveSyncConfig = async (
+  config: SelectiveSyncConfig
+): Promise<SelectiveSyncConfig> => {
+  const message: SetSelectiveSyncConfig = {
+    name: 'SetSelectiveSyncConfig',
+    config,
+  };
+  return unwrapSelectiveSyncConfig(await chrome.runtime.sendMessage(message));
 };
 
 const getDiagnosticErrorMessage = (error: unknown): string =>

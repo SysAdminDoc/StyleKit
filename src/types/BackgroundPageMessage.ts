@@ -15,6 +15,7 @@ import {
   TeamSpaceUpdateEnvelope,
   RemoteSyncConfig,
   RemoteSyncProvider,
+  SelectiveSyncConfig,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -146,6 +147,15 @@ export type DeleteRemoteSyncConfig = {
 export type RunRemoteSync = {
   name: 'RunRemoteSync';
   provider: RemoteSyncProvider;
+};
+
+export type GetSelectiveSyncConfig = {
+  name: 'GetSelectiveSyncConfig';
+};
+
+export type SetSelectiveSyncConfig = {
+  name: 'SetSelectiveSyncConfig';
+  config: SelectiveSyncConfig;
 };
 
 export type SetStyleShadowRoots = {
@@ -377,6 +387,8 @@ type BackgroundPageMessage =
   | SaveRemoteSyncConfig
   | DeleteRemoteSyncConfig
   | RunRemoteSync
+  | GetSelectiveSyncConfig
+  | SetSelectiveSyncConfig
   | SetStyleShadowRoots
   | PreviewStyleSource
   | SetStyleSource
