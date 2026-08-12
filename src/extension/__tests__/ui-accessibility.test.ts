@@ -10,6 +10,7 @@ import Onboarding from '../../editor/components/TheOnboarding.vue';
 import EditorToast from '../../editor/components/TheToast.vue';
 import UndoToast from '../../options/components/UndoToast.vue';
 import PopupStyle from '../../popup/components/Style.vue';
+import AppButton from '../../options/components/AppButton.vue';
 import {
   stopKeyboardPropagation,
   trapFocus,
@@ -192,6 +193,22 @@ describe('extension UI accessibility', () => {
     expect(optionsToast.text()).toContain('Deleted style');
   });
 
+  it('emits one options-button click per native click', async () => {
+    const wrapper = mount(AppButton, {
+      global: {
+        stubs: {
+          'b-button': {
+            emits: ['click'],
+            template: '<button @click="$emit(\'click\')"><slot /></button>',
+          },
+        },
+      },
+    });
+
+    await wrapper.get('button').trigger('click');
+    expect(wrapper.emitted('click')).toHaveLength(1);
+  });
+
   it('ships focus rings and reduced-motion overrides in every UI surface', () => {
     const accessibilityScss = readFileSync(
       resolve(process.cwd(), 'src/shared/scss/_accessibility.scss'),
@@ -221,9 +238,11 @@ describe('extension UI accessibility', () => {
     expect(manifest.content_scripts).toHaveLength(2);
     expect(manifest.content_scripts[0].js).toEqual(['editor/index.js']);
     expect(manifest.content_scripts[1].js).toEqual(['inject-css/index.js']);
-    expect(manifest.content_scripts.every(entry => !('type' in entry))).toBe(
-      true
-    );
+    expect(
+      manifest.content_scripts.every(
+        (entry: Record<string, unknown>) => !('type' in entry)
+      )
+    ).toBe(true);
   });
 
   it('labels shadow-root styling as open-root only', () => {

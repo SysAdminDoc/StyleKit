@@ -21,6 +21,14 @@ import {
   GetDiagnosticsBundle,
   RecordDiagnostic,
   SetStyleShadowRoots,
+  PreviewStyleSource,
+  SetStyleSource,
+  ReloadStyleSource,
+  RollbackStyleSource,
+  GetStyleSourceStatuses,
+  StyleSourceConfig,
+  StyleSourceStatus,
+  StyleSourceStatusMap,
 } from '@stylekit/types';
 import {
   createImportPreview,
@@ -78,6 +86,61 @@ export const setStyleShadowRoots = (
   };
   return chrome.runtime.sendMessage(message);
 };
+
+export const previewStyleSource = async (
+  sourceUrl: string
+): Promise<string> => {
+  const message: PreviewStyleSource = {
+    name: 'PreviewStyleSource',
+    sourceUrl,
+  };
+  const response = await chrome.runtime.sendMessage(message);
+  if (response.error || response.css === undefined) {
+    throw new Error(response.error || 'The source did not return CSS.');
+  }
+  return response.css;
+};
+
+export const setStyleSource = async (
+  url: string,
+  source: StyleSourceConfig | null
+): Promise<void> => {
+  const message: SetStyleSource = {
+    name: 'SetStyleSource',
+    url,
+    source,
+  };
+  const response = await chrome.runtime.sendMessage(message);
+  if (response.error) throw new Error(response.error);
+};
+
+export const reloadStyleSource = async (
+  url: string
+): Promise<StyleSourceStatus> => {
+  const message: ReloadStyleSource = {
+    name: 'ReloadStyleSource',
+    url,
+  };
+  return chrome.runtime.sendMessage(message);
+};
+
+export const rollbackStyleSource = async (
+  url: string
+): Promise<StyleSourceStatus> => {
+  const message: RollbackStyleSource = {
+    name: 'RollbackStyleSource',
+    url,
+  };
+  return chrome.runtime.sendMessage(message);
+};
+
+export const getStyleSourceStatuses =
+  async (): Promise<StyleSourceStatusMap> => {
+    const message: GetStyleSourceStatuses = {
+      name: 'GetStyleSourceStatuses',
+    };
+    return chrome.runtime.sendMessage(message);
+  };
 
 export const setOption = (
   name: keyof StylebotOptions,

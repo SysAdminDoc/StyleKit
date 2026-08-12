@@ -77,6 +77,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **USER-origin CSS application** -- saved styles and previews use browser-managed USER-origin CSS insertion when available, with DOM fallback for restricted pages
 - **Frame-aware matching** -- child frames match their own URL, while `about:blank` and `srcdoc` frames inherit the parent referrer only when it is valid
 - **Open shadow-root styling** -- opt individual styles into web-component shadow roots; closed roots remain browser-protected
+- **External-editor live reload** -- opt styles into validated HTTPS, localhost, or local-file CSS sources with interval checks, visible status/errors, automatic snapshots, and one-click rollback
 
 ## Installation
 
@@ -114,7 +115,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (28/28 suites, 151 tests)
+npm test               # Run tests (29/29 suites, 157 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run locales:check  # Validate locale keys and placeholders against English
@@ -124,7 +125,7 @@ npm run dependencies:check # Report safe and compatibility-review dependency upd
 npm run release:artifacts  # Build and verify versioned ZIP/CRX release assets
 ```
 
-`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to a local fixture, and opens the visual editor and Monaco iframe.
+`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to document and open-shadow-root fixtures, verifies loopback live-source reload/rollback, and opens the visual editor and Monaco iframe.
 
 `npm run release:artifacts` removes old versioned StyleKit assets, builds Chrome and Firefox, creates deterministic ZIPs with POSIX entry paths, and signs and verifies a CRX when `dist.pem` or `STYLEKIT_CRX_KEY` is available.
 
@@ -179,7 +180,7 @@ StyleKit includes comprehensive security hardening:
 - **Trusted local storage** restricted to extension pages and the background service worker
 - **`textContent`** for all CSS injection (never `innerHTML`)
 - **Origin- and source-restricted Monaco `postMessage`** (never wildcard `*`)
-- **URL validation** for thumbnail fetches and CSS imports (HTTPS only)
+- **URL validation** for thumbnail fetches, one-time CSS imports, and live sources (HTTPS plus explicit loopback/file contracts)
 - **RegExp safety** with try/catch to prevent ReDoS
 - **Content-type validation** on CSS imports
 

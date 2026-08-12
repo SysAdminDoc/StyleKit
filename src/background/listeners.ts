@@ -11,6 +11,11 @@ import {
   OpenDonatePage,
   SetStyle,
   SetStyleShadowRoots,
+  PreviewStyleSource,
+  SetStyleSource,
+  ReloadStyleSource,
+  RollbackStyleSource,
+  GetStyleSourceStatuses,
   MoveStyle,
   GetAllStyles,
   SetAllStyles,
@@ -134,6 +139,11 @@ const ASYNC_MESSAGES = new Set([
   'ReportUserstylesProviderError',
   'RecordDiagnostic',
   'GetDiagnosticsBundle',
+  'PreviewStyleSource',
+  'SetStyleSource',
+  'ReloadStyleSource',
+  'RollbackStyleSource',
+  'GetStyleSourceStatuses',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -177,6 +187,21 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'SetStyleShadowRoots':
         SetStyleShadowRoots(message);
+        break;
+      case 'PreviewStyleSource':
+        PreviewStyleSource(message, sendResponse);
+        break;
+      case 'SetStyleSource':
+        SetStyleSource(message, sendResponse);
+        break;
+      case 'ReloadStyleSource':
+        ReloadStyleSource(message, sendResponse);
+        break;
+      case 'RollbackStyleSource':
+        RollbackStyleSource(message, sendResponse);
+        break;
+      case 'GetStyleSourceStatuses':
+        GetStyleSourceStatuses(sendResponse);
         break;
       case 'MoveStyle':
         MoveStyle(message);

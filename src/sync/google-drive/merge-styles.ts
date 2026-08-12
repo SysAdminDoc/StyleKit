@@ -36,6 +36,7 @@ const normalizeStyle = (style: StyleWithoutUrl): StyleWithoutUrl => ({
   enabled: style.enabled,
   readability: style.readability ?? false,
   shadowRoots: style.shadowRoots ?? false,
+  source: style.source,
   modifiedTime: style.modifiedTime,
 });
 

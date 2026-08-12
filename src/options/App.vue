@@ -52,6 +52,7 @@ export default defineComponent({
 
   created() {
     this.$store.dispatch('getAllStyles');
+    this.$store.dispatch('getStyleSourceStatuses');
     this.$store.dispatch('getAllOptions');
     this.$store.dispatch('getCommands');
     this.$store.dispatch('getGoogleDriveSyncMetadata');

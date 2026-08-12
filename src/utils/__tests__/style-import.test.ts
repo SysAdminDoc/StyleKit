@@ -26,7 +26,7 @@ describe('style import schema', () => {
     });
 
     expect(parsed.styles['example.com'].css).toBe('body { color: red; }');
-    expect(parsed.version).toBe(2);
+    expect(parsed.version).toBe(3);
   });
 
   it('parses legacy raw style maps', () => {
@@ -45,7 +45,7 @@ describe('style import schema', () => {
   it('rejects unknown versions and malformed style maps', () => {
     expect(() =>
       parseStyleImportPayload({
-        version: 3,
+        version: 4,
         styles: {},
       })
     ).toThrow('Unsupported StyleKit import version');
@@ -110,6 +110,30 @@ describe('style import schema', () => {
         },
       })
     ).toThrow('Invalid format');
+  });
+
+  it('preserves valid live-source settings and rejects malformed intervals', () => {
+    const payload = {
+      version: 3,
+      styles: {
+        'example.com': {
+          css: 'button { color: red; }',
+          enabled: true,
+          source: {
+            url: 'https://example.com/style.css',
+            enabled: true,
+            intervalMinutes: 5,
+          },
+          modifiedTime: timestamp,
+        },
+      },
+    };
+
+    expect(
+      parseStyleImportPayload(payload).styles['example.com'].source
+    ).toEqual(payload.styles['example.com'].source);
+    payload.styles['example.com'].source.intervalMinutes = 3;
+    expect(() => parseStyleImportPayload(payload)).toThrow('Invalid format');
   });
 
   it('computes add change remove previews', () => {

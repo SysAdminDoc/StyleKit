@@ -2,7 +2,7 @@ import { safeParse } from '@stylekit/css';
 import { StyleMap, StyleWithoutUrl } from '@stylekit/types';
 
 export type StyleImportEnvelope = {
-  version: 2;
+  version: 3;
   app: 'StyleKit';
   exportedAt: string;
   styles: StyleMap;
@@ -21,7 +21,7 @@ export type StyleImportPreview = {
   diff: StyleImportDiff;
 };
 
-const VERSIONED_SCHEMA = 2;
+const VERSIONED_SCHEMA = 3;
 
 export const isSafeCssContentType = (contentType: string | null): boolean => {
   if (!contentType) return true;
@@ -39,6 +39,7 @@ const normalizeStyle = (style: StyleWithoutUrl): StyleWithoutUrl => ({
   enabled: style.enabled,
   readability: style.readability ?? false,
   shadowRoots: style.shadowRoots ?? false,
+  source: style.source,
   modifiedTime: style.modifiedTime,
 });
 
@@ -74,6 +75,21 @@ export const isValidStyleMap = (data: unknown): data is StyleMap => {
     ) {
       return false;
     }
+    if (style.source !== undefined) {
+      if (
+        !style.source ||
+        typeof style.source !== 'object' ||
+        Array.isArray(style.source)
+      ) {
+        return false;
+      }
+      const source = style.source as Record<string, unknown>;
+      if (typeof source.url !== 'string' || !source.url.trim()) return false;
+      if (typeof source.enabled !== 'boolean') return false;
+      if (![1, 5, 15, 60].includes(source.intervalMinutes as number)) {
+        return false;
+      }
+    }
     if (
       typeof style.modifiedTime !== 'string' &&
       style.modifiedTime !== undefined
@@ -97,6 +113,7 @@ export const parseStyleImportPayload = (data: unknown): StyleImportEnvelope => {
   if (
     hasVersionedSchema &&
     record.version !== 1 &&
+    record.version !== 2 &&
     record.version !== VERSIONED_SCHEMA
   ) {
     throw new Error(`Unsupported StyleKit import version: ${record.version}`);

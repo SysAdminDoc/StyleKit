@@ -12,10 +12,7 @@
     <style-import-from-url
       v-if="importDialog"
       :existing-styles="$store.state.styles"
-      @import="
-        saveStyle({ url: $event.url, css: $event.css });
-        importDialog = false;
-      "
+      @import="importStyle"
       @cancel="importDialog = false"
     />
 
@@ -69,10 +66,16 @@
           :modified-time="style.modifiedTime"
           :initial-enabled="style.enabled"
           :initial-shadow-roots="style.shadowRoots"
+          :source="style.source"
+          :source-status="$store.state.styleSourceStatuses[style.url]"
           @save="saveStyle"
           @delete="deleteStyle(style)"
           @toggle="toggleStyle(style)"
           @toggle-shadow-roots="setShadowRoots(style.url, $event)"
+          @save-source="setLiveSource(style.url, $event)"
+          @reload-source="reloadLiveSource(style.url)"
+          @rollback-source="rollbackLiveSource(style.url)"
+          @remove-source="setLiveSource(style.url, null)"
         />
       </b-col>
     </b-row>
@@ -90,7 +93,7 @@
 import { defineComponent } from 'vue';
 import { compareAsc } from 'date-fns';
 
-import { Style, StyleMap } from '@stylekit/types';
+import { Style, StyleMap, StyleSourceConfig } from '@stylekit/types';
 
 import AppButton from './AppButton.vue';
 import UndoToast from './UndoToast.vue';
@@ -146,6 +149,7 @@ export default defineComponent({
             enabled: stylesObj[url].enabled,
             readability: stylesObj[url].readability,
             shadowRoots: stylesObj[url].shadowRoots ?? false,
+            source: stylesObj[url].source,
             modifiedTime: stylesObj[url].modifiedTime,
           });
         }
@@ -196,19 +200,65 @@ export default defineComponent({
       this.showToast('Deleted all styles');
     },
 
-    saveStyle({
+    async saveStyle({
       initialUrl,
       url,
       css,
+      source,
     }: {
-      initialUrl: string;
+      initialUrl?: string;
       url: string;
       css: string;
-    }): void {
-      const error = this.$store.dispatch('saveStyle', { initialUrl, url, css });
-      if (error && typeof error === 'string') {
+      source?: StyleSourceConfig;
+    }): Promise<void> {
+      const error = await this.$store.dispatch('saveStyle', {
+        initialUrl,
+        url,
+        css,
+        source,
+      });
+      if (typeof error === 'string') {
         this.showToast(error);
       }
+    },
+
+    async importStyle({
+      url,
+      css,
+      source,
+    }: {
+      url: string;
+      css: string;
+      source?: StyleSourceConfig;
+    }): Promise<void> {
+      await this.saveStyle({ url, css });
+      if (source) {
+        await this.setLiveSource(url, source);
+      }
+      this.importDialog = false;
+    },
+
+    async setLiveSource(
+      url: string,
+      source: StyleSourceConfig | null
+    ): Promise<void> {
+      const error = await this.$store.dispatch('setStyleSource', {
+        url,
+        source,
+      });
+      this.showToast(
+        error || (source ? 'Live source saved.' : 'Live source removed.')
+      );
+    },
+
+    async reloadLiveSource(url: string): Promise<void> {
+      const error = await this.$store.dispatch('reloadStyleSource', url);
+      this.showToast(error || 'Live source checked and snapshot updated.');
+    },
+
+    async rollbackLiveSource(url: string): Promise<void> {
+      const error = await this.$store.dispatch('rollbackStyleSource', url);
+      this.showToast(error || 'Restored source snapshot and disabled reload.');
     },
 
     showToast(message: string): void {

@@ -5,6 +5,7 @@ import ContextMenu from './contextmenu';
 import DefaultShortcutUpdate from './default-shortcut-update';
 import StylesMetadataUpdate from './styles-metadata-update';
 import StylesModifiedTimeUpdate from './styles-modified-time-update';
+import { initializeStyleSourceScheduler } from './style-source-scheduler';
 
 chrome.storage.session.setAccessLevel({
   accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
@@ -18,6 +19,7 @@ chrome.storage.local.setAccessLevel({
   await DefaultShortcutUpdate();
   await StylesMetadataUpdate();
   await StylesModifiedTimeUpdate();
+  await initializeStyleSourceScheduler();
 })();
 
 // Uninstall URL removed — will set up project-specific URL later

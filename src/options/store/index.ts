@@ -9,6 +9,8 @@ import {
   GoogleDriveSyncReport,
   StylesRollbackReason,
   StylesRollbackSnapshot,
+  StyleSourceConfig,
+  StyleSourceStatusMap,
 } from '@stylekit/types';
 import {
   getGoogleDriveSyncEnabled,
@@ -22,6 +24,10 @@ import {
   getAllStyles,
   setAllStyles,
   setStyleShadowRoots,
+  getStyleSourceStatuses,
+  setStyleSource,
+  reloadStyleSource,
+  rollbackStyleSource,
   setOption,
   getAllOptions,
   getCommands,
@@ -41,6 +47,7 @@ type State = {
   googleDriveSyncMetadata: GoogleDriveSyncMetadata | undefined;
   googleDriveSyncReport: GoogleDriveSyncReport | null;
   lastStylesRollbackSnapshot: StylesRollbackSnapshot | null;
+  styleSourceStatuses: StyleSourceStatusMap;
 };
 
 type SetAllStylesPayload =
@@ -64,11 +71,16 @@ export default createStore<State>({
     googleDriveSyncMetadata: undefined,
     googleDriveSyncReport: null,
     lastStylesRollbackSnapshot: null,
+    styleSourceStatuses: {},
   },
 
   actions: {
     async getAllStyles({ state }) {
       state.styles = await getAllStyles();
+    },
+
+    async getStyleSourceStatuses({ state }) {
+      state.styleSourceStatuses = await getStyleSourceStatuses();
     },
 
     async getAllOptions({ state }) {
@@ -117,14 +129,20 @@ export default createStore<State>({
       return snapshot;
     },
 
-    saveStyle(
+    async saveStyle(
       { state },
       {
         initialUrl,
         url,
         css,
-      }: { initialUrl?: string; url: string; css: string }
-    ): string | null {
+        source,
+      }: {
+        initialUrl?: string;
+        url: string;
+        css: string;
+        source?: StyleSourceConfig;
+      }
+    ): Promise<string | null> {
       try {
         // validate by parsing
         safeParse(css);
@@ -136,6 +154,7 @@ export default createStore<State>({
           css,
           readability: previousStyle?.readability ?? false,
           shadowRoots: previousStyle?.shadowRoots ?? false,
+          source: source ?? previousStyle?.source,
           enabled: previousStyle?.enabled ?? true,
           modifiedTime: getCurrentTimestamp(),
         };
@@ -144,7 +163,7 @@ export default createStore<State>({
           delete styles[initialUrl];
         }
 
-        setAllStyles(styles);
+        await setAllStyles(styles);
         state.styles = styles;
         return null;
       } catch (e) {
@@ -193,6 +212,47 @@ export default createStore<State>({
       }
 
       setStyleShadowRoots(url, enabled);
+    },
+
+    async setStyleSource(
+      { dispatch },
+      { url, source }: { url: string; source: StyleSourceConfig | null }
+    ): Promise<string | null> {
+      try {
+        await setStyleSource(url, source);
+        await Promise.all([
+          dispatch('getAllStyles'),
+          dispatch('getStyleSourceStatuses'),
+        ]);
+        return null;
+      } catch (error) {
+        return error instanceof Error ? error.message : String(error);
+      }
+    },
+
+    async reloadStyleSource({ dispatch }, url: string): Promise<string | null> {
+      const status = await reloadStyleSource(url);
+      await Promise.all([
+        dispatch('getAllStyles'),
+        dispatch('getStyleSourceStatuses'),
+      ]);
+      return status.state === 'error'
+        ? status.lastError || 'Live source reload failed.'
+        : null;
+    },
+
+    async rollbackStyleSource(
+      { dispatch },
+      url: string
+    ): Promise<string | null> {
+      const status = await rollbackStyleSource(url);
+      await Promise.all([
+        dispatch('getAllStyles'),
+        dispatch('getStyleSourceStatuses'),
+      ]);
+      return status.state === 'error'
+        ? status.lastError || 'Live source rollback failed.'
+        : null;
     },
 
     enableAllStyles({ state }) {

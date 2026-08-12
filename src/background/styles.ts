@@ -385,6 +385,7 @@ export const set = async (
       css,
       readability,
       shadowRoots: shadowRoots ?? existingStyle?.shadowRoots ?? false,
+      source: existingStyle?.source,
       enabled: true,
       modifiedTime: getCurrentTimestamp(),
     };

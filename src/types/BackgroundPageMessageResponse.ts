@@ -10,6 +10,9 @@ import {
   GetUserstylesIndexResponse,
   UserstylesProviderHealth,
   DiagnosticsBundle,
+  StyleSourcePreview,
+  StyleSourceStatus,
+  StyleSourceStatusMap,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -52,6 +55,11 @@ export type SetGoogleFontsCacheResponse = void;
 export type GetUserstylesProviderHealthResponse = UserstylesProviderHealth;
 export type GetDiagnosticsBundleResponse = DiagnosticsBundle;
 export type RecordDiagnosticResponse = void;
+export type PreviewStyleSourceResponse = StyleSourcePreview;
+export type SetStyleSourceResponse = StyleSourcePreview;
+export type ReloadStyleSourceResponse = StyleSourceStatus;
+export type RollbackStyleSourceResponse = StyleSourceStatus;
+export type GetStyleSourceStatusesResponse = StyleSourceStatusMap;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -73,6 +81,11 @@ type BackgroundPageMessageResponse =
   | GetUserstylesProviderHealthResponse
   | GetUserstylesIndexResponse
   | GetDiagnosticsBundleResponse
-  | RecordDiagnosticResponse;
+  | RecordDiagnosticResponse
+  | PreviewStyleSourceResponse
+  | SetStyleSourceResponse
+  | ReloadStyleSourceResponse
+  | RollbackStyleSourceResponse
+  | GetStyleSourceStatusesResponse;
 
 export default BackgroundPageMessageResponse;

@@ -10,6 +10,7 @@ const chromeDist = resolve(root, 'dist');
 const firefoxDist = resolve(root, 'firefox-dist');
 const profile = await mkdtemp(join(tmpdir(), 'stylekit-e2e-'));
 const expectedColor = 'rgb(12, 34, 56)';
+const expectedReloadColor = 'rgb(78, 90, 123)';
 
 const readManifest = async directory =>
   JSON.parse(await readFile(resolve(directory, 'manifest.json'), 'utf8'));
@@ -94,7 +95,16 @@ const waitForEditorReceiver = async (serviceWorker, fixtureUrl) => {
 };
 
 const createFixtureServer = () => {
-  const server = createServer((_request, response) => {
+  let liveCss = `#fixture { color: ${expectedReloadColor} !important; }`;
+  const server = createServer((request, response) => {
+    if (request.url === '/live.css') {
+      response.writeHead(200, {
+        'Content-Type': 'text/css; charset=utf-8',
+        'Cache-Control': 'no-store',
+      });
+      response.end(liveCss);
+      return;
+    }
     response.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'no-store',
@@ -114,6 +124,10 @@ const createFixtureServer = () => {
       resolveServer({
         server,
         url: `http://stylekit.test:${address.port}/fixture`,
+        sourceUrl: `http://127.0.0.1:${address.port}/live.css`,
+        setLiveCss: css => {
+          liveCss = css;
+        },
       });
     });
   });
@@ -251,7 +265,7 @@ try {
   const styleKey = fixtureServer.url;
   const css = `#fixture, #shadow-fixture { color: ${expectedColor} !important; }`;
   await popupPage.evaluate(
-    async ({ url, cssText }) => {
+    async ({ url, cssText, sourceUrl }) => {
       await chrome.runtime.sendMessage({
         name: 'SetAllStyles',
         styles: {
@@ -260,12 +274,17 @@ try {
             enabled: true,
             readability: false,
             shadowRoots: true,
+            source: {
+              url: sourceUrl,
+              enabled: true,
+              intervalMinutes: 5,
+            },
             modifiedTime: new Date().toISOString(),
           },
         },
       });
     },
-    { url: styleKey, cssText: css }
+    { url: styleKey, cssText: css, sourceUrl: fixtureServer.sourceUrl }
   );
 
   await popupPage.waitForFunction(
@@ -330,6 +349,8 @@ try {
     hasText: styleKey,
   });
   await savedStyleRow.getByText('Include open shadow roots').waitFor();
+  await savedStyleRow.getByText('Live source settings').click();
+  await savedStyleRow.getByText('Automatically reload this source').waitFor();
   assert.equal(
     await savedStyleRow.getByText('Closed shadow roots').isVisible(),
     true
@@ -365,6 +386,38 @@ try {
   );
   console.log(
     '✓ Applied opted-in CSS to a dynamic open shadow root and rendered its options state'
+  );
+
+  const reloadStatus = await popupPage.evaluate(async url => {
+    return chrome.runtime.sendMessage({ name: 'ReloadStyleSource', url });
+  }, styleKey);
+  assert.equal(reloadStatus.state, 'updated');
+  assert.equal(reloadStatus.rollbackAvailable, true);
+  await fixturePage.waitForFunction(
+    color =>
+      getComputedStyle(document.querySelector('#fixture')).color === color,
+    expectedReloadColor
+  );
+  const sourceStatuses = await popupPage.evaluate(async () => {
+    return chrome.runtime.sendMessage({ name: 'GetStyleSourceStatuses' });
+  });
+  assert.equal(sourceStatuses[styleKey].state, 'updated');
+
+  const rollbackStatus = await popupPage.evaluate(async url => {
+    return chrome.runtime.sendMessage({ name: 'RollbackStyleSource', url });
+  }, styleKey);
+  assert.equal(rollbackStatus.state, 'rolled-back');
+  await fixturePage.waitForFunction(
+    color =>
+      getComputedStyle(document.querySelector('#fixture')).color === color,
+    expectedColor
+  );
+  const rolledBackStyles = await popupPage.evaluate(async () => {
+    return chrome.runtime.sendMessage({ name: 'GetAllStyles' });
+  });
+  assert.equal(rolledBackStyles[styleKey].source.enabled, false);
+  console.log(
+    '✓ Reloaded a loopback CSS source, created a snapshot, and rolled back with polling disabled'
   );
 
   if (requiresManualContentScriptInjection) {

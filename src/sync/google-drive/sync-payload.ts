@@ -3,7 +3,7 @@ import { getCurrentTimestamp } from '@stylekit/utils';
 import { isValidStyleMap } from '../../utils/style-import';
 
 export type GoogleDriveStyleSyncPayload = {
-  version: 2;
+  version: 3;
   app: 'StyleKit';
   exportedAt: Timestamp;
   styles: StyleMap;
@@ -15,7 +15,7 @@ export type StyleSyncState = {
   tombstones: StyleSyncTombstoneMap;
 };
 
-const PAYLOAD_VERSION = 2;
+const PAYLOAD_VERSION = 3;
 
 export const isValidTombstoneMap = (
   data: unknown
@@ -80,7 +80,11 @@ export const parseGoogleDriveSyncPayload = (data: unknown): StyleSyncState => {
     };
   }
 
-  if (record.version !== 1 && record.version !== PAYLOAD_VERSION) {
+  if (
+    record.version !== 1 &&
+    record.version !== 2 &&
+    record.version !== PAYLOAD_VERSION
+  ) {
     throw new Error(`Unsupported StyleKit sync version: ${record.version}`);
   }
 

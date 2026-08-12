@@ -47,6 +47,7 @@
   "permissions": [
     "tabs",
     "activeTab",
+    "alarms",
     "storage",
     "identity",
     "contextMenus",

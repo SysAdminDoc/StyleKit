@@ -27,6 +27,32 @@ export type GoogleFontsCache = {
   ts: number;
 };
 
+export type StyleSourceIntervalMinutes = 1 | 5 | 15 | 60;
+
+export type StyleSourceConfig = {
+  url: string;
+  enabled: boolean;
+  intervalMinutes: StyleSourceIntervalMinutes;
+};
+
+export type StyleSourceStatus = {
+  state: 'never' | 'synced' | 'updated' | 'rolled-back' | 'error';
+  lastCheckedAt?: Timestamp;
+  lastUpdatedAt?: Timestamp;
+  lastError?: string;
+  rollbackAvailable: boolean;
+  snapshotCreatedAt?: Timestamp;
+};
+
+export type StyleSourceStatusMap = {
+  [url: string]: StyleSourceStatus;
+};
+
+export type StyleSourcePreview = {
+  css?: string;
+  error?: string;
+};
+
 export type StylebotOptions = {
   contextMenu: boolean;
   fonts: StylebotFonts;
@@ -45,6 +71,7 @@ export type Style = {
   enabled: boolean;
   readability: boolean;
   shadowRoots?: boolean;
+  source?: StyleSourceConfig;
   modifiedTime: Timestamp;
 };
 

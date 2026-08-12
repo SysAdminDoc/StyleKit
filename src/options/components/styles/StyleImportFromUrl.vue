@@ -14,7 +14,7 @@
 
       <b-form-input
         v-model="url"
-        placeholder="CSS file URL (e.g. https://example.com/style.css)"
+        placeholder="HTTPS, localhost, or file CSS URL"
         aria-label="CSS file URL"
         autofocus
         class="mb-2"
@@ -24,8 +24,27 @@
         v-model="targetUrl"
         placeholder="Apply to URL pattern (e.g. *.example.com)"
         aria-label="Target URL pattern"
-        class="mb-3"
+        class="mb-2"
       />
+
+      <b-form-checkbox v-model="liveReload" class="mb-2">
+        Keep this style synced with the source
+      </b-form-checkbox>
+
+      <label v-if="liveReload" class="reload-interval mb-3">
+        Check for changes
+        <select v-model.number="intervalMinutes" aria-label="Reload interval">
+          <option :value="1">Every minute</option>
+          <option :value="5">Every 5 minutes</option>
+          <option :value="15">Every 15 minutes</option>
+          <option :value="60">Every hour</option>
+        </select>
+      </label>
+
+      <small v-if="liveReload" class="source-help mb-3">
+        HTTPS, loopback HTTP, and file sources are supported. File sources
+        require “Allow access to file URLs” in the extension details.
+      </small>
 
       <div v-if="error" class="import-error mb-2" role="alert">{{ error }}</div>
 
@@ -63,7 +82,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import { getCurrentTimestamp } from '@stylekit/utils';
-import { StyleMap } from '@stylekit/types';
+import { StyleMap, StyleSourceIntervalMinutes } from '@stylekit/types';
 import {
   focusFirstElement,
   restoreFocus,
@@ -71,13 +90,11 @@ import {
 } from '../../../shared/utils/accessibility';
 
 import AppButton from '../AppButton.vue';
-import { reportDiagnostic } from '../../utils';
+import { previewStyleSource, reportDiagnostic } from '../../utils';
 import {
-  assertValidImportCss,
   createImportPreview,
   createSingleStyleImport,
   getImportDiffText,
-  isSafeCssContentType,
 } from '../../../utils/style-import';
 
 export default defineComponent({
@@ -100,6 +117,8 @@ export default defineComponent({
     preview: string;
     error: string;
     fetching: boolean;
+    liveReload: boolean;
+    intervalMinutes: StyleSourceIntervalMinutes;
     previouslyFocused: HTMLElement | null;
   } {
     return {
@@ -108,6 +127,8 @@ export default defineComponent({
       preview: '',
       error: '',
       fetching: false,
+      liveReload: false,
+      intervalMinutes: 5,
       previouslyFocused: null,
     };
   },
@@ -167,24 +188,7 @@ export default defineComponent({
       this.fetching = true;
 
       try {
-        const response = await fetch(this.url);
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch: ${response.status} ${response.statusText}`
-          );
-        }
-
-        const contentType = response.headers.get('content-type') || '';
-        if (!isSafeCssContentType(contentType)) {
-          throw new Error(
-            `Unexpected content type: ${contentType}. Expected CSS or plain text.`
-          );
-        }
-
-        const text = await response.text();
-        assertValidImportCss(text);
-
-        this.preview = text;
+        this.preview = await previewStyleSource(this.url);
       } catch (e) {
         this.error =
           e instanceof Error
@@ -207,6 +211,13 @@ export default defineComponent({
         this.$emit('import', {
           url: this.targetUrl,
           css: this.preview,
+          source: this.liveReload
+            ? {
+                url: this.url,
+                enabled: true,
+                intervalMinutes: this.intervalMinutes,
+              }
+            : undefined,
         });
       } catch (e) {
         this.error = e instanceof Error ? e.message : 'Invalid CSS import';
@@ -300,5 +311,25 @@ export default defineComponent({
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.reload-interval {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+
+  select {
+    color: #cdd6f4;
+    background: #181825;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    padding: 4px 8px;
+  }
+}
+
+.source-help {
+  display: block;
+  color: #a6adc8;
 }
 </style>

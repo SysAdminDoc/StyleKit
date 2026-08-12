@@ -38,7 +38,7 @@ describe('Google Drive sync payload', () => {
     );
     const parsed = parseGoogleDriveSyncPayload(payload);
 
-    expect(payload.version).toBe(2);
+    expect(payload.version).toBe(3);
     expect(parsed.styles['example.com'].enabled).toBe(true);
     expect(parsed.tombstones['deleted.com']).toEqual({
       deletedTime: timestamp,

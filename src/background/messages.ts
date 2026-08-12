@@ -33,6 +33,10 @@ import {
   EnableStyle as EnableStyleType,
   SetStyle as SetStyleType,
   SetStyleShadowRoots as SetStyleShadowRootsType,
+  PreviewStyleSource as PreviewStyleSourceType,
+  SetStyleSource as SetStyleSourceType,
+  ReloadStyleSource as ReloadStyleSourceType,
+  RollbackStyleSource as RollbackStyleSourceType,
   GetStylesForPage as GetStylesForPageType,
   GetStylesForIframe as GetStylesForIframeType,
   MoveStyle as MoveStyleType,
@@ -74,6 +78,11 @@ import {
   GetUserstylesProviderHealthResponse,
   GetDiagnosticsBundleResponse,
   RecordDiagnosticResponse,
+  PreviewStyleSourceResponse,
+  SetStyleSourceResponse,
+  ReloadStyleSourceResponse,
+  RollbackStyleSourceResponse,
+  GetStyleSourceStatusesResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 import {
@@ -88,6 +97,13 @@ import {
   recordUserstylesProviderFailure,
 } from './userstyles-provider';
 import { getDiagnosticsBundle, recordDiagnostic } from './diagnostics';
+import {
+  configureStyleSource,
+  getStyleSourceStatuses,
+  previewStyleSource,
+  reloadStyleSource,
+  rollbackStyleSource,
+} from './style-source';
 
 import {
   get as getReadabilitySettings,
@@ -148,6 +164,73 @@ export const SetStyleShadowRoots = async (
 ): Promise<void> => {
   await setShadowRoots(message.url, message.enabled);
   await applyStylesToAllTabs();
+};
+
+const sourceErrorResponse = (error: unknown): ReloadStyleSourceResponse => ({
+  state: 'error',
+  lastCheckedAt: new Date().toISOString(),
+  lastError: error instanceof Error ? error.message : String(error),
+  rollbackAvailable: false,
+});
+
+export const PreviewStyleSource = async (
+  message: PreviewStyleSourceType,
+  sendResponse: (response: PreviewStyleSourceResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({ css: await previewStyleSource(message.sourceUrl) });
+  } catch (error) {
+    await recordDiagnostic({
+      category: 'import',
+      operation: 'live-source-preview',
+      error,
+    }).catch(() => undefined);
+    sendResponse({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const SetStyleSource = async (
+  message: SetStyleSourceType,
+  sendResponse: (response: SetStyleSourceResponse) => void
+): Promise<void> => {
+  try {
+    await configureStyleSource(message.url, message.source);
+    sendResponse({});
+  } catch (error) {
+    sendResponse({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const ReloadStyleSource = async (
+  message: ReloadStyleSourceType,
+  sendResponse: (response: ReloadStyleSourceResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse(await reloadStyleSource(message.url));
+  } catch (error) {
+    sendResponse(sourceErrorResponse(error));
+  }
+};
+
+export const RollbackStyleSource = async (
+  message: RollbackStyleSourceType,
+  sendResponse: (response: RollbackStyleSourceResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse(await rollbackStyleSource(message.url));
+  } catch (error) {
+    sendResponse(sourceErrorResponse(error));
+  }
+};
+
+export const GetStyleSourceStatuses = async (
+  sendResponse: (response: GetStyleSourceStatusesResponse) => void
+): Promise<void> => {
+  sendResponse(await getStyleSourceStatuses());
 };
 
 export const GetAllStyles = async (

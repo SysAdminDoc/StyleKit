@@ -6,6 +6,7 @@ import {
   StyleMap,
   StylesRollbackReason,
   DiagnosticCategory,
+  StyleSourceConfig,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -20,6 +21,31 @@ export type SetStyleShadowRoots = {
   name: 'SetStyleShadowRoots';
   url: string;
   enabled: boolean;
+};
+
+export type PreviewStyleSource = {
+  name: 'PreviewStyleSource';
+  sourceUrl: string;
+};
+
+export type SetStyleSource = {
+  name: 'SetStyleSource';
+  url: string;
+  source: StyleSourceConfig | null;
+};
+
+export type ReloadStyleSource = {
+  name: 'ReloadStyleSource';
+  url: string;
+};
+
+export type RollbackStyleSource = {
+  name: 'RollbackStyleSource';
+  url: string;
+};
+
+export type GetStyleSourceStatuses = {
+  name: 'GetStyleSourceStatuses';
 };
 
 export type EnableStyle = {
@@ -196,6 +222,11 @@ export type GetDiagnosticsBundle = {
 type BackgroundPageMessage =
   | SetStyle
   | SetStyleShadowRoots
+  | PreviewStyleSource
+  | SetStyleSource
+  | ReloadStyleSource
+  | RollbackStyleSource
+  | GetStyleSourceStatuses
   | EnableStyle
   | DisableStyle
   | GetAllStyles
