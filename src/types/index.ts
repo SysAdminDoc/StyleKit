@@ -122,6 +122,22 @@ export type UserRecipesResponse = {
   error?: string;
 };
 
+export type RecipeMarketplaceSourceDraft = {
+  repository: string;
+  ref: string;
+};
+
+export type RecipeMarketplaceSource = RecipeMarketplaceSourceDraft & {
+  id: string;
+  fetchedAt: Timestamp;
+  recipes: UserRecipe[];
+};
+
+export type RecipeMarketplaceResponse = {
+  sources: RecipeMarketplaceSource[];
+  error?: string;
+};
+
 export type StyleSyncTombstone = {
   deletedTime: Timestamp;
 };

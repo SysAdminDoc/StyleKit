@@ -15,6 +15,10 @@ import {
   SaveUserRecipe,
   DeleteUserRecipe,
   ImportUserRecipes,
+  GetRecipeMarketplace,
+  AddRecipeMarketplaceSource,
+  RefreshRecipeMarketplaceSource,
+  DeleteRecipeMarketplaceSource,
   SetStyleShadowRoots,
   PreviewStyleSource,
   SetStyleSource,
@@ -154,6 +158,10 @@ const ASYNC_MESSAGES = new Set([
   'SaveUserRecipe',
   'DeleteUserRecipe',
   'ImportUserRecipes',
+  'GetRecipeMarketplace',
+  'AddRecipeMarketplaceSource',
+  'RefreshRecipeMarketplaceSource',
+  'DeleteRecipeMarketplaceSource',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -209,6 +217,18 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'ImportUserRecipes':
         ImportUserRecipes(message, sendResponse);
+        break;
+      case 'GetRecipeMarketplace':
+        GetRecipeMarketplace(sendResponse);
+        break;
+      case 'AddRecipeMarketplaceSource':
+        AddRecipeMarketplaceSource(message, sendResponse);
+        break;
+      case 'RefreshRecipeMarketplaceSource':
+        RefreshRecipeMarketplaceSource(message, sendResponse);
+        break;
+      case 'DeleteRecipeMarketplaceSource':
+        DeleteRecipeMarketplaceSource(message, sendResponse);
         break;
       case 'SetStyleShadowRoots':
         SetStyleShadowRoots(message);

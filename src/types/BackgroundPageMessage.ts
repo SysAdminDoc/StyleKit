@@ -9,6 +9,7 @@ import {
   StyleSourceConfig,
   UserRecipe,
   UserRecipeDraft,
+  RecipeMarketplaceSourceDraft,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -41,6 +42,25 @@ export type DeleteUserRecipe = {
 export type ImportUserRecipes = {
   name: 'ImportUserRecipes';
   recipes: UserRecipe[];
+};
+
+export type GetRecipeMarketplace = {
+  name: 'GetRecipeMarketplace';
+};
+
+export type AddRecipeMarketplaceSource = {
+  name: 'AddRecipeMarketplaceSource';
+  source: RecipeMarketplaceSourceDraft;
+};
+
+export type RefreshRecipeMarketplaceSource = {
+  name: 'RefreshRecipeMarketplaceSource';
+  id: string;
+};
+
+export type DeleteRecipeMarketplaceSource = {
+  name: 'DeleteRecipeMarketplaceSource';
+  id: string;
 };
 
 export type SetStyleShadowRoots = {
@@ -252,6 +272,10 @@ type BackgroundPageMessage =
   | SaveUserRecipe
   | DeleteUserRecipe
   | ImportUserRecipes
+  | GetRecipeMarketplace
+  | AddRecipeMarketplaceSource
+  | RefreshRecipeMarketplaceSource
+  | DeleteRecipeMarketplaceSource
   | SetStyleShadowRoots
   | PreviewStyleSource
   | SetStyleSource

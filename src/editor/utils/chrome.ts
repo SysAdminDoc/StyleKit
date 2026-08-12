@@ -34,6 +34,13 @@ import {
   ImportUserRecipes,
   UserRecipe,
   UserRecipeDraft,
+  RecipeMarketplaceSource,
+  RecipeMarketplaceSourceDraft,
+  GetRecipeMarketplace,
+  GetRecipeMarketplaceResponse,
+  AddRecipeMarketplaceSource,
+  RefreshRecipeMarketplaceSource,
+  DeleteRecipeMarketplaceSource,
 } from '@stylekit/types';
 
 export const getAllOptions = async (): Promise<StylebotOptions> => {
@@ -110,6 +117,50 @@ export const importUserRecipes = async (
 ): Promise<UserRecipe[]> => {
   const message: ImportUserRecipes = { name: 'ImportUserRecipes', recipes };
   return unwrapUserRecipes(await chrome.runtime.sendMessage(message));
+};
+
+const unwrapRecipeMarketplace = (
+  response: GetRecipeMarketplaceResponse
+): RecipeMarketplaceSource[] => {
+  if (response.error) throw new Error(response.error);
+  return response.sources;
+};
+
+export const getRecipeMarketplace = async (): Promise<
+  RecipeMarketplaceSource[]
+> => {
+  const message: GetRecipeMarketplace = { name: 'GetRecipeMarketplace' };
+  return unwrapRecipeMarketplace(await chrome.runtime.sendMessage(message));
+};
+
+export const addRecipeMarketplaceSource = async (
+  source: RecipeMarketplaceSourceDraft
+): Promise<RecipeMarketplaceSource[]> => {
+  const message: AddRecipeMarketplaceSource = {
+    name: 'AddRecipeMarketplaceSource',
+    source,
+  };
+  return unwrapRecipeMarketplace(await chrome.runtime.sendMessage(message));
+};
+
+export const refreshRecipeMarketplaceSource = async (
+  id: string
+): Promise<RecipeMarketplaceSource[]> => {
+  const message: RefreshRecipeMarketplaceSource = {
+    name: 'RefreshRecipeMarketplaceSource',
+    id,
+  };
+  return unwrapRecipeMarketplace(await chrome.runtime.sendMessage(message));
+};
+
+export const deleteRecipeMarketplaceSource = async (
+  id: string
+): Promise<RecipeMarketplaceSource[]> => {
+  const message: DeleteRecipeMarketplaceSource = {
+    name: 'DeleteRecipeMarketplaceSource',
+    id,
+  };
+  return unwrapRecipeMarketplace(await chrome.runtime.sendMessage(message));
 };
 
 export const openOptionsPage = (): void => {

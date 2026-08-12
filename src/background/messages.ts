@@ -36,6 +36,9 @@ import {
   SaveUserRecipe as SaveUserRecipeType,
   DeleteUserRecipe as DeleteUserRecipeType,
   ImportUserRecipes as ImportUserRecipesType,
+  AddRecipeMarketplaceSource as AddRecipeMarketplaceSourceType,
+  RefreshRecipeMarketplaceSource as RefreshRecipeMarketplaceSourceType,
+  DeleteRecipeMarketplaceSource as DeleteRecipeMarketplaceSourceType,
   SetStyleShadowRoots as SetStyleShadowRootsType,
   PreviewStyleSource as PreviewStyleSourceType,
   SetStyleSource as SetStyleSourceType,
@@ -88,6 +91,7 @@ import {
   RollbackStyleSourceResponse,
   GetStyleSourceStatusesResponse,
   GetUserRecipesResponse,
+  GetRecipeMarketplaceResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 import {
@@ -123,6 +127,12 @@ import {
   importUserRecipes,
   saveUserRecipe,
 } from './user-recipes';
+import {
+  addRecipeMarketplaceSource,
+  deleteRecipeMarketplaceSource,
+  getRecipeMarketplaceSources,
+  refreshRecipeMarketplaceSource,
+} from './recipe-marketplace';
 
 import {
   get as getReadabilitySettings,
@@ -241,6 +251,56 @@ export const ImportUserRecipes = async (
 ): Promise<void> => {
   await sendUserRecipeMutation(
     () => importUserRecipes(message.recipes),
+    sendResponse
+  );
+};
+
+const sendRecipeMarketplaceMutation = async (
+  operation: () => Promise<Awaited<ReturnType<typeof getRecipeMarketplaceSources>>>,
+  sendResponse: (response: GetRecipeMarketplaceResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({ sources: await operation() });
+  } catch (error) {
+    sendResponse({
+      sources: [],
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const GetRecipeMarketplace = async (
+  sendResponse: (response: GetRecipeMarketplaceResponse) => void
+): Promise<void> => {
+  sendResponse({ sources: await getRecipeMarketplaceSources() });
+};
+
+export const AddRecipeMarketplaceSource = async (
+  message: AddRecipeMarketplaceSourceType,
+  sendResponse: (response: GetRecipeMarketplaceResponse) => void
+): Promise<void> => {
+  await sendRecipeMarketplaceMutation(
+    () => addRecipeMarketplaceSource(message.source),
+    sendResponse
+  );
+};
+
+export const RefreshRecipeMarketplaceSource = async (
+  message: RefreshRecipeMarketplaceSourceType,
+  sendResponse: (response: GetRecipeMarketplaceResponse) => void
+): Promise<void> => {
+  await sendRecipeMarketplaceMutation(
+    () => refreshRecipeMarketplaceSource(message.id),
+    sendResponse
+  );
+};
+
+export const DeleteRecipeMarketplaceSource = async (
+  message: DeleteRecipeMarketplaceSourceType,
+  sendResponse: (response: GetRecipeMarketplaceResponse) => void
+): Promise<void> => {
+  await sendRecipeMarketplaceMutation(
+    () => deleteRecipeMarketplaceSource(message.id),
     sendResponse
   );
 };

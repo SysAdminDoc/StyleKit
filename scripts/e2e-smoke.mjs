@@ -694,6 +694,22 @@ try {
       .locator('#stylebot .section')
       .filter({ hasText: 'Site Recipes' });
     await recipesSection.locator('.collapse-btn').click();
+    await recipesSection.getByRole('button', { name: 'Add source' }).click();
+    await recipesSection
+      .getByLabel('Marketplace repository')
+      .fill('owner/recipes');
+    await recipesSection.getByLabel('Marketplace version pin').fill('main');
+    await recipesSection
+      .getByRole('button', { name: 'Add pinned source' })
+      .click();
+    await recipesSection
+      .getByRole('alert')
+      .getByText('Version pin must be a semantic version tag')
+      .waitFor();
+    await recipesSection
+      .locator('.marketplace-section')
+      .getByRole('button', { name: 'Cancel' })
+      .click();
     await recipesSection.getByRole('button', { name: 'New', exact: true }).click();
     await recipesSection.getByLabel('Recipe name').fill('E2E Focus Recipe');
     await recipesSection
@@ -733,7 +749,7 @@ try {
       })
     );
     console.log(
-      '✓ Created, applied, persisted, and exported a user-authored recipe'
+      '✓ Enforced marketplace pins and created, applied, persisted, and exported a user recipe'
     );
     await fixturePage.getByRole('button', { name: 'View changes' }).click();
     const savedDiff = fixturePage.getByRole('dialog', { name: 'CSS Changes' });

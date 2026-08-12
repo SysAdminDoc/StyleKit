@@ -98,6 +98,93 @@
       </div>
     </div>
 
+    <div class="recipe-section marketplace-section">
+      <div class="recipe-section-heading">
+        <div class="recipe-section-title">Recipe marketplace</div>
+        <div class="recipe-management-actions">
+          <button type="button" @click="addingMarketplaceSource = true">
+            Add source
+          </button>
+        </div>
+      </div>
+      <div class="no-match-hint marketplace-hint">
+        Public GitHub repositories must provide
+        <code>stylekit-recipes.json</code> at a pinned release tag or commit.
+      </div>
+
+      <form
+        v-if="addingMarketplaceSource"
+        class="recipe-form"
+        @submit.prevent="addMarketplaceSource"
+      >
+        <label>
+          GitHub repository (owner/repo)
+          <input
+            v-model="marketplaceDraft.repository"
+            aria-label="Marketplace repository"
+            placeholder="owner/stylekit-recipes"
+          />
+        </label>
+        <label>
+          Version pin
+          <input
+            v-model="marketplaceDraft.ref"
+            aria-label="Marketplace version pin"
+            placeholder="v1.0.0 or 40-character commit SHA"
+          />
+        </label>
+        <div class="recipe-form-actions">
+          <button type="submit" :disabled="loadingMarketplace">
+            {{ loadingMarketplace ? 'Fetching...' : 'Add pinned source' }}
+          </button>
+          <button type="button" @click="addingMarketplaceSource = false">
+            Cancel
+          </button>
+        </div>
+      </form>
+
+      <div
+        v-for="source in marketplaceSources"
+        :key="source.id"
+        class="marketplace-source"
+      >
+        <div class="marketplace-source-header">
+          <div>
+            <span class="recipe-name">{{ source.repository }}</span>
+            <span class="recipe-sites">Pinned to {{ source.ref }}</span>
+          </div>
+          <div class="recipe-management-actions">
+            <button type="button" @click="refreshMarketplaceSource(source.id)">
+              Refresh
+            </button>
+            <button type="button" @click="removeMarketplaceSource(source.id)">
+              Remove
+            </button>
+          </div>
+        </div>
+        <div
+          v-for="recipe in source.recipes"
+          :key="`${source.id}:${recipe.id}`"
+          class="recipe-item marketplace-recipe-item"
+        >
+          <div class="recipe-header">
+            <span class="recipe-name">{{ recipe.name }}</span>
+            <span class="recipe-desc">{{ recipe.description }}</span>
+          </div>
+          <div class="recipe-actions user-recipe-actions">
+            <button
+              type="button"
+              @mouseenter="previewRecipe(recipe)"
+              @mouseleave="removePreview"
+              @click="installMarketplaceRecipe(recipe)"
+            >
+              Install
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div v-if="matchingRecipes.length > 0" class="recipe-section">
       <div class="recipe-section-title">For this site</div>
       <div
@@ -156,11 +243,20 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import type { UserRecipe, UserRecipeDraft } from '@stylekit/types';
+import type {
+  RecipeMarketplaceSource,
+  RecipeMarketplaceSourceDraft,
+  UserRecipe,
+  UserRecipeDraft,
+} from '@stylekit/types';
 import {
+  addRecipeMarketplaceSource,
   deleteUserRecipe,
+  deleteRecipeMarketplaceSource,
+  getRecipeMarketplace,
   getUserRecipes,
   importUserRecipes,
+  refreshRecipeMarketplaceSource,
   saveUserRecipe,
 } from '../utils/chrome';
 import {
@@ -324,6 +420,10 @@ export default defineComponent({
     recipeError: string;
     recipeStatus: string;
     deleteConfirmId: string | null;
+    marketplaceSources: RecipeMarketplaceSource[];
+    marketplaceDraft: RecipeMarketplaceSourceDraft;
+    addingMarketplaceSource: boolean;
+    loadingMarketplace: boolean;
   } {
     return {
       previewStyle: null,
@@ -341,6 +441,10 @@ export default defineComponent({
       recipeError: '',
       recipeStatus: '',
       deleteConfirmId: null,
+      marketplaceSources: [],
+      marketplaceDraft: { repository: '', ref: '' },
+      addingMarketplaceSource: false,
+      loadingMarketplace: false,
     };
   },
 
@@ -363,6 +467,7 @@ export default defineComponent({
 
   created() {
     void this.loadUserRecipes();
+    void this.loadMarketplace();
   },
 
   beforeUnmount() {
@@ -370,6 +475,79 @@ export default defineComponent({
   },
 
   methods: {
+    async loadMarketplace(): Promise<void> {
+      this.loadingMarketplace = true;
+      try {
+        this.marketplaceSources = await getRecipeMarketplace();
+      } catch (error) {
+        this.recipeError =
+          error instanceof Error
+            ? error.message
+            : 'Recipe marketplace could not be loaded';
+      } finally {
+        this.loadingMarketplace = false;
+      }
+    },
+
+    async addMarketplaceSource(): Promise<void> {
+      this.loadingMarketplace = true;
+      this.recipeError = '';
+      try {
+        this.marketplaceSources = await addRecipeMarketplaceSource(
+          this.marketplaceDraft
+        );
+        this.marketplaceDraft = { repository: '', ref: '' };
+        this.addingMarketplaceSource = false;
+        this.recipeStatus = 'Pinned marketplace source added.';
+      } catch (error) {
+        this.recipeError =
+          error instanceof Error ? error.message : 'Marketplace source failed';
+      } finally {
+        this.loadingMarketplace = false;
+      }
+    },
+
+    async refreshMarketplaceSource(id: string): Promise<void> {
+      this.loadingMarketplace = true;
+      this.recipeError = '';
+      try {
+        this.marketplaceSources = await refreshRecipeMarketplaceSource(id);
+        this.recipeStatus = 'Marketplace source refreshed at its pinned version.';
+      } catch (error) {
+        this.recipeError =
+          error instanceof Error ? error.message : 'Marketplace refresh failed';
+      } finally {
+        this.loadingMarketplace = false;
+      }
+    },
+
+    async removeMarketplaceSource(id: string): Promise<void> {
+      this.recipeError = '';
+      try {
+        this.marketplaceSources = await deleteRecipeMarketplaceSource(id);
+        this.recipeStatus = 'Marketplace source removed.';
+      } catch (error) {
+        this.recipeError =
+          error instanceof Error ? error.message : 'Marketplace removal failed';
+      }
+    },
+
+    async installMarketplaceRecipe(recipe: UserRecipe): Promise<void> {
+      this.recipeError = '';
+      try {
+        this.userRecipes = await saveUserRecipe({
+          name: recipe.name,
+          description: recipe.description,
+          sites: recipe.sites,
+          css: recipe.css,
+        });
+        this.recipeStatus = `${recipe.name} installed to My recipes.`;
+      } catch (error) {
+        this.recipeError =
+          error instanceof Error ? error.message : 'Recipe install failed';
+      }
+    },
+
     async loadUserRecipes(): Promise<void> {
       this.loadingRecipes = true;
       this.recipeError = '';
@@ -531,6 +709,27 @@ export default defineComponent({
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+.marketplace-hint {
+  margin-bottom: 6px;
+}
+
+.marketplace-source {
+  border-left: 2px solid #89b4fa;
+  margin: 7px 0;
+  padding-left: 7px;
+}
+
+.marketplace-source-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.marketplace-recipe-item {
+  padding-left: 4px;
 }
 
 .recipe-management-actions button,

@@ -3,14 +3,20 @@
 import { flushPromises, shallowMount } from '@vue/test-utils';
 import TheSiteRecipes from '../TheSiteRecipes.vue';
 import {
+  addRecipeMarketplaceSource,
+  getRecipeMarketplace,
   getUserRecipes,
   saveUserRecipe,
 } from '../../utils/chrome';
 
 vi.mock('../../utils/chrome', () => ({
+  addRecipeMarketplaceSource: vi.fn(),
   deleteUserRecipe: vi.fn(),
+  deleteRecipeMarketplaceSource: vi.fn(),
+  getRecipeMarketplace: vi.fn(),
   getUserRecipes: vi.fn(),
   importUserRecipes: vi.fn(),
+  refreshRecipeMarketplaceSource: vi.fn(),
   saveUserRecipe: vi.fn(),
 }));
 
@@ -48,6 +54,7 @@ describe('user-created site recipes', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(getUserRecipes).mockResolvedValue([storedRecipe]);
+    vi.mocked(getRecipeMarketplace).mockResolvedValue([]);
   });
 
   it('loads user recipes beside the built-in collections', async () => {
@@ -85,5 +92,27 @@ describe('user-created site recipes', () => {
       })
     );
     expect(wrapper.text()).toContain('Recipe saved.');
+  });
+
+  it('adds only a pinned GitHub marketplace source', async () => {
+    vi.mocked(addRecipeMarketplaceSource).mockResolvedValue([]);
+    const wrapper = mountRecipes();
+    await flushPromises();
+
+    await wrapper.get('.marketplace-section button').trigger('click');
+    await wrapper.get('[aria-label="Marketplace repository"]').setValue(
+      'owner/recipes'
+    );
+    await wrapper.get('[aria-label="Marketplace version pin"]').setValue(
+      'v1.2.3'
+    );
+    await wrapper.get('.marketplace-section form').trigger('submit');
+    await flushPromises();
+
+    expect(addRecipeMarketplaceSource).toHaveBeenCalledWith({
+      repository: 'owner/recipes',
+      ref: 'v1.2.3',
+    });
+    expect(wrapper.text()).toContain('Pinned marketplace source added.');
   });
 });
