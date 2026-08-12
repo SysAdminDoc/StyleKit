@@ -1,0 +1,77 @@
+name: Feature request
+description: Suggest an improvement for StyleKit
+title: "[Feature]: "
+labels:
+  - Feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement. Describe the user problem and desired outcome without including private CSS, tokens, cookies, or account information.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to accomplish, and what makes it difficult today?
+      placeholder: A clear description of the user need.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior you would like StyleKit to provide.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Note any workarounds or competing approaches you tried.
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Primary browser
+      options:
+        - Chrome
+        - Edge
+        - Brave
+        - Firefox
+        - Other Chromium browser
+        - Browser-independent
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: stylekit_version
+    attributes:
+      label: StyleKit version
+      placeholder: "For example: 1.1.12"
+    validations:
+      required: true
+  - type: dropdown
+    id: distribution
+    attributes:
+      label: Distribution channel
+      options:
+        - GitHub release ZIP (Load unpacked)
+        - GitHub release CRX
+        - Built from source
+        - Browser store
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add mockups or examples after removing private URLs, CSS, tokens, and account details.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checks
+      options:
+        - label: I searched existing issues for similar requests.
+          required: true
+        - label: I removed secrets and private data from this request.
+          required: true

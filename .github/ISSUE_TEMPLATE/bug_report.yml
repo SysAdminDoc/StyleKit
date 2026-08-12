@@ -1,0 +1,103 @@
+name: Bug report
+description: Report a reproducible problem with StyleKit
+title: "[Bug]: "
+labels:
+  - Bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve StyleKit. Do not include access tokens, cookies, private URLs, imported CSS contents, or other sensitive data.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you were doing when it occurred.
+      placeholder: A clear, concise description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the smallest reliable sequence that demonstrates the problem.
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What did you expect StyleKit to do?
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Edge
+        - Brave
+        - Firefox
+        - Other Chromium browser
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: browser_version
+    attributes:
+      label: Browser version
+      placeholder: "For example: Chrome 140.0.7339.81"
+    validations:
+      required: true
+  - type: input
+    id: stylekit_version
+    attributes:
+      label: StyleKit version
+      description: Find this in the extension details page or release asset name.
+      placeholder: "For example: 1.1.12"
+    validations:
+      required: true
+  - type: dropdown
+    id: distribution
+    attributes:
+      label: Distribution channel
+      options:
+        - GitHub release ZIP (Load unpacked)
+        - GitHub release CRX
+        - Built from source
+        - Browser store
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: operating_system
+    attributes:
+      label: Operating system
+      placeholder: "For example: Windows 11 24H2"
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Privacy-safe diagnostics
+      description: Include relevant console errors or status text after removing CSS, tokens, cookies, account details, and private URLs.
+      render: shell
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add screenshots or other details that may help reproduce the problem. Redact personal information first.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checks
+      options:
+        - label: I searched existing issues for this problem.
+          required: true
+        - label: I removed secrets and private data from this report.
+          required: true
