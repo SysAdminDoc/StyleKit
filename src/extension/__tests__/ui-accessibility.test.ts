@@ -160,11 +160,15 @@ describe('extension UI accessibility', () => {
     );
     expect(document.activeElement?.textContent?.trim()).toBe('Next');
 
+    const leakedShortcut = vi.fn();
+    window.addEventListener('keydown', leakedShortcut);
     await dialog.trigger('keydown', { key: 'Escape' });
     await nextTick();
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
     expect(document.activeElement).toBe(opener);
     expect(setEditorOnboardingDone).toHaveBeenCalledWith(true);
+    expect(leakedShortcut).not.toHaveBeenCalled();
+    window.removeEventListener('keydown', leakedShortcut);
   });
 
   it('announces editor and options toast messages politely', async () => {

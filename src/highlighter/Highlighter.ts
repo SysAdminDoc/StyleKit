@@ -1,20 +1,25 @@
 import Overlay from './Overlay';
-import { getSelector } from '@stylekit/css';
+import { appendSelector, getSelector } from '@stylekit/css';
 
 type LayoutProperty = 'margin' | 'border' | 'padding' | 'height' | 'width';
 
 class Highlighter {
   overlay: Overlay | null;
-  onSelect: (selector: string) => void;
+  onSelect: (selector: string, additive: boolean) => void;
   lastSelector: string;
 
-  constructor({ onSelect }: { onSelect: (selector: string) => void }) {
+  constructor({
+    onSelect,
+  }: {
+    onSelect: (selector: string, additive: boolean) => void;
+  }) {
     this.overlay = null;
     this.onSelect = onSelect;
     this.lastSelector = '';
   }
 
-  startInspecting = (): void => {
+  startInspecting = (initialSelector = ''): void => {
+    this.lastSelector = initialSelector;
     this.addWindowListeners();
   };
 
@@ -70,14 +75,12 @@ class Highlighter {
 
       const selector = getSelector(event.target as HTMLElement);
 
-      // Shift+click: append to existing selector with comma (multi-select)
-      if (event.shiftKey && this.lastSelector) {
-        const combined = `${this.lastSelector}, ${selector}`;
-        this.lastSelector = combined;
-        this.onSelect(combined);
+      if (event.shiftKey) {
+        this.lastSelector = appendSelector(this.lastSelector, selector);
+        this.onSelect(this.lastSelector, true);
       } else {
         this.lastSelector = selector;
-        this.onSelect(selector);
+        this.onSelect(selector, false);
       }
     }
   };

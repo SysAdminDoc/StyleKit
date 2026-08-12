@@ -15,6 +15,8 @@ export {
   getClassBasedSelector,
   getTagNameBasedSelector,
   validateSelector,
+  splitSelectorList,
+  appendSelector,
 } from './selector';
 
 export { addGoogleWebFont, cleanGoogleWebFonts } from './webfont';

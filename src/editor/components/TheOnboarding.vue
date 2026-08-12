@@ -131,6 +131,7 @@ export default defineComponent({
 
   methods: {
     onKeyDown(event: KeyboardEvent): void {
+      event.stopPropagation();
       if (event.key === 'Escape') {
         event.preventDefault();
         this.dismiss();

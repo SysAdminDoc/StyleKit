@@ -112,7 +112,10 @@ const createFixtureServer = () => {
     response.end(`<!doctype html>
       <html>
         <head><title>StyleKit E2E Fixture</title></head>
-        <body><main id="fixture">StyleKit extension smoke fixture</main></body>
+        <body>
+          <main id="fixture">StyleKit extension smoke fixture</main>
+          <aside id="secondary">Secondary selector fixture</aside>
+        </body>
       </html>`);
   });
 
@@ -437,6 +440,29 @@ try {
       const host = document.querySelector('#stylebot');
       return Boolean(host?.shadowRoot?.querySelector('#stylebot-app'));
     });
+    const inspectorButton = fixturePage.locator(
+      '#stylebot .stylebot-inspector'
+    );
+    const onboardingOverlay = fixturePage.locator(
+      '#stylebot .onboarding-overlay'
+    );
+    if (await onboardingOverlay.isVisible().catch(() => false)) {
+      await fixturePage.keyboard.press('Escape');
+      await onboardingOverlay.waitFor({ state: 'hidden' });
+    }
+    assert.equal(await inspectorButton.getAttribute('aria-pressed'), 'true');
+    await fixturePage.locator('#fixture').click({ modifiers: ['Shift'] });
+    await fixturePage.locator('#secondary').click({ modifiers: ['Shift'] });
+    await fixturePage.waitForFunction(() => {
+      const host = document.querySelector('#stylebot');
+      const input = host?.shadowRoot?.querySelector('.css-selector-input');
+      return input?.value === '#fixture, #secondary';
+    });
+    assert.equal(await inspectorButton.getAttribute('aria-pressed'), 'true');
+    await inspectorButton.click();
+    console.log(
+      '✓ Built a deduplicated multi-selector with Shift-click while inspection stayed active'
+    );
     await fixturePage.keyboard.press('c');
     await fixturePage.waitForFunction(() => {
       const host = document.querySelector('#stylebot');

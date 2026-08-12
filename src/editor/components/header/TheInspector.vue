@@ -3,8 +3,8 @@
     class="stylebot-inspector"
     :class="{ active }"
     :disabled="disabled"
-    :title="`${t('inspect_description')} (i)`"
-    :aria-label="`${t('inspect_description')} (i)`"
+    :title="`${t('inspect_description')} (i). Shift+click to add elements.`"
+    :aria-label="`${t('inspect_description')} (i). Shift+click to add elements.`"
     :aria-pressed="active"
     :variant="active ? 'primary' : 'outline-secondary'"
     @click="toggle"
@@ -59,7 +59,7 @@ export default defineComponent({
       if (!newValue) {
         this.highlighter?.stopInspecting();
       } else {
-        this.highlighter?.startInspecting();
+        this.highlighter?.startInspecting(this.activeSelector);
       }
     },
 
@@ -74,7 +74,7 @@ export default defineComponent({
     this.highlighter = new Highlighter({ onSelect: this.select });
 
     if (this.active) {
-      this.highlighter?.startInspecting();
+      this.highlighter?.startInspecting(this.activeSelector);
     }
   },
 
@@ -89,13 +89,14 @@ export default defineComponent({
         this.$store.commit('setInspecting', false);
       } else {
         this.$store.commit('setInspecting', true);
-        this.$store.commit('setActiveSelector', '');
       }
     },
 
-    select(selector: string): void {
-      this.toggle();
+    select(selector: string, additive: boolean): void {
       this.$emit('select', selector);
+      if (!additive) {
+        this.$store.commit('setInspecting', false);
+      }
     },
   },
 });
