@@ -68,9 +68,11 @@
           :url="style.url"
           :modified-time="style.modifiedTime"
           :initial-enabled="style.enabled"
+          :initial-shadow-roots="style.shadowRoots"
           @save="saveStyle"
           @delete="deleteStyle(style)"
           @toggle="toggleStyle(style)"
+          @toggle-shadow-roots="setShadowRoots(style.url, $event)"
         />
       </b-col>
     </b-row>
@@ -143,6 +145,7 @@ export default defineComponent({
             css: stylesObj[url].css,
             enabled: stylesObj[url].enabled,
             readability: stylesObj[url].readability,
+            shadowRoots: stylesObj[url].shadowRoots ?? false,
             modifiedTime: stylesObj[url].modifiedTime,
           });
         }
@@ -162,9 +165,7 @@ export default defineComponent({
     },
 
     deleteStyle(style: Style): void {
-      this.savedStyles = JSON.parse(
-        JSON.stringify(this.$store.state.styles)
-      );
+      this.savedStyles = JSON.parse(JSON.stringify(this.$store.state.styles));
       this.$store.dispatch('deleteStyle', style.url);
       this.showToast(`Deleted style for ${style.url}`);
     },
@@ -177,6 +178,10 @@ export default defineComponent({
       }
     },
 
+    setShadowRoots(url: string, enabled: boolean): void {
+      this.$store.dispatch('setShadowRoots', { url, enabled });
+    },
+
     enableAll(): void {
       this.$store.dispatch('enableAllStyles');
     },
@@ -186,9 +191,7 @@ export default defineComponent({
     },
 
     deleteAll(): void {
-      this.savedStyles = JSON.parse(
-        JSON.stringify(this.$store.state.styles)
-      );
+      this.savedStyles = JSON.parse(JSON.stringify(this.$store.state.styles));
       this.$store.dispatch('deleteAllStyles');
       this.showToast('Deleted all styles');
     },

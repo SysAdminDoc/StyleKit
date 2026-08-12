@@ -13,6 +13,13 @@ export type SetStyle = {
   url: string;
   css: string;
   readability: boolean;
+  shadowRoots?: boolean;
+};
+
+export type SetStyleShadowRoots = {
+  name: 'SetStyleShadowRoots';
+  url: string;
+  enabled: boolean;
 };
 
 export type EnableStyle = {
@@ -188,6 +195,7 @@ export type GetDiagnosticsBundle = {
 
 type BackgroundPageMessage =
   | SetStyle
+  | SetStyleShadowRoots
   | EnableStyle
   | DisableStyle
   | GetAllStyles

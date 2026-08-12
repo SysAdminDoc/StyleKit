@@ -26,7 +26,7 @@ describe('style import schema', () => {
     });
 
     expect(parsed.styles['example.com'].css).toBe('body { color: red; }');
-    expect(parsed.version).toBe(1);
+    expect(parsed.version).toBe(2);
   });
 
   it('parses legacy raw style maps', () => {
@@ -45,7 +45,7 @@ describe('style import schema', () => {
   it('rejects unknown versions and malformed style maps', () => {
     expect(() =>
       parseStyleImportPayload({
-        version: 2,
+        version: 3,
         styles: {},
       })
     ).toThrow('Unsupported StyleKit import version');
@@ -79,7 +79,37 @@ describe('style import schema', () => {
     );
 
     expect(parsed.styles['example.com'].enabled).toBe(true);
+    expect(parsed.styles['example.com'].shadowRoots).toBe(false);
     expect(() => assertValidImportCss('')).toThrow('CSS is empty');
+  });
+
+  it('preserves the open-shadow-root opt-in and rejects malformed flags', () => {
+    const parsed = parseStyleImportPayload({
+      version: 2,
+      styles: {
+        'example.com': {
+          css: 'button { color: red; }',
+          enabled: true,
+          readability: false,
+          shadowRoots: true,
+          modifiedTime: timestamp,
+        },
+      },
+    });
+
+    expect(parsed.styles['example.com'].shadowRoots).toBe(true);
+    expect(() =>
+      parseStyleImportPayload({
+        version: 2,
+        styles: {
+          'example.com': {
+            css: 'button {}',
+            enabled: true,
+            shadowRoots: 'yes',
+          },
+        },
+      })
+    ).toThrow('Invalid format');
   });
 
   it('computes add change remove previews', () => {

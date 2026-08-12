@@ -1,13 +1,9 @@
-import {
-  StyleMap,
-  StyleSyncTombstoneMap,
-  Timestamp,
-} from '@stylekit/types';
+import { StyleMap, StyleSyncTombstoneMap, Timestamp } from '@stylekit/types';
 import { getCurrentTimestamp } from '@stylekit/utils';
 import { isValidStyleMap } from '../../utils/style-import';
 
 export type GoogleDriveStyleSyncPayload = {
-  version: 1;
+  version: 2;
   app: 'StyleKit';
   exportedAt: Timestamp;
   styles: StyleMap;
@@ -19,7 +15,7 @@ export type StyleSyncState = {
   tombstones: StyleSyncTombstoneMap;
 };
 
-const PAYLOAD_VERSION = 1;
+const PAYLOAD_VERSION = 2;
 
 export const isValidTombstoneMap = (
   data: unknown
@@ -66,9 +62,7 @@ export const createGoogleDriveSyncPayload = (
   };
 };
 
-export const parseGoogleDriveSyncPayload = (
-  data: unknown
-): StyleSyncState => {
+export const parseGoogleDriveSyncPayload = (data: unknown): StyleSyncState => {
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     throw new Error('Invalid sync file: expected a StyleKit backup object');
   }
@@ -86,7 +80,7 @@ export const parseGoogleDriveSyncPayload = (
     };
   }
 
-  if (record.version !== PAYLOAD_VERSION) {
+  if (record.version !== 1 && record.version !== PAYLOAD_VERSION) {
     throw new Error(`Unsupported StyleKit sync version: ${record.version}`);
   }
 

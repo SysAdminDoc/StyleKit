@@ -20,6 +20,7 @@ import {
   DiagnosticsBundle,
   GetDiagnosticsBundle,
   RecordDiagnostic,
+  SetStyleShadowRoots,
 } from '@stylekit/types';
 import {
   createImportPreview,
@@ -63,6 +64,18 @@ export const setAllStyles = (
     rollbackReason,
   };
 
+  return chrome.runtime.sendMessage(message);
+};
+
+export const setStyleShadowRoots = (
+  url: string,
+  enabled: boolean
+): Promise<void> => {
+  const message: SetStyleShadowRoots = {
+    name: 'SetStyleShadowRoots',
+    url,
+    enabled,
+  };
   return chrome.runtime.sendMessage(message);
 };
 

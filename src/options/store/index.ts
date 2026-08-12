@@ -21,6 +21,7 @@ import { setGoogleDriveSyncEnabled } from '@stylekit/sync';
 import {
   getAllStyles,
   setAllStyles,
+  setStyleShadowRoots,
   setOption,
   getAllOptions,
   getCommands,
@@ -128,11 +129,14 @@ export default createStore<State>({
         // validate by parsing
         safeParse(css);
         const styles = { ...state.styles };
+        const previousStyle =
+          styles[url] || (initialUrl ? styles[initialUrl] : undefined);
 
         styles[url] = {
           css,
-          readability: styles[url] ? styles[url].readability : false,
-          enabled: styles[url] ? styles[url].enabled : true,
+          readability: previousStyle?.readability ?? false,
+          shadowRoots: previousStyle?.shadowRoots ?? false,
+          enabled: previousStyle?.enabled ?? true,
           modifiedTime: getCurrentTimestamp(),
         };
 
@@ -177,6 +181,18 @@ export default createStore<State>({
       }
 
       setAllStyles(state.styles);
+    },
+
+    setShadowRoots(
+      { state },
+      { url, enabled }: { url: string; enabled: boolean }
+    ) {
+      if (state.styles[url]) {
+        state.styles[url].shadowRoots = enabled;
+        state.styles[url].modifiedTime = getCurrentTimestamp();
+      }
+
+      setStyleShadowRoots(url, enabled);
     },
 
     enableAllStyles({ state }) {
@@ -241,7 +257,11 @@ export default createStore<State>({
         return null;
       } catch (e) {
         const message =
-          e instanceof Error ? e.message : typeof e === 'string' ? e : 'Sync failed';
+          e instanceof Error
+            ? e.message
+            : typeof e === 'string'
+              ? e
+              : 'Sync failed';
         console.error('Google Drive sync error:', e);
         return message;
       }

@@ -38,10 +38,38 @@ describe('Google Drive sync payload', () => {
     );
     const parsed = parseGoogleDriveSyncPayload(payload);
 
+    expect(payload.version).toBe(2);
     expect(parsed.styles['example.com'].enabled).toBe(true);
     expect(parsed.tombstones['deleted.com']).toEqual({
       deletedTime: timestamp,
     });
+  });
+
+  it('accepts v1 payloads and round-trips the shadow-root opt-in in v2', () => {
+    expect(
+      parseGoogleDriveSyncPayload({
+        version: 1,
+        styles: {},
+        tombstones: {},
+      })
+    ).toEqual({ styles: {}, tombstones: {} });
+
+    const payload = createGoogleDriveSyncPayload(
+      {
+        'example.com': {
+          css: 'button { color: red; }',
+          enabled: true,
+          readability: false,
+          shadowRoots: true,
+          modifiedTime: timestamp,
+        },
+      },
+      {}
+    );
+
+    expect(
+      parseGoogleDriveSyncPayload(payload).styles['example.com'].shadowRoots
+    ).toBe(true);
   });
 
   it('rejects malformed tombstones', () => {

@@ -18,6 +18,17 @@
       </b-form-checkbox>
 
       <span class="style-timestamp">updated {{ formattedTimestamp }}</span>
+
+      <b-form-checkbox
+        v-model="shadowRoots"
+        class="shadow-root-toggle"
+        @update:model-value="$emit('toggle-shadow-roots', $event)"
+      >
+        Include open shadow roots
+      </b-form-checkbox>
+      <small class="shadow-root-help">
+        Closed shadow roots are browser-protected and cannot be styled.
+      </small>
     </b-col>
 
     <b-col cols="5">
@@ -69,17 +80,20 @@ export default defineComponent({
     },
     initialEnabled: Boolean,
     initialReadability: Boolean,
+    initialShadowRoots: Boolean,
   },
 
   data(): {
     enabled: boolean;
     edit: boolean;
     readability: boolean;
+    shadowRoots: boolean;
   } {
     return {
       edit: false,
       enabled: this.initialEnabled,
       readability: this.initialReadability,
+      shadowRoots: this.initialShadowRoots,
     };
   },
 
@@ -98,6 +112,10 @@ export default defineComponent({
 
     initialReadability(newVal: boolean): void {
       this.readability = newVal;
+    },
+
+    initialShadowRoots(newVal: boolean): void {
+      this.shadowRoots = newVal;
     },
   },
 });
@@ -125,5 +143,17 @@ export default defineComponent({
   font-size: 12px;
   font-style: italic;
   margin-left: 24px;
+}
+
+.shadow-root-toggle {
+  margin-top: 8px;
+  margin-left: 24px;
+  font-size: 13px;
+}
+
+.shadow-root-help {
+  display: block;
+  margin-left: 48px;
+  opacity: 0.65;
 }
 </style>

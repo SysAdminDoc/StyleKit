@@ -5,12 +5,10 @@ import { t } from '@stylekit/i18n';
 
 import { State } from '../store';
 import TheStylebotApp from '../components/TheStylebotApp.vue';
-import BIcon from '../../shared/components/BIcon.vue';
 import { stopKeyboardPropagation } from '../../shared/utils/accessibility';
+import { installBootstrap } from '../../shared/bootstrap';
 
 import '../index.scss';
-
-import { createBootstrap } from 'bootstrap-vue-next';
 
 const injectCss = (shadowRoot: ShadowRoot): void => {
   // Reset all inherited CSS properties at the shadow host boundary so that
@@ -98,8 +96,7 @@ const initEditor = (store: Store<State>): void => {
     },
   });
 
-  app.use(createBootstrap());
-  app.component('BIcon', BIcon);
+  installBootstrap(app);
   app.use(store);
   app.component('VueDraggableResizable', VueDraggableResizable);
   app.config.globalProperties.t = t;

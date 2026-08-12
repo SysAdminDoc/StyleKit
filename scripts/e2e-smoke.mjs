@@ -249,7 +249,7 @@ try {
   console.log('✓ Rendered and navigated the options page');
 
   const styleKey = fixtureServer.url;
-  const css = `#fixture { color: ${expectedColor} !important; }`;
+  const css = `#fixture, #shadow-fixture { color: ${expectedColor} !important; }`;
   await popupPage.evaluate(
     async ({ url, cssText }) => {
       await chrome.runtime.sendMessage({
@@ -259,6 +259,7 @@ try {
             css: cssText,
             enabled: true,
             readability: false,
+            shadowRoots: true,
             modifiedTime: new Date().toISOString(),
           },
         },
@@ -305,8 +306,65 @@ try {
       .evaluate(element => getComputedStyle(element).color),
     expectedColor
   );
+  await fixturePage.evaluate(() => {
+    const host = document.createElement('section');
+    host.id = 'shadow-host';
+    const root = host.attachShadow({ mode: 'open' });
+    const target = document.createElement('button');
+    target.id = 'shadow-fixture';
+    target.textContent = 'Shadow fixture';
+    root.appendChild(target);
+    document.body.appendChild(host);
+  });
+  await fixturePage.waitForFunction(color => {
+    const host = document.querySelector('#shadow-host');
+    const target = host?.shadowRoot?.querySelector('#shadow-fixture');
+    return target && getComputedStyle(target).color === color;
+  }, expectedColor);
+  await optionsPage.reload();
+  await optionsPage
+    .locator('.navigation-item')
+    .filter({ hasText: 'Styles' })
+    .click();
+  const savedStyleRow = optionsPage.locator('.style').filter({
+    hasText: styleKey,
+  });
+  await savedStyleRow.getByText('Include open shadow roots').waitFor();
+  assert.equal(
+    await savedStyleRow.getByText('Closed shadow roots').isVisible(),
+    true
+  );
+  const shadowRootControl = await savedStyleRow.evaluate(element => ({
+    tag: element.tagName,
+    className: element.className,
+    html: element.innerHTML.slice(0, 1000),
+    controls: Array.from(
+      element.querySelectorAll(
+        'input, label, button, [role="checkbox"], [role="switch"]'
+      )
+    ).map(control => ({
+      tag: control.tagName,
+      text: control.textContent?.trim(),
+      type: control.getAttribute('type'),
+      checked:
+        control instanceof HTMLInputElement ? control.checked : undefined,
+      ariaChecked: control.getAttribute('aria-checked'),
+    })),
+  }));
+  assert(
+    shadowRootControl.controls.some(
+      control => control.type === 'checkbox' && control.checked
+    ) ||
+      shadowRootControl.controls.some(
+        control => control.ariaChecked === 'true'
+      ),
+    `Shadow-root option was not checked: ${JSON.stringify(shadowRootControl)}`
+  );
   console.log(
     '✓ Persisted and applied test CSS through the real content/background path'
+  );
+  console.log(
+    '✓ Applied opted-in CSS to a dynamic open shadow root and rendered its options state'
   );
 
   if (requiresManualContentScriptInjection) {

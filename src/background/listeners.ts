@@ -10,6 +10,7 @@ import {
   OpenOptionsPage,
   OpenDonatePage,
   SetStyle,
+  SetStyleShadowRoots,
   MoveStyle,
   GetAllStyles,
   SetAllStyles,
@@ -173,6 +174,9 @@ chrome.runtime.onMessage.addListener(
 
       case 'SetStyle':
         SetStyle(message, sender);
+        break;
+      case 'SetStyleShadowRoots':
+        SetStyleShadowRoots(message);
         break;
       case 'MoveStyle':
         MoveStyle(message);

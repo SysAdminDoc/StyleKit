@@ -225,4 +225,14 @@ describe('extension UI accessibility', () => {
       true
     );
   });
+
+  it('labels shadow-root styling as open-root only', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/options/components/styles/Style.vue'),
+      'utf8'
+    );
+    expect(source).toContain('Include open shadow roots');
+    expect(source).toContain('Closed shadow roots');
+    expect(source).toContain('cannot be styled');
+  });
 });

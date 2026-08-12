@@ -20,6 +20,7 @@ export type GetAllStylesResponse = {
     css: string;
     enabled: boolean;
     readability: boolean;
+    shadowRoots?: boolean;
     modifiedTime: Timestamp;
   };
 };

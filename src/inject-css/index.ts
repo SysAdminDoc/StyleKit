@@ -4,6 +4,7 @@
  */
 import { injectCSSIntoDocument } from '@stylekit/css';
 import { apply as applyReadability } from '@stylekit/readability';
+import { shadowRootStyleManager } from './shadow-root-styles';
 
 import {
   GetStylesForPage,
@@ -25,6 +26,7 @@ const injectCss = (
     (response: GetStylesForPageResponse) => {
       if (response) {
         const { styles, defaultStyle } = response;
+        shadowRootStyleManager.applyStyles(styles);
 
         if (!response.userOriginApplied) {
           styles.forEach(style => {
@@ -67,7 +69,9 @@ const run = () => {
 run();
 
 chrome.runtime.onMessage.addListener((message: TabMessage) => {
-  if (message.name === 'PreviewStyle') {
+  if (message.name === 'ApplyStylesToTab') {
+    shadowRootStyleManager.applyStyles(message.styles);
+  } else if (message.name === 'PreviewStyle') {
     const id = `stylekit-preview-${message.id}`;
     let el = document.getElementById(id) as HTMLStyleElement | null;
     if (!el) {

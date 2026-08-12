@@ -220,8 +220,15 @@ export const getStylesForPage = (
     const rawCss = allStyles[url].css || '';
     const css = important ? appendImportantToDeclarations(rawCss) : rawCss;
 
-    const { enabled, readability, modifiedTime } = allStyles[url];
-    const style = { url, css, enabled, readability, modifiedTime };
+    const { enabled, readability, shadowRoots, modifiedTime } = allStyles[url];
+    const style = {
+      url,
+      css,
+      enabled,
+      readability,
+      shadowRoots: shadowRoots ?? false,
+      modifiedTime,
+    };
 
     if (url !== '*') {
       if (!defaultStyle || url.length > defaultStyle.url.length) {
@@ -364,9 +371,11 @@ export const setAll = async (
 export const set = async (
   url: string,
   css: string,
-  readability: boolean
+  readability: boolean,
+  shadowRoots?: boolean
 ): Promise<void> => {
   const styles = await getAll();
+  const existingStyle = styles[url];
 
   if (!css) {
     await recordDeletedStyleUrls([url]);
@@ -375,6 +384,7 @@ export const set = async (
     styles[url] = {
       css,
       readability,
+      shadowRoots: shadowRoots ?? existingStyle?.shadowRoots ?? false,
       enabled: true,
       modifiedTime: getCurrentTimestamp(),
     };
@@ -418,11 +428,24 @@ export const setReadability = async (
       css: '',
       enabled: true,
       readability: value,
+      shadowRoots: false,
       modifiedTime: getCurrentTimestamp(),
     };
   }
 
   return setAll(styles);
+};
+
+export const setShadowRoots = async (
+  url: string,
+  value: boolean
+): Promise<void> => {
+  const styles = await getAll();
+  if (!styles[url]) return;
+
+  styles[url].shadowRoots = value;
+  styles[url].modifiedTime = getCurrentTimestamp();
+  await setAll(styles);
 };
 
 export const move = async (src: string, dest: string): Promise<void> => {

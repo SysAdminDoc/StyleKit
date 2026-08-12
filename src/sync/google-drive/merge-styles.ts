@@ -35,6 +35,7 @@ const normalizeStyle = (style: StyleWithoutUrl): StyleWithoutUrl => ({
   css: style.css,
   enabled: style.enabled,
   readability: style.readability ?? false,
+  shadowRoots: style.shadowRoots ?? false,
   modifiedTime: style.modifiedTime,
 });
 
@@ -42,7 +43,8 @@ const styleChanged = (
   local: StyleWithoutUrl,
   remote: StyleWithoutUrl
 ): boolean =>
-  JSON.stringify(normalizeStyle(local)) !== JSON.stringify(normalizeStyle(remote));
+  JSON.stringify(normalizeStyle(local)) !==
+  JSON.stringify(normalizeStyle(remote));
 
 const eventRank = (event: MergeEvent): number =>
   event.kind === 'tombstone' ? 2 : 1;

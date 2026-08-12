@@ -76,6 +76,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **Narrow extension resource exposure** -- content-script assets are allowlisted exactly and Chrome builds use dynamic web-accessible URLs
 - **USER-origin CSS application** -- saved styles and previews use browser-managed USER-origin CSS insertion when available, with DOM fallback for restricted pages
 - **Frame-aware matching** -- child frames match their own URL, while `about:blank` and `srcdoc` frames inherit the parent referrer only when it is valid
+- **Open shadow-root styling** -- opt individual styles into web-component shadow roots; closed roots remain browser-protected
 
 ## Installation
 
@@ -113,7 +114,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (25/25 suites, 139 tests)
+npm test               # Run tests (27/27 suites, 148 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npx playwright install chromium # One-time E2E browser install

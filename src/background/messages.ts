@@ -17,6 +17,7 @@ import {
   createStylesRollbackSnapshot,
   getLastStylesRollbackSnapshot,
   restoreLastStylesRollbackSnapshot,
+  setShadowRoots,
 } from './styles';
 
 import {
@@ -31,6 +32,7 @@ import {
   DisableStyle as DisableStyleType,
   EnableStyle as EnableStyleType,
   SetStyle as SetStyleType,
+  SetStyleShadowRoots as SetStyleShadowRootsType,
   GetStylesForPage as GetStylesForPageType,
   GetStylesForIframe as GetStylesForIframeType,
   MoveStyle as MoveStyleType,
@@ -114,7 +116,7 @@ export const SetStyle = async (
   sender?: chrome.runtime.MessageSender
 ): Promise<void> => {
   const previousStyle = await get(message.url);
-  await set(message.url, message.css, message.readability);
+  await set(message.url, message.css, message.readability, message.shadowRoots);
 
   if (sender?.tab?.id !== undefined) {
     await replaceUserOriginCss(
@@ -126,7 +128,26 @@ export const SetStyle = async (
       previousStyle?.css,
       message.css
     );
+    const allStyles = await getAll();
+    const pageStyles = getStylesForPage(
+      sender.tab.url || message.url,
+      allStyles
+    );
+    chrome.tabs.sendMessage(sender.tab.id, {
+      name: 'ApplyStylesToTab',
+      ...pageStyles,
+      userOriginApplied: true,
+    });
+  } else {
+    await applyStylesToAllTabs();
   }
+};
+
+export const SetStyleShadowRoots = async (
+  message: SetStyleShadowRootsType
+): Promise<void> => {
+  await setShadowRoots(message.url, message.enabled);
+  await applyStylesToAllTabs();
 };
 
 export const GetAllStyles = async (

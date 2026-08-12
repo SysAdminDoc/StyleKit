@@ -2,7 +2,7 @@ import { safeParse } from '@stylekit/css';
 import { StyleMap, StyleWithoutUrl } from '@stylekit/types';
 
 export type StyleImportEnvelope = {
-  version: 1;
+  version: 2;
   app: 'StyleKit';
   exportedAt: string;
   styles: StyleMap;
@@ -21,7 +21,7 @@ export type StyleImportPreview = {
   diff: StyleImportDiff;
 };
 
-const VERSIONED_SCHEMA = 1;
+const VERSIONED_SCHEMA = 2;
 
 export const isSafeCssContentType = (contentType: string | null): boolean => {
   if (!contentType) return true;
@@ -38,6 +38,7 @@ const normalizeStyle = (style: StyleWithoutUrl): StyleWithoutUrl => ({
   css: style.css,
   enabled: style.enabled,
   readability: style.readability ?? false,
+  shadowRoots: style.shadowRoots ?? false,
   modifiedTime: style.modifiedTime,
 });
 
@@ -55,7 +56,8 @@ export const isValidStyleMap = (data: unknown): data is StyleMap => {
 
   for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
     if (typeof key !== 'string' || !key.trim()) return false;
-    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    if (!value || typeof value !== 'object' || Array.isArray(value))
+      return false;
 
     const style = value as Record<string, unknown>;
     if (typeof style.css !== 'string') return false;
@@ -63,6 +65,12 @@ export const isValidStyleMap = (data: unknown): data is StyleMap => {
     if (
       typeof style.readability !== 'boolean' &&
       style.readability !== undefined
+    ) {
+      return false;
+    }
+    if (
+      typeof style.shadowRoots !== 'boolean' &&
+      style.shadowRoots !== undefined
     ) {
       return false;
     }
@@ -86,7 +94,11 @@ export const parseStyleImportPayload = (data: unknown): StyleImportEnvelope => {
   const hasVersionedSchema = 'version' in record;
   const styles = hasVersionedSchema ? record.styles : record;
 
-  if (hasVersionedSchema && record.version !== VERSIONED_SCHEMA) {
+  if (
+    hasVersionedSchema &&
+    record.version !== 1 &&
+    record.version !== VERSIONED_SCHEMA
+  ) {
     throw new Error(`Unsupported StyleKit import version: ${record.version}`);
   }
 
@@ -146,6 +158,7 @@ export const createSingleStyleImport = (
       css,
       enabled: true,
       readability: false,
+      shadowRoots: false,
       modifiedTime,
     },
   });
