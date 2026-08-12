@@ -35,20 +35,26 @@ const storedRecipe = {
   updatedAt: 'first',
 };
 
-const mountRecipes = () =>
-  shallowMount(TheSiteRecipes, {
+const mountRecipes = (url = 'https://www.example.com/page') => {
+  const dispatch = vi.fn();
+  const wrapper = shallowMount(TheSiteRecipes, {
     global: {
+      stubs: {
+        'b-button': { template: '<button><slot /></button>' },
+      },
       mocks: {
         $store: {
           state: {
             css: 'body { color: red; }',
-            url: 'https://www.example.com/page',
+            url,
           },
-          dispatch: vi.fn(),
+          dispatch,
         },
       },
     },
   });
+  return { dispatch, wrapper };
+};
 
 describe('user-created site recipes', () => {
   beforeEach(() => {
@@ -58,7 +64,7 @@ describe('user-created site recipes', () => {
   });
 
   it('loads user recipes beside the built-in collections', async () => {
-    const wrapper = mountRecipes();
+    const { wrapper } = mountRecipes();
     await flushPromises();
 
     expect(wrapper.text()).toContain('My recipes');
@@ -68,7 +74,7 @@ describe('user-created site recipes', () => {
 
   it('prefills and saves a reusable recipe from the current page', async () => {
     vi.mocked(saveUserRecipe).mockResolvedValue([storedRecipe]);
-    const wrapper = mountRecipes();
+    const { wrapper } = mountRecipes();
     await flushPromises();
 
     await wrapper.find('.recipe-management-actions button').trigger('click');
@@ -96,7 +102,7 @@ describe('user-created site recipes', () => {
 
   it('adds only a pinned GitHub marketplace source', async () => {
     vi.mocked(addRecipeMarketplaceSource).mockResolvedValue([]);
-    const wrapper = mountRecipes();
+    const { wrapper } = mountRecipes();
     await flushPromises();
 
     await wrapper.get('.marketplace-section button').trigger('click');
@@ -114,5 +120,19 @@ describe('user-created site recipes', () => {
       ref: 'v1.2.3',
     });
     expect(wrapper.text()).toContain('Pinned marketplace source added.');
+  });
+
+  it('suggests and applies the primary recipe for the current domain', async () => {
+    const { dispatch, wrapper } = mountRecipes(
+      'https://studio.youtube.com/channel/example'
+    );
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("You're on YouTube — try Clean YouTube");
+    await wrapper.get('.site-suggestion button').trigger('click');
+    expect(dispatch).toHaveBeenCalledWith(
+      'applyCss',
+      expect.objectContaining({ css: expect.stringContaining('#comments') })
+    );
   });
 });

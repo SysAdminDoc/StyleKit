@@ -197,7 +197,7 @@
             <div class="section-header-text">
               <span class="section-title">Site Recipes</span>
               <span class="section-hint">
-                One-click tweaks for popular sites
+                {{ siteRecipeHint }}
               </span>
             </div>
             <b-icon
@@ -253,6 +253,7 @@ import TheComputedStyles from './TheComputedStyles.vue';
 import TheSnippetLibrary from './TheSnippetLibrary.vue';
 import TheSiteRecipes from './TheSiteRecipes.vue';
 import TheMediaQueryWrapper from './TheMediaQueryWrapper.vue';
+import { getSiteRecipeSuggestion } from '../utils/site-recipes';
 
 export default defineComponent({
   name: 'TheBasicEditor',
@@ -277,6 +278,13 @@ export default defineComponent({
   },
 
   computed: {
+    siteRecipeHint(): string {
+      const suggestion = getSiteRecipeSuggestion(this.$store.state.url || '');
+      return suggestion
+        ? `You're on ${suggestion.siteName} — try ${suggestion.recipe.name}`
+        : 'One-click tweaks for popular sites';
+    },
+
     text: {
       get(): boolean {
         return this.$store.state.options.basicModeSections.text;

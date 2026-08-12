@@ -11,6 +11,16 @@ const firefoxDist = resolve(root, 'firefox-dist');
 const profile = await mkdtemp(join(tmpdir(), 'stylekit-e2e-'));
 const expectedColor = 'rgb(12, 34, 56)';
 const expectedReloadColor = 'rgb(78, 90, 123)';
+const fixtureHtml = `<!doctype html>
+  <html>
+    <head><title>StyleKit E2E Fixture</title></head>
+    <body>
+      <section id="layout-context" style="display: flex; gap: 12px; font-family: 'Roboto Flex'">
+        <main id="fixture">StyleKit extension smoke fixture</main>
+        <aside id="secondary">Secondary selector fixture</aside>
+      </section>
+    </body>
+  </html>`;
 
 const readManifest = async directory =>
   JSON.parse(await readFile(resolve(directory, 'manifest.json'), 'utf8'));
@@ -124,16 +134,7 @@ const createFixtureServer = () => {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'no-store',
     });
-    response.end(`<!doctype html>
-      <html>
-        <head><title>StyleKit E2E Fixture</title></head>
-        <body>
-          <section id="layout-context" style="display: flex; gap: 12px; font-family: 'Roboto Flex'">
-            <main id="fixture">StyleKit extension smoke fixture</main>
-            <aside id="secondary">Secondary selector fixture</aside>
-          </section>
-        </body>
-      </html>`);
+    response.end(fixtureHtml);
   });
 
   return new Promise((resolveServer, reject) => {
@@ -143,7 +144,7 @@ const createFixtureServer = () => {
       assert(address && typeof address === 'object');
       resolveServer({
         server,
-        url: `http://stylekit.test:${address.port}/fixture`,
+        url: 'https://www.youtube.com/watch?v=stylekit-e2e',
         sourceUrl: `http://127.0.0.1:${address.port}/live.css`,
         setLiveCss: css => {
           liveCss = css;
@@ -193,7 +194,6 @@ try {
       `--disable-extensions-except=${chromeDist}`,
       `--load-extension=${chromeDist}`,
       '--disable-features=ExtensionsMenuAccessControl',
-      '--host-resolver-rules=MAP stylekit.test 127.0.0.1',
       '--no-proxy-server',
       ...(process.env.STYLEKIT_E2E_BROWSER_LOG === '1'
         ? ['--enable-logging=stderr', '--vmodule=extension*=2']
@@ -216,6 +216,13 @@ try {
   assert.match(extensionId, /^[a-p]{32}$/);
   console.log(`✓ Loaded StyleKit ${extensionId} in a clean Chromium profile`);
 
+  await context.route('https://www.youtube.com/**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/html; charset=utf-8',
+      body: fixtureHtml,
+    })
+  );
   const fixturePage = await context.newPage();
   const fixtureErrors = [];
   const fixtureConsoleErrors = [];
@@ -289,6 +296,7 @@ try {
   console.log('✓ Rendered and navigated the options page');
 
   const styleKey = fixtureServer.url;
+  const fixtureHostname = new URL(styleKey).hostname;
   const css = `#fixture, #shadow-fixture { color: ${expectedColor} !important; }`;
   await popupPage.evaluate(
     async ({ url, cssText, sourceUrl }) => {
@@ -693,7 +701,15 @@ try {
     const recipesSection = fixturePage
       .locator('#stylebot .section')
       .filter({ hasText: 'Site Recipes' });
+    await recipesSection
+      .locator('.collapse-btn')
+      .getByText("You're on YouTube — try Clean YouTube")
+      .waitFor();
     await recipesSection.locator('.collapse-btn').click();
+    await recipesSection
+      .getByRole('region', { name: 'Suggested recipe for YouTube' })
+      .getByRole('button', { name: 'Apply suggestion' })
+      .waitFor();
     await recipesSection.getByRole('button', { name: 'Add source' }).click();
     await recipesSection
       .getByLabel('Marketplace repository')
@@ -749,7 +765,7 @@ try {
       })
     );
     console.log(
-      '✓ Enforced marketplace pins and created, applied, persisted, and exported a user recipe'
+      '✓ Rendered domain suggestions, enforced marketplace pins, and shared a user recipe'
     );
     await fixturePage.getByRole('button', { name: 'View changes' }).click();
     const savedDiff = fixturePage.getByRole('dialog', { name: 'CSS Changes' });
@@ -800,7 +816,9 @@ try {
     await monacoTheme.selectOption('sepia');
     const monacoLint = monacoFrame.getByLabel('CSS lint preset');
     await monacoFrame
-      .locator('select[aria-label="CSS lint preset"][title*="stylekit.test"]')
+      .locator(
+        `select[aria-label="CSS lint preset"][title*="${fixtureHostname}"]`
+      )
       .waitFor();
     await monacoLint.selectOption('strict');
     await monacoFrame
@@ -831,7 +849,7 @@ try {
       ).replaceAll('\r\n', '\n'),
       '.prettier-smoke {\n  color: red;\n}\n'
     );
-    await serviceWorker.evaluate(async () => {
+    await serviceWorker.evaluate(async hostname => {
       const deadline = Date.now() + 5000;
       while (Date.now() < deadline) {
         const stored = await chrome.storage.local.get([
@@ -839,8 +857,7 @@ try {
           'stylekit-monaco-format-on-save',
         ]);
         if (
-          stored['stylekit-monaco-lint']?.sitePresets?.['stylekit.test'] ===
-            'strict' &&
+          stored['stylekit-monaco-lint']?.sitePresets?.[hostname] === 'strict' &&
           stored['stylekit-monaco-format-on-save'] === true
         ) {
           return;
@@ -848,7 +865,7 @@ try {
         await new Promise(resolveWait => setTimeout(resolveWait, 50));
       }
       throw new Error('Monaco lint/format settings were not persisted');
-    });
+    }, fixtureHostname);
     await fixturePage.locator('#stylebot iframe').evaluate(iframe => {
       const src = iframe.getAttribute('src');
       if (!src) throw new Error('Monaco iframe source is missing');
@@ -858,7 +875,10 @@ try {
     assert.equal(await monacoTheme.inputValue(), 'sepia');
     await monacoLint.waitFor();
     assert.equal(await monacoLint.inputValue(), 'strict');
-    assert.match(await monacoLint.getAttribute('title'), /stylekit\.test/);
+    assert(
+      (await monacoLint.getAttribute('title'))?.includes(fixtureHostname),
+      'Reloaded Monaco lint override should identify the fixture hostname'
+    );
     await prettierOnSave.waitFor();
     assert(await prettierOnSave.isChecked());
     console.log(

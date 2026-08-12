@@ -1,5 +1,29 @@
 <template>
   <div class="site-recipes">
+    <div
+      v-if="siteSuggestion"
+      class="site-suggestion"
+      role="region"
+      :aria-label="`Suggested recipe for ${siteSuggestion.siteName}`"
+    >
+      <div class="site-suggestion-copy">
+        <strong>
+          You're on {{ siteSuggestion.siteName }} — try
+          {{ siteSuggestion.recipe.name }}
+        </strong>
+        <span>{{ siteSuggestion.recipe.description }}</span>
+      </div>
+      <b-button
+        size="sm"
+        variant="primary"
+        @mouseenter="previewRecipe(siteSuggestion.recipe)"
+        @mouseleave="removePreview"
+        @click="installRecipe(siteSuggestion.recipe)"
+      >
+        Apply suggestion
+      </b-button>
+    </div>
+
     <div class="recipe-section">
       <div class="recipe-section-heading">
         <div class="recipe-section-title">My recipes</div>
@@ -185,10 +209,12 @@
       </div>
     </div>
 
-    <div v-if="matchingRecipes.length > 0" class="recipe-section">
-      <div class="recipe-section-title">For this site</div>
+    <div v-if="additionalSiteRecipes.length > 0" class="recipe-section">
+      <div class="recipe-section-title">
+        More for {{ siteSuggestion?.siteName || 'this site' }}
+      </div>
       <div
-        v-for="recipe in matchingRecipes"
+        v-for="recipe in additionalSiteRecipes"
         :key="recipe.name"
         class="recipe-item"
       >
@@ -264,96 +290,12 @@ import {
   pickUserRecipeFile,
 } from '../utils/user-recipes';
 import { normalizeRecipeSite } from '../../utils/user-recipes';
-
-interface Recipe {
-  name: string;
-  description: string;
-  sites: string[];
-  css: string;
-}
-
-const siteRecipes: Recipe[] = [
-  // YouTube
-  {
-    name: 'Clean YouTube',
-    description: 'Hide comments, sidebar recommendations, and end screens',
-    sites: ['youtube.com'],
-    css: '#comments { display: none; }\n#related { display: none; }\n.ytp-ce-element { display: none; }\n.ytp-cards-button { display: none; }',
-  },
-  {
-    name: 'YouTube Focus Mode',
-    description: 'Just the video - hide everything else',
-    sites: ['youtube.com'],
-    css: '#masthead-container { display: none; }\n#related { display: none; }\n#comments { display: none; }\n#info { display: none; }\n#meta { display: none; }\n#secondary { display: none; }',
-  },
-  {
-    name: 'YouTube Dark Sidebar',
-    description: 'Darken the sidebar and guide',
-    sites: ['youtube.com'],
-    css: 'ytd-mini-guide-renderer { background: #0f0f0f; }\nytd-guide-renderer { background: #0f0f0f; }',
-  },
-  // Reddit
-  {
-    name: 'Clean Reddit',
-    description: 'Hide sidebar, promoted posts, and awards',
-    sites: ['reddit.com'],
-    css: '[data-testid="frontpage-sidebar"] { display: none; }\n[data-testid="post-container"] shreddit-post[is-promoted] { display: none; }\n.award-button { display: none; }',
-  },
-  {
-    name: 'Reddit Wide Mode',
-    description: 'Make content full width',
-    sites: ['reddit.com'],
-    css: '.ListingLayout-outerContainer { max-width: 100%; }\n.ListingLayout-backgroundContainer { max-width: 100%; }',
-  },
-  // Twitter/X
-  {
-    name: 'Clean Twitter/X',
-    description: 'Hide trending sidebar, who to follow, and promoted tweets',
-    sites: ['twitter.com', 'x.com'],
-    css: '[data-testid="sidebarColumn"] { display: none; }\n[data-testid="placementTracking"] { display: none; }',
-  },
-  {
-    name: 'Twitter/X Focus',
-    description: 'Maximize timeline width',
-    sites: ['twitter.com', 'x.com'],
-    css: '[data-testid="sidebarColumn"] { display: none; }\n[data-testid="primaryColumn"] { max-width: 100%; }',
-  },
-  // GitHub
-  {
-    name: 'GitHub Wide Code',
-    description: 'Make code and file views full width',
-    sites: ['github.com'],
-    css: '.container-xl { max-width: 100%; }\n.js-repo-pjax-container .container-xl { padding-left: 16px; padding-right: 16px; }',
-  },
-  // Google
-  {
-    name: 'Google Clean Search',
-    description: 'Hide ads and sidebar from Google search results',
-    sites: ['google.com'],
-    css: '#tads { display: none; }\n#tadsb { display: none; }\n#rhs { display: none; }\n.commercial-unit-desktop-top { display: none; }',
-  },
-  // Amazon
-  {
-    name: 'Amazon Clean',
-    description: 'Hide sponsored products and ad placements',
-    sites: ['amazon.com'],
-    css: '.AdHolder { display: none; }\n[data-cel-widget*="sponsored"] { display: none; }\n.s-sponsored-label-info-icon { display: none; }',
-  },
-  // Wikipedia
-  {
-    name: 'Wikipedia Reader',
-    description: 'Wider content, larger text, cleaner layout',
-    sites: ['wikipedia.org'],
-    css: '#mw-content-text { font-size: 18px; line-height: 1.7; }\n.mw-body { max-width: 900px; margin: 0 auto; }',
-  },
-  // Facebook
-  {
-    name: 'Facebook Clean',
-    description: 'Hide sponsored posts and right sidebar',
-    sites: ['facebook.com'],
-    css: '[data-pagelet="RightRail"] { display: none; }\n[aria-label="Sponsored"] { display: none; }',
-  },
-];
+import {
+  findSiteRecipes,
+  getSiteRecipeSuggestion,
+  type SiteRecipe as Recipe,
+  type SiteRecipeSuggestion,
+} from '../utils/site-recipes';
 
 const universalRecipes: Recipe[] = [
   {
@@ -454,10 +396,15 @@ export default defineComponent({
     },
 
     matchingRecipes(): Recipe[] {
-      const url = this.currentUrl.toLowerCase();
-      return siteRecipes.filter(recipe =>
-        recipe.sites.some(site => url.includes(site))
-      );
+      return findSiteRecipes(this.currentUrl);
+    },
+
+    siteSuggestion(): SiteRecipeSuggestion | null {
+      return getSiteRecipeSuggestion(this.currentUrl);
+    },
+
+    additionalSiteRecipes(): Recipe[] {
+      return this.matchingRecipes.slice(1);
     },
 
     universalRecipes(): Recipe[] {
@@ -682,6 +629,29 @@ export default defineComponent({
 <style lang="scss" scoped>
 .site-recipes {
   font-size: 13px;
+}
+
+.site-suggestion {
+  align-items: center;
+  background: rgba(137, 180, 250, 0.12);
+  border: 1px solid rgba(137, 180, 250, 0.45);
+  border-radius: 6px;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 9px;
+}
+
+.site-suggestion-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  span {
+    color: #a6adc8;
+    font-size: 11px;
+  }
 }
 
 .recipe-section {
