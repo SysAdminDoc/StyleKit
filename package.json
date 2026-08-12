@@ -24,6 +24,7 @@
     "start:firefox": "web-ext run --source-dir ./firefox-dist/",
     "lint": "eslint --ext .js,.ts,.vue src",
     "lint:fix": "npm run lint -- --fix",
+    "release:artifacts": "node scripts/release-artifacts.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
