@@ -6,6 +6,7 @@ import { t } from '@stylekit/i18n';
 import { State } from '../store';
 import TheStylebotApp from '../components/TheStylebotApp.vue';
 import BIcon from '../../shared/components/BIcon.vue';
+import { stopKeyboardPropagation } from '../../shared/utils/accessibility';
 
 import '../index.scss';
 
@@ -16,7 +17,8 @@ const injectCss = (shadowRoot: ShadowRoot): void => {
   // styles installed on the page cannot bleed into the editor UI.
   const resetEl = document.createElement('style');
   resetEl.setAttribute('id', 'stylebot-host-reset');
-  resetEl.textContent = ':host { all: initial !important; display: block !important; }';
+  resetEl.textContent =
+    ':host { all: initial !important; display: block !important; }';
   shadowRoot.appendChild(resetEl);
 
   const url = chrome.runtime.getURL('editor/index.css');
@@ -38,7 +40,11 @@ const syncCounterFilter = (host: HTMLElement): void => {
   const htmlFilter = getComputedStyle(document.documentElement).filter;
   const bodyFilter = getComputedStyle(document.body).filter;
   const pageFilter =
-    htmlFilter !== 'none' ? htmlFilter : bodyFilter !== 'none' ? bodyFilter : null;
+    htmlFilter !== 'none'
+      ? htmlFilter
+      : bodyFilter !== 'none'
+        ? bodyFilter
+        : null;
 
   if (pageFilter) {
     host.style.setProperty('filter', pageFilter, 'important');
@@ -79,19 +85,7 @@ const initEditor = (store: Store<State>): void => {
   stylebotApp.id = 'stylebot-app';
   shadowRoot.appendChild(stylebotApp);
 
-  // Prevent page keyboard shortcuts from firing when typing in Stylebot inputs
-  const stopKeyboardPropagation = (e: Event): void => {
-    const target = e.target as HTMLElement;
-    if (
-      target &&
-      (target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable)
-    ) {
-      e.stopPropagation();
-    }
-  };
-
+  // Prevent page keyboard shortcuts from firing when typing in StyleKit controls.
   stylebotAppHost.addEventListener('keydown', stopKeyboardPropagation);
   stylebotAppHost.addEventListener('keyup', stopKeyboardPropagation);
   stylebotAppHost.addEventListener('keypress', stopKeyboardPropagation);

@@ -4,6 +4,8 @@
     :class="{ active }"
     :disabled="disabled"
     :title="`${t('inspect_description')} (i)`"
+    :aria-label="`${t('inspect_description')} (i)`"
+    :aria-pressed="active"
     :variant="active ? 'primary' : 'outline-secondary'"
     @click="toggle"
   >

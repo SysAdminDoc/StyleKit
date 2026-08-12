@@ -14,14 +14,20 @@
       <button
         class="style-action-btn edit-btn"
         title="Edit style"
+        :aria-label="`Edit style for ${url}`"
         @click="edit"
       >
         &#x270E;
       </button>
       <button
         class="style-action-btn delete-btn"
-        :class="{ 'confirming': confirmingDelete }"
+        :class="{ confirming: confirmingDelete }"
         :title="confirmingDelete ? 'Click again to confirm' : 'Delete style'"
+        :aria-label="
+          confirmingDelete
+            ? `Confirm deletion of style for ${url}`
+            : `Delete style for ${url}`
+        "
         @click="deleteStyle"
       >
         {{ confirmingDelete ? 'Sure?' : '&#x2715;' }}
@@ -121,7 +127,9 @@ export default defineComponent({
         this.$emit('deleted', this.url);
       } else {
         this.confirmingDelete = true;
-        setTimeout(() => { this.confirmingDelete = false; }, 3000);
+        setTimeout(() => {
+          this.confirmingDelete = false;
+        }, 3000);
       }
     },
   },
@@ -160,7 +168,9 @@ export default defineComponent({
   line-height: 1;
   border-radius: 3px;
   color: #6c7086;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 
   &:hover {
     color: #cdd6f4;

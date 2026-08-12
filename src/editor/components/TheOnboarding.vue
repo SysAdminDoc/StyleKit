@@ -1,43 +1,82 @@
 <template>
-  <div v-if="visible" class="onboarding-overlay" @click.self="dismiss">
-    <div class="onboarding-card">
-      <div class="onboarding-step-indicator">
+  <div
+    v-if="visible"
+    class="onboarding-overlay"
+    @click.self="dismiss"
+    @keydown="onKeyDown"
+  >
+    <div
+      ref="dialog"
+      class="onboarding-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-title"
+      aria-describedby="onboarding-description"
+      tabindex="-1"
+    >
+      <div
+        class="onboarding-step-indicator"
+        role="status"
+        :aria-label="`Step ${step} of ${totalSteps}`"
+      >
         <span
           v-for="i in totalSteps"
           :key="i"
           class="step-dot"
           :class="{ active: i === step }"
+          aria-hidden="true"
         />
       </div>
 
       <div class="onboarding-content">
         <div v-if="step === 1" class="step">
-          <div class="step-icon">&#x1F3AF;</div>
-          <h3>Pick an Element</h3>
-          <p>Click the crosshair icon in the top-left, then click any element on the page to select it for styling.</p>
+          <div class="step-icon" aria-hidden="true">&#x1F3AF;</div>
+          <h3 id="onboarding-title">Pick an Element</h3>
+          <p id="onboarding-description">
+            Click the crosshair icon in the top-left, then click any element on
+            the page to select it for styling.
+          </p>
         </div>
 
         <div v-if="step === 2" class="step">
-          <div class="step-icon">&#x1F3A8;</div>
-          <h3>Style It Visually</h3>
-          <p>Use the property panels to change fonts, colors, spacing, and borders. Changes are saved instantly and appear on every visit.</p>
+          <div class="step-icon" aria-hidden="true">&#x1F3A8;</div>
+          <h3 id="onboarding-title">Style It Visually</h3>
+          <p id="onboarding-description">
+            Use the property panels to change fonts, colors, spacing, and
+            borders. Changes are saved instantly and appear on every visit.
+          </p>
         </div>
 
         <div v-if="step === 3" class="step">
-          <div class="step-icon">&#x1F680;</div>
-          <h3>Try Snippets & Recipes</h3>
-          <p>Browse ready-made Snippets for quick effects, or try Site Recipes for one-click improvements to popular websites.</p>
+          <div class="step-icon" aria-hidden="true">&#x1F680;</div>
+          <h3 id="onboarding-title">Try Snippets & Recipes</h3>
+          <p id="onboarding-description">
+            Browse ready-made Snippets for quick effects, or try Site Recipes
+            for one-click improvements to popular websites.
+          </p>
         </div>
       </div>
 
       <div class="onboarding-actions">
-        <button v-if="step > 1" class="onboarding-btn secondary" @click="step--">
+        <button
+          v-if="step > 1"
+          class="onboarding-btn secondary"
+          @click="step--"
+        >
           Back
         </button>
-        <button v-if="step < totalSteps" class="onboarding-btn primary" @click="step++">
+        <button
+          v-if="step < totalSteps"
+          class="onboarding-btn primary"
+          @click="step++"
+        >
           Next
         </button>
-        <button v-if="step === totalSteps" class="onboarding-btn primary" @click="dismiss">
+        <button
+          v-if="step === totalSteps"
+          class="onboarding-btn primary"
+          @click="dismiss"
+        >
           Get Started
         </button>
       </div>
@@ -47,6 +86,11 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import {
+  focusFirstElement,
+  restoreFocus,
+  trapFocus,
+} from '../../shared/utils/accessibility';
 
 import {
   getEditorOnboardingDone,
@@ -61,7 +105,21 @@ export default defineComponent({
       visible: false,
       step: 1,
       totalSteps: 3,
+      previouslyFocused: null as HTMLElement | null,
     };
+  },
+
+  watch: {
+    visible(isVisible: boolean): void {
+      if (isVisible) {
+        this.previouslyFocused = document.activeElement as HTMLElement | null;
+        this.$nextTick(() =>
+          focusFirstElement(this.$refs.dialog as HTMLElement)
+        );
+      } else {
+        restoreFocus(this.previouslyFocused);
+      }
+    },
   },
 
   async created() {
@@ -72,6 +130,15 @@ export default defineComponent({
   },
 
   methods: {
+    onKeyDown(event: KeyboardEvent): void {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.dismiss();
+        return;
+      }
+      trapFocus(event, this.$refs.dialog as HTMLElement);
+    },
+
     dismiss(): void {
       this.visible = false;
       setEditorOnboardingDone(true).catch(e =>

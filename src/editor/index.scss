@@ -1,5 +1,6 @@
 @use 'sass:meta';
 @use 'scss/theme';
+@use '../shared/scss/accessibility';
 @use 'vue3-swatches/dist/style.css' as swatches;
 @use 'vue-draggable-resizable/style.css' as draggable;
 @use 'bootstrap-vue-next/dist/bootstrap-vue-next.css' as bootstrap-vue;
@@ -7,6 +8,9 @@
 .stylebot-app {
   all: initial;
   display: block;
+
+  @include accessibility.focus-ring;
+  @include accessibility.reduced-motion;
 
   @include meta.load-css(
     'bootstrap/scss/bootstrap',

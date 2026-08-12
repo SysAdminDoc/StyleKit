@@ -63,6 +63,10 @@ export default defineComponent({
 @use 'bootstrap-vue-next/dist/bootstrap-vue-next.css' as bootstrap-vue;
 @use 'bootstrap/scss/bootstrap';
 @use './scss/dark-mode';
+@use '../shared/scss/accessibility';
+
+@include accessibility.focus-ring;
+@include accessibility.reduced-motion;
 
 .main {
   height: calc(100% - 50px);

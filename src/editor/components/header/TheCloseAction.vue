@@ -1,6 +1,11 @@
 <template>
-  <b-button :title="`${t('close')} (esc)`" variant="sm" @click="onClick">
-    <b-icon icon="x-circle" />
+  <b-button
+    :title="`${t('close')} (esc)`"
+    :aria-label="`${t('close')} (esc)`"
+    variant="sm"
+    @click="onClick"
+  >
+    <b-icon icon="x-circle" aria-hidden="true" />
   </b-button>
 </template>
 

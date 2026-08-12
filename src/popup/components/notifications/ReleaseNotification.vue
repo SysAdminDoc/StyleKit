@@ -3,7 +3,12 @@
     <b-icon icon="broadcast" />
     <span class="pl-2">{{ t('see_whats_new_3_1') }}</span>
 
-    <b-button class="dismiss-btn" :title="t('hide')" @click="dismiss">
+    <b-button
+      class="dismiss-btn"
+      :title="t('hide')"
+      :aria-label="t('hide')"
+      @click="dismiss"
+    >
       <b-icon icon="x" scale="1.4" />
     </b-button>
   </b-list-group-item>

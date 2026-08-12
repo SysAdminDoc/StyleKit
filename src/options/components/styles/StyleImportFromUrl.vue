@@ -1,12 +1,21 @@
 <template>
   <div class="style-import">
-    <div class="style-import-overlay" @click="$emit('cancel')" />
-    <div class="style-import-modal">
-      <h5 class="mb-3">Import CSS from URL</h5>
+    <div class="style-import-overlay" @click="cancel" />
+    <div
+      ref="dialog"
+      class="style-import-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="style-import-title"
+      tabindex="-1"
+      @keydown="onKeyDown"
+    >
+      <h5 id="style-import-title" class="mb-3">Import CSS from URL</h5>
 
       <b-form-input
         v-model="url"
         placeholder="CSS file URL (e.g. https://example.com/style.css)"
+        aria-label="CSS file URL"
         autofocus
         class="mb-2"
       />
@@ -14,10 +23,11 @@
       <b-form-input
         v-model="targetUrl"
         placeholder="Apply to URL pattern (e.g. *.example.com)"
+        aria-label="Target URL pattern"
         class="mb-3"
       />
 
-      <div v-if="error" class="import-error mb-2">{{ error }}</div>
+      <div v-if="error" class="import-error mb-2" role="alert">{{ error }}</div>
 
       <div v-if="preview" class="import-preview mb-3">
         <div class="preview-label">Preview ({{ previewLines }} lines)</div>
@@ -28,7 +38,7 @@
       </div>
 
       <div class="import-actions">
-        <app-button @click="$emit('cancel')">Cancel</app-button>
+        <app-button @click="cancel">Cancel</app-button>
         <app-button
           v-if="!preview"
           variant="primary"
@@ -54,6 +64,11 @@
 import { defineComponent, PropType } from 'vue';
 import { getCurrentTimestamp } from '@stylekit/utils';
 import { StyleMap } from '@stylekit/types';
+import {
+  focusFirstElement,
+  restoreFocus,
+  trapFocus,
+} from '../../../shared/utils/accessibility';
 
 import AppButton from '../AppButton.vue';
 import { reportDiagnostic } from '../../utils';
@@ -85,6 +100,7 @@ export default defineComponent({
     preview: string;
     error: string;
     fetching: boolean;
+    previouslyFocused: HTMLElement | null;
   } {
     return {
       url: '',
@@ -92,6 +108,7 @@ export default defineComponent({
       preview: '',
       error: '',
       fetching: false,
+      previouslyFocused: null,
     };
   },
 
@@ -121,7 +138,29 @@ export default defineComponent({
     },
   },
 
+  mounted() {
+    this.previouslyFocused = document.activeElement as HTMLElement | null;
+    this.$nextTick(() => focusFirstElement(this.$refs.dialog as HTMLElement));
+  },
+
+  beforeUnmount() {
+    restoreFocus(this.previouslyFocused);
+  },
+
   methods: {
+    cancel(): void {
+      this.$emit('cancel');
+    },
+
+    onKeyDown(event: KeyboardEvent): void {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.cancel();
+        return;
+      }
+      trapFocus(event, this.$refs.dialog as HTMLElement);
+    },
+
     async fetchCss(): Promise<void> {
       this.error = '';
       this.preview = '';

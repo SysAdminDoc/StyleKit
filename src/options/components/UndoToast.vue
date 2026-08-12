@@ -1,9 +1,19 @@
 <template>
   <transition name="toast-slide">
-    <div v-if="visible" class="undo-toast">
+    <div
+      v-if="visible"
+      class="undo-toast"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <span class="undo-toast-message">{{ message }}</span>
       <button class="undo-toast-btn" @click="undo">Undo</button>
-      <div class="undo-toast-progress" :style="{ animationDuration: duration + 'ms' }" />
+      <div
+        class="undo-toast-progress"
+        aria-hidden="true"
+        :style="{ animationDuration: duration + 'ms' }"
+      />
     </div>
   </transition>
 </template>

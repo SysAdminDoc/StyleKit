@@ -1,14 +1,23 @@
 <template>
-  <div class="stylebot-delete-style-dialog">
-    <div class="delete-style-dialog-content p-4">
-      <h1 class="title">{{ t('delete_style_for_url_title', [url]) }}</h1>
+  <div class="stylebot-delete-style-dialog" @keydown="onKeyDown">
+    <div
+      ref="dialog"
+      class="delete-style-dialog-content p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-style-title"
+      tabindex="-1"
+    >
+      <h1 id="delete-style-title" class="title">
+        {{ t('delete_style_for_url_title', [url]) }}
+      </h1>
 
       <div class="description text-muted pt-2 pb-4">
         {{ t('delete_style_for_url_description', [url]) }}
       </div>
 
       <div class="delete-style-dialog-footer">
-        <b-button variant="outline-secondary" class="mr-2" @click="$emit('close')">
+        <b-button variant="outline-secondary" class="mr-2" @click="close">
           {{ t('cancel') }}
         </b-button>
 
@@ -22,9 +31,20 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import {
+  focusFirstElement,
+  restoreFocus,
+  trapFocus,
+} from '../../../shared/utils/accessibility';
 
 export default defineComponent({
   name: 'TheDeleteStyleDialog',
+
+  data() {
+    return {
+      previouslyFocused: null as HTMLElement | null,
+    };
+  },
 
   computed: {
     url(): string {
@@ -32,10 +52,32 @@ export default defineComponent({
     },
   },
 
+  mounted() {
+    this.previouslyFocused = document.activeElement as HTMLElement | null;
+    this.$nextTick(() => focusFirstElement(this.$refs.dialog as HTMLElement));
+  },
+
+  beforeUnmount() {
+    restoreFocus(this.previouslyFocused);
+  },
+
   methods: {
+    close(): void {
+      this.$emit('close');
+    },
+
+    onKeyDown(event: KeyboardEvent): void {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.close();
+        return;
+      }
+      trapFocus(event, this.$refs.dialog as HTMLElement);
+    },
+
     deleteStyle(): void {
       this.$store.dispatch('applyCss', { css: '' });
-      this.$emit('close');
+      this.close();
     },
   },
 });

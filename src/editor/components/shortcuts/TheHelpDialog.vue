@@ -1,14 +1,23 @@
 <template>
-  <div class="stylebot-help-dialog-overlay">
-    <div class="stylebot-help-dialog p-4">
+  <div class="stylebot-help-dialog-overlay" @keydown="onKeyDown">
+    <div
+      ref="dialog"
+      class="stylebot-help-dialog p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="keyboard-shortcuts-title"
+      tabindex="-1"
+    >
       <b-row>
         <b-col cols="11">
-          <h1 class="title mb-4">StyleKit {{ t('keyboard_shortcuts') }}</h1>
+          <h1 id="keyboard-shortcuts-title" class="title mb-4">
+            StyleKit {{ t('keyboard_shortcuts') }}
+          </h1>
         </b-col>
 
         <b-col cols="1" style="text-align: right">
-          <button class="close-btn" @click="close">
-            <b-icon icon="x-circle" />
+          <button class="close-btn" :aria-label="t('close')" @click="close">
+            <b-icon icon="x-circle" aria-hidden="true" />
           </button>
         </b-col>
       </b-row>
@@ -140,11 +149,22 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { StylebotCommands, StylebotEditorCommands } from '@stylekit/types';
+import {
+  focusFirstElement,
+  restoreFocus,
+  trapFocus,
+} from '../../../shared/utils/accessibility';
 
 import { openOptionsPage } from '../../utils/chrome';
 
 export default defineComponent({
   name: 'TheHelpDialog',
+
+  data() {
+    return {
+      previouslyFocused: null as HTMLElement | null,
+    };
+  },
 
   computed: {
     commands(): StylebotCommands {
@@ -157,15 +177,27 @@ export default defineComponent({
   },
 
   mounted() {
+    this.previouslyFocused = document.activeElement as HTMLElement | null;
     this.$store.commit('setInspecting', false);
     document.addEventListener('mousedown', this.mousedown);
+    this.$nextTick(() => focusFirstElement(this.$refs.dialog as HTMLElement));
   },
 
   beforeUnmount() {
     document.removeEventListener('mousedown', this.mousedown);
+    restoreFocus(this.previouslyFocused);
   },
 
   methods: {
+    onKeyDown(event: KeyboardEvent): void {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.close();
+        return;
+      }
+      trapFocus(event, this.$refs.dialog as HTMLElement);
+    },
+
     mousedown(event: MouseEvent): void {
       const el = event.composedPath()[0] as HTMLElement;
 

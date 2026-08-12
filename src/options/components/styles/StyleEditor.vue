@@ -1,16 +1,24 @@
 <template>
   <div class="style-editor">
     <div class="style-editor-overlay" />
-    <div class="style-editor-modal">
+    <div
+      ref="dialog"
+      class="style-editor-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Style editor"
+      tabindex="-1"
+      @keydown="onKeyDown"
+    >
       <div class="px-3 py-4">
         <b-form-input
           v-model="url"
           placeholder="Enter URL..."
           label="URL"
           autofocus
-          style="max-width: 600px;"
+          style="max-width: 600px"
         />
-        <div class="url-pattern-help" style="max-width: 600px;">
+        <div class="url-pattern-help" style="max-width: 600px">
           <span
             class="url-pattern-toggle"
             @click="showPatternHelp = !showPatternHelp"
@@ -18,11 +26,26 @@
             {{ showPatternHelp ? 'Hide' : 'URL pattern help' }}
           </span>
           <div v-if="showPatternHelp" class="url-pattern-hints">
-            <div><code>example.com</code> - matches domain and subdomains</div>
-            <div><code>*.example.com/path/*</code> - wildcard matching</div>
-            <div><code>^https://example\.com/user/\d+</code> - regex (prefix with ^)</div>
-            <div><code>site1.com, site2.com</code> - multiple URLs (comma-separated)</div>
-            <div><code>*</code> - matches all pages</div>
+            <div>
+              <code>example.com</code>
+              - matches domain and subdomains
+            </div>
+            <div>
+              <code>*.example.com/path/*</code>
+              - wildcard matching
+            </div>
+            <div>
+              <code>^https://example\.com/user/\d+</code>
+              - regex (prefix with ^)
+            </div>
+            <div>
+              <code>site1.com, site2.com</code>
+              - multiple URLs (comma-separated)
+            </div>
+            <div>
+              <code>*</code>
+              - matches all pages
+            </div>
           </div>
         </div>
       </div>
@@ -31,7 +54,7 @@
         <code-editor :css="css" @update="css = $event" />
       </div>
 
-      <div v-if="error" class="style-editor-error mx-3">
+      <div v-if="error" class="style-editor-error mx-3" role="alert">
         {{ error }}
       </div>
 
@@ -45,7 +68,7 @@
           {{ t('save') }}
         </app-button>
 
-        <app-button @click="$emit('cancel')">{{ t('cancel') }}</app-button>
+        <app-button @click="cancel">{{ t('cancel') }}</app-button>
       </div>
     </div>
   </div>
@@ -55,6 +78,11 @@
 import { defineComponent } from 'vue';
 
 import { safeParse } from '@stylekit/css';
+import {
+  focusFirstElement,
+  restoreFocus,
+  trapFocus,
+} from '../../../shared/utils/accessibility';
 import AppButton from '../AppButton.vue';
 import CodeEditor from './CodeEditor.vue';
 
@@ -85,23 +113,52 @@ export default defineComponent({
     css: string;
     showPatternHelp: boolean;
     error: string;
+    previouslyFocused: HTMLElement | null;
   } {
     return {
       url: this.initialUrl,
       css: this.initialCss,
       showPatternHelp: false,
       error: '',
+      previouslyFocused: null,
     };
   },
 
+  mounted() {
+    this.previouslyFocused = document.activeElement as HTMLElement | null;
+    this.$nextTick(() => focusFirstElement(this.$refs.dialog as HTMLElement));
+  },
+
+  beforeUnmount() {
+    restoreFocus(this.previouslyFocused);
+  },
+
   methods: {
+    cancel(): void {
+      this.$emit('cancel');
+    },
+
+    onKeyDown(event: KeyboardEvent): void {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.cancel();
+        return;
+      }
+      trapFocus(event, this.$refs.dialog as HTMLElement);
+    },
+
     save(): void {
       this.error = '';
       try {
         safeParse(this.css);
-        this.$emit('save', { initialUrl: this.initialUrl, url: this.url, css: this.css });
+        this.$emit('save', {
+          initialUrl: this.initialUrl,
+          url: this.url,
+          css: this.css,
+        });
       } catch {
-        this.error = 'Invalid CSS syntax. Please check your styles and try again.';
+        this.error =
+          'Invalid CSS syntax. Please check your styles and try again.';
       }
     },
   },

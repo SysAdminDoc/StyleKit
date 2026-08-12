@@ -29,10 +29,11 @@
           variant="outline-secondary"
           class="element-search-btn"
           title="Search elements by selector"
+          aria-label="Search elements by selector"
           :disabled="disabled"
           @click="showSearch = !showSearch"
         >
-          <b-icon icon="search" />
+          <b-icon icon="search" aria-hidden="true" />
         </b-button>
       </template>
     </b-input-group>
@@ -157,12 +158,16 @@ export default defineComponent({
           if (els.length > 0) {
             results.push(q);
           }
-        } catch { /* invalid selector */ }
+        } catch {
+          /* invalid selector */
+        }
       }
 
       // Also search by tag name, class, or id fragments
       if (results.length === 0) {
-        const allElements = document.querySelectorAll('body *:not(#stylebot):not(#stylebot *)');
+        const allElements = document.querySelectorAll(
+          'body *:not(#stylebot):not(#stylebot *)'
+        );
         const seen = new Set<string>();
 
         for (const el of Array.from(allElements).slice(0, 5000)) {

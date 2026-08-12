@@ -7,10 +7,14 @@
         :key="entry.id"
         class="usw-installed-row"
       >
-        <label class="usw-toggle" :title="entry.enabled !== false ? 'Disable' : 'Enable'">
+        <label
+          class="usw-toggle"
+          :title="entry.enabled !== false ? 'Disable' : 'Enable'"
+        >
           <input
             type="checkbox"
             :checked="entry.enabled !== false"
+            :aria-label="`${entry.enabled !== false ? 'Disable' : 'Enable'} ${entry.name}`"
             @change="toggleInstalledStyle(entry.id)"
           />
           <span class="usw-toggle-track" />
@@ -19,29 +23,55 @@
           class="usw-installed-name"
           :class="{ 'usw-installed-disabled': entry.enabled === false }"
           :title="entry.name"
-        >{{ truncate(entry.name, 30) }}</span>
+        >
+          {{ truncate(entry.name, 30) }}
+        </span>
         <div class="usw-installed-actions">
           <button
             v-if="updatableIds.has(entry.id)"
             class="style-action-btn update-btn"
             :disabled="updatingIds.has(entry.id)"
             title="Update available"
+            :aria-label="`Update ${entry.name}`"
             @click="updateStyle(entry.id)"
-          >{{ updatingIds.has(entry.id) ? '...' : '&#x21BB;' }}</button>
-          <button class="style-action-btn edit-btn" title="Edit CSS" @click="editStyle()">&#x270E;</button>
+          >
+            {{ updatingIds.has(entry.id) ? '...' : '&#x21BB;' }}
+          </button>
+          <button
+            class="style-action-btn edit-btn"
+            title="Edit CSS"
+            :aria-label="`Edit CSS for ${entry.name}`"
+            @click="editStyle()"
+          >
+            &#x270E;
+          </button>
           <button
             class="style-action-btn delete-btn"
             :class="{ confirming: confirmDeleteId === entry.id }"
-            :title="confirmDeleteId === entry.id ? 'Click again to confirm' : 'Uninstall'"
+            :title="
+              confirmDeleteId === entry.id
+                ? 'Click again to confirm'
+                : 'Uninstall'
+            "
+            :aria-label="
+              confirmDeleteId === entry.id
+                ? `Confirm uninstall of ${entry.name}`
+                : `Uninstall ${entry.name}`
+            "
             @click="confirmAndDelete(entry.id)"
-          >{{ confirmDeleteId === entry.id ? 'Sure?' : '&#x2715;' }}</button>
+          >
+            {{ confirmDeleteId === entry.id ? 'Sure?' : '&#x2715;' }}
+          </button>
         </div>
       </b-list-group-item>
     </div>
 
-
-
-    <b-list-group-item v-if="!autoLoadStyles" button class="find-styles-btn" @click="toggleSearch">
+    <b-list-group-item
+      v-if="!autoLoadStyles"
+      button
+      class="find-styles-btn"
+      @click="toggleSearch"
+    >
       <b-icon icon="search" />
       <span class="pl-2">{{ t('find_styles') }}</span>
       <span v-if="allResults.length > 0" class="find-styles-badge">
@@ -50,19 +80,30 @@
     </b-list-group-item>
     <div v-if="showSearch" class="find-styles-panel">
       <!-- Loading -->
-      <div v-if="loading" class="find-styles-status">
-        <div class="find-styles-spinner"></div>
+      <div
+        v-if="loading"
+        class="find-styles-status"
+        role="status"
+        aria-live="polite"
+      >
+        <div class="find-styles-spinner" aria-hidden="true"></div>
         <span>{{ t('loading_styles') }}</span>
       </div>
 
       <!-- Error -->
-      <div v-else-if="error" class="find-styles-status find-styles-error">
+      <div
+        v-else-if="error"
+        class="find-styles-status find-styles-error"
+        role="alert"
+      >
         <span>{{ providerStatusText || t('style_search_error') }}</span>
         <button
           class="find-styles-retry"
           :disabled="!providerCanRetry"
           @click="search"
-        >{{ providerRetryText }}</button>
+        >
+          {{ providerRetryText }}
+        </button>
       </div>
 
       <template v-else>
@@ -71,7 +112,9 @@
           <div class="find-styles-domain-row">
             <span class="find-styles-domain">{{ domain }}</span>
             <span class="find-styles-count">
-              {{ results.length }}{{ nameFilter ? '' : '+' }} style{{ results.length !== 1 ? 's' : '' }}
+              {{ results.length }}{{ nameFilter ? '' : '+' }} style{{
+                results.length !== 1 ? 's' : ''
+              }}
             </span>
           </div>
           <input
@@ -79,6 +122,7 @@
             class="find-styles-search"
             type="text"
             placeholder="Filter by name..."
+            aria-label="Filter styles by name"
           />
         </div>
 
@@ -86,12 +130,19 @@
           v-if="providerStatusText"
           class="find-styles-provider-status"
           :class="{ degraded: providerHealth?.status !== 'ok' }"
+          role="status"
+          aria-live="polite"
         >
           {{ providerStatusText }}
         </div>
 
         <!-- No results -->
-        <div v-if="results.length === 0" class="find-styles-status">
+        <div
+          v-if="results.length === 0"
+          class="find-styles-status"
+          role="status"
+          aria-live="polite"
+        >
           {{ nameFilter ? 'No matching styles' : t('no_styles_found') }}
         </div>
 
@@ -127,7 +178,9 @@
                     :href="getStyleUrl(style)"
                     target="_blank"
                     :title="style.n"
-                  >{{ truncate(style.n, 34) }}</a>
+                  >
+                    {{ truncate(style.n, 34) }}
+                  </a>
                 </div>
                 <div class="find-style-meta">
                   <span class="find-style-author">{{ style.an }}</span>
@@ -148,10 +201,17 @@
                   class="find-style-btn install-btn"
                   :disabled="busyIds.has(style.i)"
                   title="Install style"
+                  :aria-label="`${pendingInstallId === style.i ? 'Apply' : 'Install'} ${style.n}`"
                   @click="installStyle(style)"
                 >
-                  <span v-if="installingIds.has(style.i)" class="find-style-spinner-sm"></span>
-                  <template v-else>{{ pendingInstallId === style.i ? 'Apply' : 'Install' }}</template>
+                  <span
+                    v-if="installingIds.has(style.i)"
+                    class="find-style-spinner-sm"
+                    aria-hidden="true"
+                  ></span>
+                  <template v-else>
+                    {{ pendingInstallId === style.i ? 'Apply' : 'Install' }}
+                  </template>
                 </button>
               </div>
             </div>
@@ -256,19 +316,24 @@ export default defineComponent({
   computed: {
     results(): UserstyleEntry[] {
       const q = this.nameFilter.toLowerCase().trim();
-      const uninstalled = this.allResults.filter(s => !this.installedIds.has(s.i));
+      const uninstalled = this.allResults.filter(
+        s => !this.installedIds.has(s.i)
+      );
       const sorted = [...uninstalled].sort((a, b) => b.w - a.w || b.t - a.t);
       if (!q) return sorted;
       return sorted.filter(s => s.n.toLowerCase().includes(q));
     },
 
     installedIds(): Set<number> {
-      return new Set(
-        Object.keys(this.installedMap).map(Number)
-      );
+      return new Set(Object.keys(this.installedMap).map(Number));
     },
 
-    domainInstalled(): Array<{ id: number; name: string; domain: string; css: string }> {
+    domainInstalled(): Array<{
+      id: number;
+      name: string;
+      domain: string;
+      css: string;
+    }> {
       if (!this.domain) return [];
       return Object.entries(this.installedMap)
         .filter(([, entry]) => entry.domain === this.domain)
@@ -294,7 +359,9 @@ export default defineComponent({
       if (!health) return '';
 
       if (health.status === 'ok') {
-        return this.providerFromCache ? 'Using cached UserStyles.world index' : '';
+        return this.providerFromCache
+          ? 'Using cached UserStyles.world index'
+          : '';
       }
 
       const retry =
@@ -389,7 +456,8 @@ export default defineComponent({
     },
 
     getProviderDiagnosticMessage(operation: string, error: unknown): string {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       if (/^HTTP \d+$/.test(errorMessage)) return errorMessage;
       if (errorMessage === 'Style source returned HTML instead of CSS') {
         return errorMessage;
@@ -407,7 +475,9 @@ export default defineComponent({
           operation,
           errorMessage,
         })
-        .catch(() => { /* diagnostics only */ });
+        .catch(() => {
+          /* diagnostics only */
+        });
     },
 
     formatProviderRetryDelay(nextRetryAt?: number): string {
@@ -420,7 +490,10 @@ export default defineComponent({
       return `${Math.ceil(remainingSeconds / 60)}m`;
     },
 
-    getMergedCssForDomain(domain: string, map: Record<number, InstalledEntry>): string {
+    getMergedCssForDomain(
+      domain: string,
+      map: Record<number, InstalledEntry>
+    ): string {
       return Object.values(map)
         .filter(e => e.domain === domain && e.enabled !== false)
         .map(e => e.css)
@@ -458,10 +531,18 @@ export default defineComponent({
             if (!cat) return false;
             if (cat === dom) return true;
             if (dom.endsWith('.' + cat) || cat.endsWith('.' + dom)) return true;
-            const domCore = dom.replace(/\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/, '');
-            const catCore = cat.replace(/\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/, '');
+            const domCore = dom.replace(
+              /\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/,
+              ''
+            );
+            const catCore = cat.replace(
+              /\.(com|org|net|io|co|edu|gov|me|app|dev)(\.\w+)?$/,
+              ''
+            );
             if (domCore === catCore) return true;
-            return domCore.split('.').some((part: string) => part === catCore || part === cat);
+            return domCore
+              .split('.')
+              .some((part: string) => part === catCore || part === cat);
           })
           .slice(0, 150);
 
@@ -483,7 +564,9 @@ export default defineComponent({
         const CHUNK = 8192;
         let binary = '';
         for (let i = 0; i < uint8.length; i += CHUNK) {
-          binary += String.fromCharCode(...Array.from(uint8.subarray(i, i + CHUNK)));
+          binary += String.fromCharCode(
+            ...Array.from(uint8.subarray(i, i + CHUNK))
+          );
         }
         const contentType = res.headers.get('content-type') || 'image/webp';
         return `data:${contentType};base64,${btoa(binary)}`;
@@ -498,10 +581,14 @@ export default defineComponent({
 
       // Apply cached thumbnails immediately
       const thumbResult = await chrome.storage.local.get(THUMB_LOCAL_KEY);
-      const thumbCache = (thumbResult[THUMB_LOCAL_KEY] as Record<number, string>) || {};
+      const thumbCache =
+        (thumbResult[THUMB_LOCAL_KEY] as Record<number, string>) || {};
       for (const style of styles) {
         if (thumbCache[style.i]) {
-          this.thumbnails = { ...this.thumbnails, [style.i]: thumbCache[style.i] };
+          this.thumbnails = {
+            ...this.thumbnails,
+            [style.i]: thumbCache[style.i],
+          };
         }
       }
 
@@ -519,7 +606,8 @@ export default defineComponent({
       await Promise.all(
         styles.map(async style => {
           const dataUrl = await this.getThumb(style.i, style.sn);
-          if (dataUrl) this.thumbnails = { ...this.thumbnails, [style.i]: dataUrl };
+          if (dataUrl)
+            this.thumbnails = { ...this.thumbnails, [style.i]: dataUrl };
         })
       );
     },
@@ -587,7 +675,9 @@ export default defineComponent({
           id,
           css,
         })
-        .catch(() => { /* fire-and-forget */ });
+        .catch(() => {
+          /* fire-and-forget */
+        });
     },
 
     removePreviewById(id: string): void {
@@ -598,7 +688,9 @@ export default defineComponent({
           tabId: this.tab.id,
           id,
         })
-        .catch(() => { /* fire-and-forget */ });
+        .catch(() => {
+          /* fire-and-forget */
+        });
     },
 
     hoverPreview(style: UserstyleEntry): void {
@@ -695,7 +787,8 @@ export default defineComponent({
     },
 
     async installStyle(style: UserstyleEntry): Promise<void> {
-      if (this.installingIds.has(style.i) || this.installedIds.has(style.i)) return;
+      if (this.installingIds.has(style.i) || this.installedIds.has(style.i))
+        return;
 
       this.installingIds = new Set([...this.installingIds, style.i]);
       this.setBusy(style.i, true);
@@ -711,7 +804,13 @@ export default defineComponent({
         // Persist to our tracking map so install state survives popup close
         const newMap: Record<number, InstalledEntry> = {
           ...this.installedMap,
-          [style.i]: { domain: this.domain, css, name: style.n, uswId: style.i, installedAt: Date.now() },
+          [style.i]: {
+            domain: this.domain,
+            css,
+            name: style.n,
+            uswId: style.i,
+            installedAt: Date.now(),
+          },
         };
 
         const preview = this.getDomainStylePreview(newMap);
@@ -735,7 +834,10 @@ export default defineComponent({
 
         // Instantly inject into the live tab without requiring a refresh
         if (this.tab?.id) {
-          this.applyPreviewById(`usw-installed-${this.domain}`, preview.mergedCss);
+          this.applyPreviewById(
+            `usw-installed-${this.domain}`,
+            preview.mergedCss
+          );
         }
 
         // Clear hover preview — installed style is now injected permanently
@@ -790,9 +892,11 @@ export default defineComponent({
       if (!installed.length) return;
 
       // Check styles older than 24 hours
-      const staleThreshold = Date.now() - (24 * 60 * 60 * 1000);
+      const staleThreshold = Date.now() - 24 * 60 * 60 * 1000;
       const toCheck = installed.filter(
-        ([, entry]) => entry.uswId && (!entry.installedAt || entry.installedAt < staleThreshold)
+        ([, entry]) =>
+          entry.uswId &&
+          (!entry.installedAt || entry.installedAt < staleThreshold)
       );
       if (!toCheck.length) return;
 
@@ -929,8 +1033,12 @@ export default defineComponent({
     editStyle(): void {
       if (!this.tab?.id) return;
       chrome.tabs
-        .sendMessage(this.tab.id, { name: 'OpenStylebotInCodeMode' } as OpenStylebotInCodeMode)
-        .catch(() => { /* fire-and-forget */ });
+        .sendMessage(this.tab.id, {
+          name: 'OpenStylebotInCodeMode',
+        } as OpenStylebotInCodeMode)
+        .catch(() => {
+          /* fire-and-forget */
+        });
       window.close();
     },
 
@@ -1012,7 +1120,9 @@ export default defineComponent({
       height: 11px;
       border-radius: 50%;
       background: #6c7086;
-      transition: transform 0.18s, background 0.18s;
+      transition:
+        transform 0.18s,
+        background 0.18s;
     }
   }
 
@@ -1292,7 +1402,6 @@ export default defineComponent({
   }
 }
 
-
 .find-style-meta {
   display: flex;
   gap: 6px;
@@ -1339,7 +1448,9 @@ export default defineComponent({
   cursor: pointer;
   font-size: 12px;
   padding: 0;
-  transition: color 0.12s, background 0.12s;
+  transition:
+    color 0.12s,
+    background 0.12s;
 
   &:disabled {
     cursor: default;
@@ -1417,11 +1528,18 @@ export default defineComponent({
 }
 
 @keyframes sk-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes update-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 </style>

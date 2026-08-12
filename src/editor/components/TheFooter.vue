@@ -7,6 +7,7 @@
         class="undo-redo-btn"
         :disabled="!canUndo"
         :title="t('undo')"
+        :aria-label="t('undo')"
         @click="undo"
       >
         &#x21B6;
@@ -17,6 +18,7 @@
         class="undo-redo-btn"
         :disabled="!canRedo"
         :title="t('redo')"
+        :aria-label="t('redo')"
         @click="redo"
       >
         &#x21B7;
@@ -27,6 +29,7 @@
         class="copy-btn"
         :disabled="!hasCss"
         :title="copyTitle"
+        :aria-label="copyTitle"
         @click="copyCss"
       >
         {{ copyIcon }}
@@ -37,6 +40,7 @@
         class="diff-btn"
         :disabled="!hasCss"
         title="View changes"
+        aria-label="View changes"
         @click="$emit('show-diff')"
       >
         &#x2261;
@@ -47,6 +51,7 @@
         class="export-btn"
         :disabled="!hasCss"
         :title="exportTitle"
+        :aria-label="exportTitle"
         @click="exportStyle"
       >
         &#x21E5;
@@ -57,13 +62,25 @@
         class="reset-btn"
         :class="{ confirming: confirmReset }"
         :disabled="!hasCss"
-        :title="confirmReset ? 'Click again to confirm reset' : 'Reset all styles for this page'"
+        :title="
+          confirmReset
+            ? 'Click again to confirm reset'
+            : 'Reset all styles for this page'
+        "
+        :aria-label="
+          confirmReset
+            ? 'Confirm reset of all styles for this page'
+            : 'Reset all styles for this page'
+        "
         @click="resetAll"
       >
         {{ confirmReset ? 'Sure?' : '&#x2715;' }}
       </b-button>
     </b-col>
-    <b-col cols="4" class="responsive-actions d-flex align-items-center justify-content-center">
+    <b-col
+      cols="4"
+      class="responsive-actions d-flex align-items-center justify-content-center"
+    >
       <b-button
         v-for="bp in breakpoints"
         :key="bp.width"
@@ -72,6 +89,8 @@
         class="responsive-btn"
         :class="{ active: activeBreakpoint === bp.width }"
         :title="`Preview at ${bp.width}px (${bp.label})`"
+        :aria-label="`Preview at ${bp.width}px (${bp.label})`"
+        :aria-pressed="activeBreakpoint === bp.width"
         @click="toggleBreakpoint(bp.width)"
       >
         {{ bp.icon }}
@@ -203,9 +222,20 @@ export default defineComponent({
         document.body.style.removeProperty('overflow-x');
       } else {
         this.activeBreakpoint = width;
-        document.documentElement.style.setProperty('max-width', `${width}px`, 'important');
-        document.documentElement.style.setProperty('margin', '0 auto', 'important');
-        document.documentElement.style.setProperty('transition', 'max-width 0.3s ease');
+        document.documentElement.style.setProperty(
+          'max-width',
+          `${width}px`,
+          'important'
+        );
+        document.documentElement.style.setProperty(
+          'margin',
+          '0 auto',
+          'important'
+        );
+        document.documentElement.style.setProperty(
+          'transition',
+          'max-width 0.3s ease'
+        );
         document.body.style.setProperty('overflow-x', 'hidden');
       }
     },
@@ -216,7 +246,9 @@ export default defineComponent({
         this.$store.dispatch('applyCss', { css: '' });
       } else {
         this.confirmReset = true;
-        setTimeout(() => { this.confirmReset = false; }, 3000);
+        setTimeout(() => {
+          this.confirmReset = false;
+        }, 3000);
       }
     },
   },

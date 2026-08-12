@@ -1,10 +1,14 @@
 <template>
   <b-button
     :title="dockedRight ? 'Move panel to left' : 'Move panel to right'"
+    :aria-label="dockedRight ? 'Move panel to left' : 'Move panel to right'"
     variant="sm"
     @click="toggleDock"
   >
-    <b-icon :icon="dockedRight ? 'arrow-bar-left' : 'arrow-bar-right'" />
+    <b-icon
+      :icon="dockedRight ? 'arrow-bar-left' : 'arrow-bar-right'"
+      aria-hidden="true"
+    />
   </b-button>
 </template>
 

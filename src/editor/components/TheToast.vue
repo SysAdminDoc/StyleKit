@@ -1,10 +1,14 @@
 <template>
   <transition name="toast-fade">
-    <div v-if="visible" class="stylebot-toast">
+    <div
+      v-if="visible"
+      class="stylebot-toast"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <span class="toast-message">{{ message }}</span>
-      <button v-if="canUndo" class="toast-undo-btn" @click="undo">
-        Undo
-      </button>
+      <button v-if="canUndo" class="toast-undo-btn" @click="undo">Undo</button>
     </div>
   </transition>
 </template>
@@ -102,7 +106,9 @@ export default defineComponent({
 
 .toast-fade-enter-active,
 .toast-fade-leave-active {
-  transition: opacity 0.2s, transform 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
 }
 
 .toast-fade-enter,

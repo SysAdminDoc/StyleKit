@@ -72,6 +72,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **Grayscale mode** -- reduce eye strain
 - **15+ language translations**
 - **Two-click delete confirmation** -- prevents accidental style deletion
+- **Accessible extension UI** -- named icon controls, contained/restored modal focus, announced status messages, visible keyboard focus, and reduced-motion-safe effects
 - **Narrow extension resource exposure** -- content-script assets are allowlisted exactly and Chrome builds use dynamic web-accessible URLs
 - **USER-origin CSS application** -- saved styles and previews use browser-managed USER-origin CSS insertion when available, with DOM fallback for restricted pages
 - **Frame-aware matching** -- child frames match their own URL, while `about:blank` and `srcdoc` frames inherit the parent referrer only when it is valid
@@ -112,7 +113,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (24/24 suites, 131 tests)
+npm test               # Run tests (25/25 suites, 138 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run dependencies:check # Report safe and compatibility-review dependency updates

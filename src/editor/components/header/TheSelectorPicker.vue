@@ -5,6 +5,7 @@
       variant="outline-secondary"
       :disabled="!activeSelector"
       title="Element selector picker"
+      aria-label="Element selector picker"
       class="selector-picker-btn"
       @click="openPicker"
     >
@@ -12,8 +13,23 @@
     </b-button>
 
     <div v-if="open" class="picker-backdrop" @mousedown.self="close">
-      <div class="picker-dialog">
-        <textarea class="picker-textarea" :value="currentSelector" readonly />
+      <div
+        ref="dialog"
+        class="picker-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="selector-picker-title"
+        tabindex="-1"
+      >
+        <h2 id="selector-picker-title" class="sr-only">
+          Element selector picker
+        </h2>
+        <textarea
+          class="picker-textarea"
+          :value="currentSelector"
+          aria-label="Current selector"
+          readonly
+        />
 
         <div class="picker-sliders-row">
           <input
@@ -22,6 +38,7 @@
             class="picker-slider"
             :min="0"
             :max="maxDepth"
+            aria-label="Selector ancestor depth"
           />
           <input
             v-model.number="classValue"
@@ -29,20 +46,28 @@
             class="picker-slider"
             :min="0"
             :max="maxClasses"
+            aria-label="Number of classes in selector"
           />
-          <span class="picker-match-count">{{ matchCount }}</span>
+          <span class="picker-match-count" role="status" aria-live="polite">
+            {{ matchCount }} matches
+          </span>
         </div>
 
         <div class="picker-actions">
-          <button class="picker-btn picker-btn-cancel" @click="close">Cancel</button>
-          <button class="picker-btn picker-btn-apply" @click="applySelector">Apply</button>
+          <button class="picker-btn picker-btn-cancel" @click="close">
+            Cancel
+          </button>
+          <button class="picker-btn picker-btn-apply" @click="applySelector">
+            Apply
+          </button>
         </div>
 
         <div class="picker-candidates-label">Selector alternatives</div>
         <div class="picker-candidates">
-          <div
+          <button
             v-for="s in candidates"
             :key="s"
+            type="button"
             class="picker-candidate"
             :class="{ 'picker-candidate-active': s === currentSelector }"
             @click="selectCandidate(s)"
@@ -50,7 +75,7 @@
             @mouseleave="restoreCurrentHighlight"
           >
             {{ s }}
-          </div>
+          </button>
           <div v-if="candidates.length === 0" class="picker-empty">
             No element found for current selector
           </div>
@@ -64,6 +89,11 @@
 import { defineComponent } from 'vue';
 import { validateSelector } from '@stylekit/css';
 import { Highlighter } from '@stylekit/highlighter';
+import {
+  focusFirstElement,
+  restoreFocus,
+  trapFocus,
+} from '../../../shared/utils/accessibility';
 
 interface ElementInfo {
   tag: string;
@@ -81,6 +111,7 @@ export default defineComponent({
     classValue: number;
     candidates: string[];
     highlighter: Highlighter | null;
+    previouslyFocused: HTMLElement | null;
   } {
     return {
       open: false,
@@ -89,6 +120,7 @@ export default defineComponent({
       classValue: 0,
       candidates: [],
       highlighter: null,
+      previouslyFocused: null,
     };
   },
 
@@ -147,6 +179,7 @@ export default defineComponent({
   methods: {
     openPicker() {
       if (!this.activeSelector) return;
+      this.previouslyFocused = document.activeElement as HTMLElement | null;
       this.chain = this.buildChain(this.activeSelector);
       this.depthValue = 0;
       this.classValue = this.chain.length ? this.chain[0].classes.length : 0;
@@ -154,6 +187,7 @@ export default defineComponent({
       this.open = true;
       this.$nextTick(() => {
         window.addEventListener('keydown', this.onKeyDown);
+        focusFirstElement(this.$refs.dialog as HTMLElement);
         const sel = this.currentSelector;
         if (sel && validateSelector(sel)) {
           this.highlighter?.highlight(sel);
@@ -165,10 +199,16 @@ export default defineComponent({
       this.open = false;
       this.highlighter?.unhighlight();
       window.removeEventListener('keydown', this.onKeyDown);
+      restoreFocus(this.previouslyFocused);
     },
 
     onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') this.close();
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.close();
+        return;
+      }
+      trapFocus(e, this.$refs.dialog as HTMLElement);
     },
 
     applySelector() {
@@ -254,7 +294,9 @@ export default defineComponent({
       const parts = [focusedSel];
       for (let i = d - 1; i >= 0; i--) {
         const el = this.chain[i];
-        parts.push(el.id ? `#${el.id}` : el.classes.length ? `.${el.classes[0]}` : el.tag);
+        parts.push(
+          el.id ? `#${el.id}` : el.classes.length ? `.${el.classes[0]}` : el.tag
+        );
       }
       return parts.join(' ');
     },
@@ -448,6 +490,8 @@ export default defineComponent({
 }
 
 .picker-candidate {
+  display: block;
+  width: 100%;
   padding: 6px 12px;
   font-size: 12px;
   font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
@@ -456,6 +500,11 @@ export default defineComponent({
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: left;
+  background: transparent;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
   border-left: 3px solid transparent;
   transition: background 0.1s;
 

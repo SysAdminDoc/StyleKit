@@ -1,11 +1,10 @@
 <template>
   <div class="popup">
     <b-list-group v-if="tab && tab.id" class="list-group">
-      <b-list-group-item
-        v-if="styles.length > 1"
-        class="quick-toggle-row"
-      >
-        <span class="quick-toggle-label">{{ styles.length }} styles active</span>
+      <b-list-group-item v-if="styles.length > 1" class="quick-toggle-row">
+        <span class="quick-toggle-label">
+          {{ styles.length }} styles active
+        </span>
         <button
           class="quick-toggle-btn"
           :title="allEnabled ? 'Disable all' : 'Enable all'"
@@ -55,7 +54,11 @@ import ReleaseNotification from './components/notifications/ReleaseNotification.
 import { getStyles, getCurrentTab, getIsStylebotOpen } from './utils';
 
 import { getGoogleDriveSyncEnabled } from '@stylekit/sync';
-import { GoogleDriveSyncMetadata, EnableStyle, DisableStyle } from '@stylekit/types';
+import {
+  GoogleDriveSyncMetadata,
+  EnableStyle,
+  DisableStyle,
+} from '@stylekit/types';
 
 export default defineComponent({
   name: 'App',
@@ -139,7 +142,10 @@ export default defineComponent({
           const message: EnableStyle = { name: 'EnableStyle', url: style.url };
           chrome.runtime.sendMessage(message);
         } else {
-          const message: DisableStyle = { name: 'DisableStyle', url: style.url };
+          const message: DisableStyle = {
+            name: 'DisableStyle',
+            url: style.url,
+          };
           chrome.runtime.sendMessage(message);
         }
       });
@@ -152,6 +158,10 @@ export default defineComponent({
 @use 'bootstrap-vue-next/dist/bootstrap-vue-next.css' as bootstrap-vue;
 @use 'bootstrap/scss/bootstrap';
 @use './scss/dark-mode';
+@use '../shared/scss/accessibility';
+
+@include accessibility.focus-ring;
+@include accessibility.reduced-motion;
 
 body,
 span {
@@ -213,7 +223,9 @@ body {
   padding: 2px 10px;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 
   &:hover {
     background: #45475a;
