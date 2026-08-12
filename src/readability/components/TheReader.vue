@@ -12,6 +12,8 @@
         :byline="article.byline"
       />
 
+      <the-speech-controls :text="article.textContent || ''" />
+
       <!-- eslint-disable vue/no-v-html - html is generated with the readability project -->
       <div class="stylebot-reader-content" v-html="article.content" />
     </div>
@@ -34,12 +36,14 @@ import {
 } from '@stylekit/types';
 
 import TheReaderHeader from './TheReaderHeader.vue';
+import TheSpeechControls from './TheSpeechControls.vue';
 
 export default defineComponent({
   name: 'TheReader',
 
   components: {
     TheReaderHeader,
+    TheSpeechControls,
   },
 
   props: {

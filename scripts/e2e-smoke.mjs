@@ -375,6 +375,10 @@ try {
     .locator('.offline-content')
     .getByText(/remain readable when the original website is unavailable/)
     .waitFor();
+  await optionsPage.getByRole('button', { name: 'Read aloud' }).waitFor();
+  const readingSpeed = optionsPage.getByLabel('Reading speed');
+  await readingSpeed.selectOption('1.5');
+  assert.equal(await readingSpeed.inputValue(), '1.5');
   console.log('✓ Captured and rendered a sanitized offline reading-list item');
 
   await optionsPage

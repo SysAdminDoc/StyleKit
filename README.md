@@ -79,6 +79,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **Read-later queue** -- save readable pages from the popup, mark them read/unread, and remove them from a dedicated options view
 - **Offline snapshots** -- keep bounded, allowlist-sanitized text-first article copies without scripts, forms, cookies, trackers, or remote image dependencies
 - **Cross-device reading sync** -- merge article updates and deletion tombstones through configured Google Drive, WebDAV, or S3 sync
+- **Read aloud** -- listen to live or saved articles with pause, resume, stop, and 0.5×–2× reading-speed controls
 
 ### Other
 - **One-click hide element** -- right-click context menu
@@ -132,7 +133,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (63/63 suites, 253 tests)
+npm test               # Run tests (64/64 suites, 258 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run locales:check  # Validate locale keys and placeholders against English
