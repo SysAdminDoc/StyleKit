@@ -38,7 +38,6 @@
         size="sm"
         variant="link"
         class="diff-btn"
-        :disabled="!hasCss"
         title="View changes"
         aria-label="View changes"
         @click="$emit('show-diff')"

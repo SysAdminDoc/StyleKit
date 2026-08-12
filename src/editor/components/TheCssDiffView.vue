@@ -1,13 +1,39 @@
 <template>
   <div v-if="visible" class="css-diff-overlay" @click.self="$emit('close')">
-    <div class="css-diff-panel">
+    <div
+      class="css-diff-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="stylekit-css-diff-title"
+    >
       <div class="css-diff-header">
-        <span class="css-diff-title">CSS Changes</span>
-        <span class="css-diff-close" @click="$emit('close')">&times;</span>
+        <div>
+          <div id="stylekit-css-diff-title" class="css-diff-title">
+            CSS Changes
+          </div>
+          <div v-if="previousVersion" class="css-diff-context">
+            Compared with saved version from
+            <time :datetime="previousVersion.savedAt">{{ savedAtLabel }}</time>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="css-diff-close"
+          aria-label="Close CSS changes"
+          @click="$emit('close')"
+        >
+          &times;
+        </button>
       </div>
 
-      <div v-if="diffLines.length === 0" class="css-diff-empty">
-        No changes from original
+      <div v-if="loading" class="css-diff-empty">Loading saved version...</div>
+
+      <div v-else-if="!previousVersion" class="css-diff-empty">
+        No previous saved version yet
+      </div>
+
+      <div v-else-if="diffLines.length === 0" class="css-diff-empty">
+        No changes from the previous saved version
       </div>
 
       <div v-else class="css-diff-body">
@@ -27,6 +53,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import type { StyleVersionSnapshot } from '@stylekit/types';
+import { getStyleVersion } from '../utils/chrome';
 
 type DiffLine = {
   type: 'added' | 'removed' | 'unchanged';
@@ -44,14 +72,31 @@ export default defineComponent({
     },
   },
 
+  data(): {
+    loading: boolean;
+    previousVersion: StyleVersionSnapshot | null;
+  } {
+    return {
+      loading: false,
+      previousVersion: null,
+    };
+  },
+
   computed: {
     originalCss(): string {
-      const history = this.$store.state.cssHistory;
-      return history.length > 0 ? history[0] : '';
+      return this.previousVersion?.css || '';
     },
 
     currentCss(): string {
       return this.$store.state.css;
+    },
+
+    savedAtLabel(): string {
+      if (!this.previousVersion) return '';
+      const date = new Date(this.previousVersion.savedAt);
+      return Number.isNaN(date.getTime())
+        ? this.previousVersion.savedAt
+        : date.toLocaleString();
     },
 
     diffLines(): DiffLine[] {
@@ -93,7 +138,25 @@ export default defineComponent({
     },
   },
 
+  watch: {
+    visible: {
+      immediate: true,
+      handler(visible: boolean): void {
+        if (visible) void this.loadPreviousVersion();
+      },
+    },
+  },
+
   methods: {
+    async loadPreviousVersion(): Promise<void> {
+      this.loading = true;
+      try {
+        this.previousVersion = await getStyleVersion(this.$store.state.url);
+      } finally {
+        this.loading = false;
+      }
+    },
+
     computeLcs(a: string[], b: string[]): string[] {
       const m = a.length;
       const n = b.length;
@@ -173,7 +236,16 @@ export default defineComponent({
   color: #cdd6f4;
 }
 
+.css-diff-context {
+  color: #a6adc8;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
 .css-diff-close {
+  appearance: none;
+  background: transparent;
+  border: 0;
   font-size: 20px;
   color: #6c7086;
   cursor: pointer;

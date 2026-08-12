@@ -13,6 +13,7 @@ import {
   StyleSourcePreview,
   StyleSourceStatus,
   StyleSourceStatusMap,
+  StyleVersionSnapshot,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -60,6 +61,7 @@ export type SetStyleSourceResponse = StyleSourcePreview;
 export type ReloadStyleSourceResponse = StyleSourceStatus;
 export type RollbackStyleSourceResponse = StyleSourceStatus;
 export type GetStyleSourceStatusesResponse = StyleSourceStatusMap;
+export type GetStyleVersionResponse = StyleVersionSnapshot | null;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -86,6 +88,7 @@ type BackgroundPageMessageResponse =
   | SetStyleSourceResponse
   | ReloadStyleSourceResponse
   | RollbackStyleSourceResponse
-  | GetStyleSourceStatusesResponse;
+  | GetStyleSourceStatusesResponse
+  | GetStyleVersionResponse;
 
 export default BackgroundPageMessageResponse;

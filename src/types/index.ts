@@ -90,6 +90,11 @@ export type StyleMap = {
   [url: string]: Omit<Style, 'url'>;
 };
 
+export type StyleVersionSnapshot = {
+  css: string;
+  savedAt: Timestamp;
+};
+
 export type StyleSyncTombstone = {
   deletedTime: Timestamp;
 };

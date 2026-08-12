@@ -10,6 +10,7 @@ import {
   OpenOptionsPage,
   OpenDonatePage,
   SetStyle,
+  GetStyleVersion,
   SetStyleShadowRoots,
   PreviewStyleSource,
   SetStyleSource,
@@ -144,6 +145,7 @@ const ASYNC_MESSAGES = new Set([
   'ReloadStyleSource',
   'RollbackStyleSource',
   'GetStyleSourceStatuses',
+  'GetStyleVersion',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -184,6 +186,9 @@ chrome.runtime.onMessage.addListener(
 
       case 'SetStyle':
         SetStyle(message, sender);
+        break;
+      case 'GetStyleVersion':
+        GetStyleVersion(message, sendResponse);
         break;
       case 'SetStyleShadowRoots':
         SetStyleShadowRoots(message);

@@ -690,6 +690,27 @@ try {
     console.log(
       '✓ Applied and replayed a selector-scoped animation from visual keyframe markers'
     );
+    await fixturePage.getByRole('button', { name: 'View changes' }).click();
+    const savedDiff = fixturePage.getByRole('dialog', { name: 'CSS Changes' });
+    await savedDiff.getByText('Compared with saved version from').waitFor();
+    assert(
+      (await savedDiff.locator('.added, .removed').count()) > 0,
+      'Saved-version diff did not render any changed lines'
+    );
+    assert(
+      await serviceWorker.evaluate(async url => {
+        const stored = await chrome.storage.local.get(
+          'stylekit-style-versions'
+        );
+        return Boolean(
+          stored['stylekit-style-versions']?.[url]?.previous?.savedAt
+        );
+      }, styleKey)
+    );
+    await savedDiff.getByRole('button', { name: 'Close CSS changes' }).click();
+    console.log(
+      '✓ Compared current CSS with a background-persisted previous saved version'
+    );
     await fixturePage.keyboard.press('c');
     await fixturePage.waitForFunction(() => {
       const host = document.querySelector('#stylebot');

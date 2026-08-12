@@ -17,6 +17,11 @@ export type SetStyle = {
   shadowRoots?: boolean;
 };
 
+export type GetStyleVersion = {
+  name: 'GetStyleVersion';
+  url: string;
+};
+
 export type SetStyleShadowRoots = {
   name: 'SetStyleShadowRoots';
   url: string;
@@ -221,6 +226,7 @@ export type GetDiagnosticsBundle = {
 
 type BackgroundPageMessage =
   | SetStyle
+  | GetStyleVersion
   | SetStyleShadowRoots
   | PreviewStyleSource
   | SetStyleSource

@@ -25,6 +25,8 @@ import {
   GoogleFontsCache,
   DiagnosticCategory,
   RecordDiagnostic,
+  GetStyleVersion,
+  GetStyleVersionResponse,
 } from '@stylekit/types';
 
 export const getAllOptions = async (): Promise<StylebotOptions> => {
@@ -56,6 +58,17 @@ export const getStylesForPage = async (
   const message: GetStylesForPage = {
     name: 'GetStylesForPage',
     important,
+  };
+
+  return chrome.runtime.sendMessage(message);
+};
+
+export const getStyleVersion = async (
+  url: string
+): Promise<GetStyleVersionResponse> => {
+  const message: GetStyleVersion = {
+    name: 'GetStyleVersion',
+    url,
   };
 
   return chrome.runtime.sendMessage(message);

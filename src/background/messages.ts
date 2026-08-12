@@ -32,6 +32,7 @@ import {
   DisableStyle as DisableStyleType,
   EnableStyle as EnableStyleType,
   SetStyle as SetStyleType,
+  GetStyleVersion as GetStyleVersionType,
   SetStyleShadowRoots as SetStyleShadowRootsType,
   PreviewStyleSource as PreviewStyleSourceType,
   SetStyleSource as SetStyleSourceType,
@@ -108,6 +109,10 @@ import {
   reloadStyleSource,
   rollbackStyleSource,
 } from './style-source';
+import {
+  getStyleVersion,
+  recordStyleVersion,
+} from './style-versions';
 
 import {
   get as getReadabilitySettings,
@@ -138,6 +143,14 @@ export const SetStyle = async (
   sender?: chrome.runtime.MessageSender
 ): Promise<void> => {
   const previousStyle = await get(message.url);
+  if (previousStyle?.css !== message.css) {
+    await recordStyleVersion(
+      message.url,
+      previousStyle?.css || '',
+      message.css,
+      previousStyle?.modifiedTime || new Date().toISOString()
+    ).catch(() => undefined);
+  }
   await set(message.url, message.css, message.readability, message.shadowRoots);
 
   if (sender?.tab?.id !== undefined) {
@@ -163,6 +176,13 @@ export const SetStyle = async (
   } else {
     await applyStylesToAllTabs();
   }
+};
+
+export const GetStyleVersion = async (
+  message: GetStyleVersionType,
+  sendResponse: (response: Awaited<ReturnType<typeof getStyleVersion>>) => void
+): Promise<void> => {
+  sendResponse(await getStyleVersion(message.url));
 };
 
 export const SetStyleShadowRoots = async (
