@@ -1,11 +1,23 @@
 import { parse } from 'postcss';
 import { safeParse } from './safe-parse';
+import type { GoogleFontAxis } from '@stylekit/types';
 
 const getGoogleFontUrlAndParams = (
-  value: string
+  value: string,
+  axes?: GoogleFontAxis[]
 ): { url: string; params: string } => {
   const arg = value.replace(/ /g, '+');
-  const url = `https://fonts.googleapis.com/css2?family=${arg}:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap`;
+  const sortedAxes = axes
+    ?.filter(axis => axis.min < axis.max)
+    .sort((left, right) =>
+      left.tag < right.tag ? -1 : left.tag > right.tag ? 1 : 0
+    );
+  const axisQuery = sortedAxes?.length
+    ? `:${sortedAxes.map(axis => axis.tag).join(',')}@${sortedAxes
+        .map(axis => `${axis.min}..${axis.max}`)
+        .join(',')}`
+    : ':ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900';
+  const url = `https://fonts.googleapis.com/css2?family=${arg}${axisQuery}&display=swap`;
   const params = `url(${url})`;
 
   return { url, params };
@@ -17,10 +29,11 @@ const getGoogleFontUrlAndParams = (
  */
 export const addGoogleWebFont = async (
   value: string,
-  css: string
+  css: string,
+  axes?: GoogleFontAxis[]
 ): Promise<string> => {
   const root = safeParse(css);
-  const { url, params } = getGoogleFontUrlAndParams(value);
+  const { url, params } = getGoogleFontUrlAndParams(value, axes);
 
   return new Promise(resolve => {
     fetch(url)
@@ -75,10 +88,18 @@ export const cleanGoogleWebFonts = (css: string): string => {
     });
   });
 
-  const fontParams = fonts.map(font => getGoogleFontUrlAndParams(font).params);
-
   root.walkAtRules('import', atRule => {
-    if (fontParams.indexOf(atRule.params) === -1) {
+    const familyMatch = atRule.params.match(
+      /fonts\.googleapis\.com\/css2\?family=([^:&)]+)(?::[^&)]+)?/
+    );
+    if (!familyMatch) return;
+    const importedFamily = decodeURIComponent(
+      familyMatch[1].replace(/\+/g, ' ')
+    ).replace(/^['"]|['"]$/g, '');
+    const used = fonts.some(
+      font => font.replace(/^['"]|['"]$/g, '') === importedFamily
+    );
+    if (!used) {
       atRule.remove();
     }
   });

@@ -98,6 +98,10 @@ import {
 } from './userstyles-provider';
 import { getDiagnosticsBundle, recordDiagnostic } from './diagnostics';
 import {
+  GOOGLE_FONTS_METADATA_URL,
+  parseGoogleFontsMetadata,
+} from './google-fonts';
+import {
   configureStyleSource,
   getStyleSourceStatuses,
   previewStyleSource,
@@ -114,6 +118,8 @@ import { get as getCommands, set as setCommands } from './commands';
 
 const ONBOARDING_KEY = 'stylekit-onboarding-done';
 const GOOGLE_FONTS_CACHE_KEY = 'stylekit-google-fonts';
+const GOOGLE_FONTS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const GOOGLE_FONTS_MAX_BYTES = 10 * 1024 * 1024;
 
 export const DisableStyle = async (
   message: DisableStyleType
@@ -507,7 +513,44 @@ export const GetGoogleFontsCache = async (
   sendResponse: (response: GetGoogleFontsCacheResponse) => void
 ): Promise<void> => {
   const items = await chrome.storage.local.get(GOOGLE_FONTS_CACHE_KEY);
-  sendResponse(items[GOOGLE_FONTS_CACHE_KEY] || null);
+  const cached = items[GOOGLE_FONTS_CACHE_KEY] as
+    | GetGoogleFontsCacheResponse
+    | undefined;
+  if (cached && cached.axes && Date.now() - cached.ts < GOOGLE_FONTS_TTL_MS) {
+    sendResponse(cached);
+    return;
+  }
+
+  try {
+    const response = await fetch(GOOGLE_FONTS_METADATA_URL, {
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+    });
+    if (!response.ok) {
+      throw new Error(`Google Fonts HTTP ${response.status}`);
+    }
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.toLowerCase().includes('application/json')) {
+      throw new Error(
+        `Google Fonts returned ${contentType || 'unknown content'}`
+      );
+    }
+    const text = await response.text();
+    if (new TextEncoder().encode(text).byteLength > GOOGLE_FONTS_MAX_BYTES) {
+      throw new Error('Google Fonts metadata exceeds the 10 MB limit.');
+    }
+    const catalog = parseGoogleFontsMetadata(text);
+    await chrome.storage.local.set({ [GOOGLE_FONTS_CACHE_KEY]: catalog });
+    sendResponse(catalog);
+  } catch (error) {
+    await recordDiagnostic({
+      category: 'fonts',
+      operation: 'catalog-fetch',
+      error,
+      level: 'warning',
+    }).catch(() => undefined);
+    sendResponse(cached || null);
+  }
 };
 
 export const SetGoogleFontsCache = async (

@@ -113,7 +113,7 @@ const createFixtureServer = () => {
       <html>
         <head><title>StyleKit E2E Fixture</title></head>
         <body>
-          <section id="layout-context" style="display: flex; gap: 12px">
+          <section id="layout-context" style="display: flex; gap: 12px; font-family: 'Roboto Flex'">
             <main id="fixture">StyleKit extension smoke fixture</main>
             <aside id="secondary">Secondary selector fixture</aside>
           </section>
@@ -431,6 +431,21 @@ try {
     );
   } else {
     await waitForEditorReceiver(serviceWorker, fixtureServer.url);
+    await serviceWorker.evaluate(async () => {
+      await chrome.storage.local.set({
+        'stylekit-google-fonts': {
+          fonts: ['Roboto Flex'],
+          axes: {
+            'Roboto Flex': [
+              { tag: 'opsz', min: 8, max: 144, defaultValue: 14 },
+              { tag: 'wdth', min: 25, max: 151, defaultValue: 100 },
+              { tag: 'wght', min: 100, max: 1000, defaultValue: 400 },
+            ],
+          },
+          ts: Date.now(),
+        },
+      });
+    });
     await serviceWorker.evaluate(async fixtureUrl => {
       const tabs = await chrome.tabs.query({});
       const fixtureTab = tabs.find(tab => tab.url === fixtureUrl);
@@ -487,6 +502,39 @@ try {
       .waitFor({ state: 'detached' });
     console.log(
       '✓ Visualized and removed the selected elements’ flex layout context'
+    );
+    const textSectionState = await fixturePage
+      .locator('#stylebot')
+      .evaluate(host => {
+        const sections = Array.from(
+          host.shadowRoot?.querySelectorAll('.section') || []
+        );
+        const textSection = sections.find(section =>
+          section.querySelector('.section-title')?.textContent?.includes('Text')
+        );
+        textSection?.querySelector('.collapse-btn')?.click();
+        return Boolean(textSection);
+      });
+    assert(textSectionState, 'Text section was not rendered');
+    const widthAxisInput = fixturePage.locator(
+      '#stylebot input[aria-label="Width axis value"]'
+    );
+    await widthAxisInput.waitFor();
+    await widthAxisInput.fill('112');
+    await fixturePage
+      .locator('#stylebot input[aria-label="Font weight value"]')
+      .fill('575');
+    await fixturePage.waitForFunction(() =>
+      ['#fixture', '#secondary'].every(selector => {
+        const style = getComputedStyle(document.querySelector(selector));
+        return (
+          style.fontWeight === '575' &&
+          style.fontVariationSettings.includes('"wdth" 112')
+        );
+      })
+    );
+    console.log(
+      '✓ Applied numeric weight and metadata-backed variable-font axes'
     );
     const sectionState = await fixturePage
       .locator('#stylebot')

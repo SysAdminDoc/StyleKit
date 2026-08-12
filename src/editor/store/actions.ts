@@ -39,6 +39,7 @@ import {
   getCommands,
   getReadabilitySettings,
   setReadabilitySettings,
+  getGoogleFontsCache,
 } from '../utils/chrome';
 
 import { initListeners } from '../listeners';
@@ -244,7 +245,8 @@ export default {
 
     // Add @import for Google Web Font if needed
     if (value) {
-      css = await addGoogleWebFont(value, css);
+      const catalog = await getGoogleFontsCache().catch(() => null);
+      css = await addGoogleWebFont(value, css, catalog?.axes?.[value]);
     }
 
     // Apply font-family declaration

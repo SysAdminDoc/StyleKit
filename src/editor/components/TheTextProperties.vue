@@ -4,6 +4,7 @@
     <font-size class="mt-2" />
     <line-height class="mt-2" />
     <font-style class="mt-2" />
+    <font-axes />
     <text-decoration class="mt-2" />
     <text-transform class="mt-2" />
     <text-align class="mt-2" />
@@ -24,6 +25,7 @@ import TextTransform from './text/TextTransform.vue';
 import TextAlign from './text/TextAlign.vue';
 import LetterSpacing from './text/LetterSpacing.vue';
 import WordSpacing from './text/WordSpacing.vue';
+import FontAxes from './text/FontAxes.vue';
 
 export default defineComponent({
   name: 'TheTextProperties',
@@ -37,6 +39,7 @@ export default defineComponent({
     TextAlign,
     LetterSpacing,
     WordSpacing,
+    FontAxes,
   },
 });
 </script>

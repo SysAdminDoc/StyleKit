@@ -59,6 +59,7 @@
     "https://drive.google.com/*",
     "https://www.googleapis.com/*",
     "https://fonts.googleapis.com/*",
+    "https://fonts.google.com/*",
     "https://api.github.com/*",
     "https://userstyles.world/*",
     "https://cdn.jsdelivr.net/*"

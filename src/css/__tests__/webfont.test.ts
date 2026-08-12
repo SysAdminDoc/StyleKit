@@ -6,7 +6,10 @@ const fontUrl =
 describe('webfont', () => {
   describe('addGoogleWebFont', () => {
     it('adds @import rule for font at the top of css', async () => {
-      vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ status: 200 })));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.resolve({ status: 200 }))
+      );
 
       const css = 'a { font-family: Muli; }';
       const output = await addGoogleWebFont('Muli', css);
@@ -17,7 +20,10 @@ describe('webfont', () => {
     });
 
     it('does not add @import rule if it already exists', async () => {
-      vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ status: 200 })));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.resolve({ status: 200 }))
+      );
 
       const css = `@import url(${fontUrl});\n\na { font-family: Muli }`;
       const output = await addGoogleWebFont('Muli', css);
@@ -26,7 +32,10 @@ describe('webfont', () => {
     });
 
     it('does not add @import rule if google web font API returns 400', async () => {
-      vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ status: 400 })));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.resolve({ status: 400 }))
+      );
 
       const css = 'a { font-family: Roboto; }';
       const output = await addGoogleWebFont('Invalid', css);
@@ -35,12 +44,31 @@ describe('webfont', () => {
     });
 
     it('does not add @import rule if google web font API request fails', async () => {
-      vi.stubGlobal('fetch', vi.fn(() => Promise.reject()));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.reject())
+      );
 
       const css = 'a { font-family: Roboto; }';
       const output = await addGoogleWebFont('Invalid', css);
 
       expect(output).toBe(css);
+    });
+
+    it('requests the declared variable-font axis ranges', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.resolve({ status: 200 }))
+      );
+
+      const output = await addGoogleWebFont('Variable Sans', '', [
+        { tag: 'wght', min: 100, max: 900, defaultValue: 400 },
+        { tag: 'wdth', min: 75, max: 125, defaultValue: 100 },
+      ]);
+
+      expect(output).toContain(
+        'family=Variable+Sans:wdth,wght@75..125,100..900&display=swap'
+      );
     });
   });
 
@@ -61,6 +89,14 @@ describe('webfont', () => {
       const output = cleanGoogleWebFonts(css);
 
       expect(output).toBe(css);
+    });
+
+    it('keeps a variable font import while that family is used', () => {
+      const variableUrl =
+        'https://fonts.googleapis.com/css2?family=Variable+Sans:wdth,wght@75..125,100..900&display=swap';
+      const css = `@import url(${variableUrl});\n\na { font-family: "Variable Sans", sans-serif; }`;
+
+      expect(cleanGoogleWebFonts(css)).toBe(css);
     });
   });
 });

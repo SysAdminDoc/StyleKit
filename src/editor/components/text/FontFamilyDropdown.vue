@@ -96,12 +96,9 @@ import {
   getGoogleFontsCache,
   openOptionsPage,
   reportDiagnostic,
-  setGoogleFontsCache,
 } from '../../utils/chrome';
 
 import DropdownHackToSupportShadowDom from './../DropdownHackToSupportShadowDom.vue';
-
-const GOOGLE_FONTS_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 
 export default defineComponent({
   name: 'FontFamilyDropdown',
@@ -194,30 +191,9 @@ export default defineComponent({
       try {
         const entry = await getGoogleFontsCache();
 
-        if (entry && Date.now() - entry.ts < GOOGLE_FONTS_TTL_MS) {
+        if (entry) {
           this.googleFonts = entry.fonts;
-          return;
         }
-
-        this.googleFontsLoading = true;
-        const res = await fetch(
-          'https://fonts.googleapis.com/metadata/fonts?capability=WOFF2',
-          { referrerPolicy: 'no-referrer' }
-        );
-
-        if (!res.ok) {
-          throw new Error(`Google Fonts HTTP ${res.status}`);
-        }
-
-        const text = await res.text();
-        // Google's metadata endpoint returns JSON with a )]}' prefix
-        const json = JSON.parse(text.replace(/^\)\]\}'?\n?/, ''));
-        const fonts: string[] = (json.familyMetadataList || [])
-          .map((f: { family: string }) => f.family)
-          .sort();
-
-        this.googleFonts = fonts;
-        await setGoogleFontsCache({ fonts, ts: Date.now() });
       } catch (e) {
         console.warn('StyleKit: failed to load Google Fonts list', e);
         reportDiagnostic('fonts', 'catalog-fetch', e, 'warning').catch(

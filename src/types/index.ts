@@ -23,8 +23,15 @@ export type StylebotLayout = {
 
 export type StylebotColorPalette = 'basic' | 'material';
 export type StylebotFonts = Array<string>;
+export type GoogleFontAxis = {
+  tag: string;
+  min: number;
+  max: number;
+  defaultValue: number;
+};
 export type GoogleFontsCache = {
   fonts: string[];
+  axes?: Record<string, GoogleFontAxis[]>;
   ts: number;
 };
 
