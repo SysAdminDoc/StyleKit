@@ -6,59 +6,113 @@
 
     <template v-else>
       <div class="snippet-tabs">
-        <span
+        <button
+          type="button"
           class="snippet-tab"
           :class="{ active: activeTab === 'utilities' }"
-          @click="activeTab = 'utilities'"
+          :aria-pressed="activeTab === 'utilities'"
+          @click="setTab('utilities')"
         >
           Utilities
-        </span>
-        <span
+        </button>
+        <button
+          type="button"
           class="snippet-tab"
           :class="{ active: activeTab === 'flair' }"
-          @click="activeTab = 'flair'"
+          :aria-pressed="activeTab === 'flair'"
+          @click="setTab('flair')"
         >
           Flair
-        </span>
+        </button>
       </div>
 
       <div
-        v-for="(category, catIndex) in visibleCategories"
-        :key="catIndex"
+        v-for="category in visibleCategories"
+        :key="category.label"
         class="snippet-category"
       >
         <div class="snippet-category-label">{{ category.label }}</div>
         <div
-          v-for="(snippet, index) in category.snippets"
-          :key="index"
+          v-for="snippet in category.snippets"
+          :key="snippet.name"
           class="snippet-item"
-          :class="{ installed: isInstalled(snippet), previewing: previewingKey === snippetKey(catIndex, index) }"
+          :class="{
+            installed: isInstalled(snippet),
+            previewing: previewingKey === snippetKey(category, snippet),
+          }"
         >
           <span class="snippet-name">{{ snippet.name }}</span>
           <span class="snippet-actions">
-            <span
+            <button
+              type="button"
               class="snippet-btn snippet-preview-btn"
-              :class="{ active: previewingKey === snippetKey(catIndex, index) }"
-              @mouseenter="startPreview(snippet, catIndex, index)"
-              @mouseleave="stopPreview"
+              :class="{
+                active: previewingKey === snippetKey(category, snippet),
+              }"
+              :aria-pressed="
+                previewPinned &&
+                previewingKey === snippetKey(category, snippet)
+              "
+              :aria-label="`Preview changes from ${snippet.name}`"
+              @mouseenter="startTransientPreview(snippet, category)"
+              @mouseleave="stopTransientPreview"
+              @focus="startTransientPreview(snippet, category)"
+              @blur="stopTransientPreview"
+              @click="togglePreview(snippet, category)"
             >
               Preview
-            </span>
-            <span
+            </button>
+            <button
               v-if="isInstalled(snippet)"
+              type="button"
               class="snippet-btn snippet-remove-btn"
               @click="removeSnippet(snippet)"
             >
               Remove
-            </span>
-            <span
+            </button>
+            <button
               v-else
+              type="button"
               class="snippet-btn snippet-install-btn"
               @click="installSnippet(snippet)"
             >
               Install
-            </span>
+            </button>
           </span>
+        </div>
+      </div>
+
+      <div
+        v-if="previewSnippet"
+        class="snippet-preview-panel"
+        role="region"
+        :aria-label="`Preview of ${previewSnippet.name}`"
+      >
+        <div class="snippet-preview-heading">
+          <div>
+            <strong>{{ previewSnippet.name }}</strong>
+            <span>{{ previewCategory }} · Live preview</span>
+          </div>
+          <span v-if="previewPinned" class="snippet-preview-pinned">Pinned</span>
+        </div>
+        <div class="snippet-preview-labels" aria-hidden="true">
+          <span>Property</span><span>Before</span><span>After</span>
+        </div>
+        <div
+          v-for="change in previewChanges"
+          :key="change.property"
+          class="snippet-preview-change"
+        >
+          <code>{{ change.property }}</code>
+          <code>{{ change.before }}</code>
+          <code>{{ change.after }}</code>
+        </div>
+        <div v-if="previewSnippet.keyframes" class="snippet-keyframes-note">
+          Includes reusable <code>@keyframes</code> animation rules.
+        </div>
+        <div v-if="previewPinned" class="snippet-preview-actions">
+          <button type="button" @click="commitPreview">Keep changes</button>
+          <button type="button" @click="stopPreview">Cancel preview</button>
         </div>
       </div>
     </template>
@@ -79,6 +133,12 @@ type SnippetCategory = {
   label: string;
   tab: 'utilities' | 'flair';
   snippets: Snippet[];
+};
+
+type SnippetChange = {
+  property: string;
+  before: string;
+  after: string;
 };
 
 const SNIPPET_CATEGORIES: SnippetCategory[] = [
@@ -290,12 +350,20 @@ export default defineComponent({
     activeTab: 'utilities' | 'flair';
     previewingKey: string | null;
     previewCssBackup: string | null;
+    previewSnippet: Snippet | null;
+    previewCategory: string;
+    previewChanges: SnippetChange[];
+    previewPinned: boolean;
   } {
     return {
       categories: SNIPPET_CATEGORIES,
       activeTab: 'utilities',
       previewingKey: null,
       previewCssBackup: null,
+      previewSnippet: null,
+      previewCategory: '',
+      previewChanges: [],
+      previewPinned: false,
     };
   },
 
@@ -313,9 +381,18 @@ export default defineComponent({
     },
   },
 
+  beforeUnmount() {
+    this.stopPreview();
+  },
+
   methods: {
-    snippetKey(catIndex: number, snippetIndex: number): string {
-      return `${catIndex}-${snippetIndex}`;
+    setTab(tab: 'utilities' | 'flair'): void {
+      this.stopPreview();
+      this.activeTab = tab;
+    },
+
+    snippetKey(category: SnippetCategory, snippet: Snippet): string {
+      return `${category.label}:${snippet.name}`;
     },
 
     parseDeclarations(css: string): Array<{ property: string; value: string }> {
@@ -344,7 +421,14 @@ export default defineComponent({
 
       for (const decl of declarations) {
         cloned.walkDecls(decl.property, (found: Declaration) => {
-          if (found.value === decl.value) {
+          const expectsImportant = /\s*!important\s*$/i.test(decl.value);
+          const expectedValue = decl.value
+            .replace(/\s*!important\s*$/i, '')
+            .trim();
+          if (
+            found.value === expectedValue &&
+            (!expectsImportant || found.important)
+          ) {
             matchCount++;
           }
         });
@@ -355,6 +439,11 @@ export default defineComponent({
 
     installSnippet(snippet: Snippet): void {
       if (!this.activeSelector) return;
+
+      if (this.previewSnippet === snippet && this.previewCssBackup !== null) {
+        this.commitPreview();
+        return;
+      }
 
       // Inject keyframes if needed
       if (snippet.keyframes) {
@@ -387,11 +476,44 @@ export default defineComponent({
       }
     },
 
-    startPreview(snippet: Snippet, catIndex: number, snippetIndex: number): void {
-      if (!this.activeSelector || this.isInstalled(snippet)) return;
+    readComputedValue(property: string): string {
+      try {
+        const element = document.querySelector(this.activeSelector);
+        if (!element) return '(not set)';
+        return getComputedStyle(element).getPropertyValue(property).trim() ||
+          '(not set)';
+      } catch {
+        return '(unavailable)';
+      }
+    },
+
+    beginPreview(
+      snippet: Snippet,
+      category: SnippetCategory,
+      pinned: boolean
+    ): void {
+      if (!this.activeSelector) return;
+      const key = this.snippetKey(category, snippet);
+      if (this.previewingKey === key) {
+        this.previewPinned ||= pinned;
+        return;
+      }
+      if (this.isInstalled(snippet)) return;
+
+      this.stopPreview();
 
       this.previewCssBackup = this.$store.state.css;
-      this.previewingKey = this.snippetKey(catIndex, snippetIndex);
+      this.previewingKey = key;
+      this.previewSnippet = snippet;
+      this.previewCategory = category.label;
+      this.previewPinned = pinned;
+
+      const declarations = this.parseDeclarations(snippet.css);
+      this.previewChanges = declarations.map(declaration => ({
+        property: declaration.property,
+        before: this.readComputedValue(declaration.property),
+        after: declaration.value,
+      }));
 
       // Temporarily inject keyframes for preview
       if (snippet.keyframes) {
@@ -403,7 +525,6 @@ export default defineComponent({
         }
       }
 
-      const declarations = this.parseDeclarations(snippet.css);
       for (const decl of declarations) {
         this.$store.dispatch('applyDeclaration', {
           property: decl.property,
@@ -412,12 +533,45 @@ export default defineComponent({
       }
     },
 
+    startTransientPreview(
+      snippet: Snippet,
+      category: SnippetCategory
+    ): void {
+      if (!this.previewPinned) this.beginPreview(snippet, category, false);
+    },
+
+    stopTransientPreview(): void {
+      if (!this.previewPinned) this.stopPreview();
+    },
+
+    togglePreview(snippet: Snippet, category: SnippetCategory): void {
+      const key = this.snippetKey(category, snippet);
+      if (this.previewingKey === key && this.previewPinned) {
+        this.stopPreview();
+        return;
+      }
+      this.beginPreview(snippet, category, true);
+    },
+
+    commitPreview(): void {
+      this.previewCssBackup = null;
+      this.previewingKey = null;
+      this.previewSnippet = null;
+      this.previewCategory = '';
+      this.previewChanges = [];
+      this.previewPinned = false;
+    },
+
     stopPreview(): void {
       if (this.previewCssBackup !== null) {
         this.$store.dispatch('applyCss', { css: this.previewCssBackup });
         this.previewCssBackup = null;
       }
       this.previewingKey = null;
+      this.previewSnippet = null;
+      this.previewCategory = '';
+      this.previewChanges = [];
+      this.previewPinned = false;
     },
   },
 });
@@ -443,6 +597,8 @@ export default defineComponent({
 }
 
 .snippet-tab {
+  background: transparent;
+  border: 0;
   flex: 1;
   text-align: center;
   padding: 5px 0;
@@ -527,6 +683,7 @@ export default defineComponent({
 }
 
 .snippet-btn {
+  border: 0;
   font-size: 10px;
   font-weight: 600;
   padding: 1px 6px;
@@ -534,6 +691,93 @@ export default defineComponent({
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease;
   user-select: none;
+}
+
+.snippet-preview-panel {
+  background: rgba(30, 30, 46, 0.96);
+  border: 1px solid #45475a;
+  border-radius: 6px;
+  margin-top: 10px;
+  padding: 8px;
+}
+
+.snippet-preview-heading,
+.snippet-preview-labels,
+.snippet-preview-change,
+.snippet-preview-actions {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+}
+
+.snippet-preview-heading {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 7px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+  }
+
+  span {
+    color: #a6adc8;
+    font-size: 10px;
+  }
+}
+
+.snippet-preview-pinned {
+  background: rgba(137, 180, 250, 0.14);
+  border-radius: 999px;
+  color: #89b4fa !important;
+  padding: 2px 6px;
+}
+
+.snippet-preview-labels,
+.snippet-preview-change {
+  grid-template-columns: minmax(70px, 0.8fr) minmax(80px, 1fr) minmax(80px, 1fr);
+}
+
+.snippet-preview-labels {
+  color: #6c7086;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.snippet-preview-change {
+  border-top: 1px solid rgba(69, 71, 90, 0.65);
+  padding: 4px 0;
+
+  code {
+    color: #cdd6f4;
+    font-size: 9px;
+    overflow-wrap: anywhere;
+  }
+
+  code:last-child {
+    color: #a6e3a1;
+  }
+}
+
+.snippet-keyframes-note {
+  color: #a6adc8;
+  font-size: 10px;
+  margin-top: 5px;
+}
+
+.snippet-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 7px;
+
+  button {
+    background: rgba(137, 180, 250, 0.12);
+    border: 1px solid rgba(137, 180, 250, 0.35);
+    border-radius: 3px;
+    color: #cdd6f4;
+    font-size: 10px;
+    padding: 3px 7px;
+  }
 }
 
 .snippet-preview-btn {

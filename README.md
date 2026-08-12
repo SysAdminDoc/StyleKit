@@ -56,7 +56,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **User-created recipes** -- capture, edit, preview, apply, delete, and share reusable site or universal recipes through validated versioned JSON
 - **Pinned recipe marketplace** -- add public GitHub `owner/repo` feeds at semantic-version tags or immutable commit SHAs, then validate and install recipes locally
 - **Domain-aware suggestions** -- surface an apply-ready primary recipe for supported sites, with exact hostname/subdomain matching that rejects lookalike domains
-- **Snippet library** with ready-made CSS effects
+- **Snippet change previews** -- hover/focus for a transient live effect or pin an accessible before/after declaration panel, then keep or exactly restore the prior CSS
 
 ### Sync & Backup
 - **Google Drive sync** -- automatic bidirectional sync across devices
@@ -125,7 +125,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (49/49 suites, 222 tests)
+npm test               # Run tests (50/50 suites, 224 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run locales:check  # Validate locale keys and placeholders against English

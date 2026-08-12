@@ -698,6 +698,49 @@ try {
     console.log(
       '✓ Applied and replayed a selector-scoped animation from visual keyframe markers'
     );
+    const snippetsSection = fixturePage
+      .locator('#stylebot .section')
+      .filter({ hasText: 'Snippets' });
+    await snippetsSection.locator('.collapse-btn').click();
+    await snippetsSection.locator('.collapse-content.show').waitFor();
+    await snippetsSection.locator('.collapse-content').evaluate(element =>
+      new Promise(resolveTransition => {
+        if (!element.classList.contains('collapsing')) {
+          requestAnimationFrame(() => requestAnimationFrame(resolveTransition));
+          return;
+        }
+        element.addEventListener('transitionend', resolveTransition, {
+          once: true,
+        });
+        setTimeout(resolveTransition, 1000);
+      })
+    );
+    const hideSnippet = snippetsSection
+      .locator('.snippet-item')
+      .filter({ hasText: 'Hide element' });
+    await hideSnippet
+      .getByRole('button', { name: 'Preview changes from Hide element' })
+      .click();
+    const snippetPreview = snippetsSection.getByRole('region', {
+      name: 'Preview of Hide element',
+    });
+    await snippetPreview.getByText('none !important').waitFor();
+    await fixturePage.waitForFunction(() =>
+      ['#fixture', '#secondary'].every(
+        selector => getComputedStyle(document.querySelector(selector)).display === 'none'
+      )
+    );
+    await snippetPreview
+      .getByRole('button', { name: 'Cancel preview' })
+      .click();
+    await fixturePage.waitForFunction(() =>
+      ['#fixture', '#secondary'].every(
+        selector => getComputedStyle(document.querySelector(selector)).display !== 'none'
+      )
+    );
+    console.log(
+      '✓ Previewed snippet before/after declarations and restored the prior CSS'
+    );
     const recipesSection = fixturePage
       .locator('#stylebot .section')
       .filter({ hasText: 'Site Recipes' });
@@ -767,7 +810,9 @@ try {
     console.log(
       '✓ Rendered domain suggestions, enforced marketplace pins, and shared a user recipe'
     );
-    await fixturePage.getByRole('button', { name: 'View changes' }).click();
+    await fixturePage
+      .getByRole('button', { name: 'View changes', exact: true })
+      .click();
     const savedDiff = fixturePage.getByRole('dialog', { name: 'CSS Changes' });
     await savedDiff.getByText('Compared with saved version from').waitFor();
     assert(
