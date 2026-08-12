@@ -93,7 +93,7 @@ function copyAssetsPlugin() {
 
       // Copy Monaco editor assets
       const monacoSrc = resolve(__dirname, 'node_modules/monaco-editor/min');
-      const monacoDest = resolve(__dirname, outDir, 'monaco-editor/iframe/monaco-editor/min');
+      const monacoDest = resolve(__dirname, outDir, 'monaco-editor/iframe/node_modules/monaco-editor/min');
       if (existsSync(monacoSrc)) cpSync(monacoSrc, monacoDest, { recursive: true });
 
       // Copy Monaco iframe HTML

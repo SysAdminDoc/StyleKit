@@ -32,6 +32,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 
 ### Code Editor
 - **Full Monaco editor** -- syntax highlighting, autocomplete, word wrap
+- **Persistent editor themes** -- switch Monaco between StyleKit Dark, Light, and Sepia palettes; the choice survives editor and browser restarts
 - **CSS/SCSS mode toggle** -- switch syntax highlighting between CSS and SCSS
 - **CSS linting** -- real-time error detection (missing braces, invalid values) with relaxed rules for modern CSS
 - **Live preview** -- CSS changes apply instantly as you type
@@ -119,7 +120,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (39/39 suites, 189 tests)
+npm test               # Run tests (40/40 suites, 191 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run locales:check  # Validate locale keys and placeholders against English
@@ -129,7 +130,7 @@ npm run dependencies:check # Report safe and compatibility-review dependency upd
 npm run release:artifacts  # Build and verify versioned ZIP/CRX release assets
 ```
 
-`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to document and open-shadow-root fixtures, verifies loopback live-source reload/rollback, Shift-click multi-selection, grid/flex context visualization, variable-font axes, conic-gradient controls, and visual keyframe animations, and opens the visual editor and Monaco iframe.
+`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to document and open-shadow-root fixtures, verifies loopback live-source reload/rollback, Shift-click multi-selection, grid/flex context visualization, variable-font axes, conic-gradient controls, visual keyframe animations, and persisted Monaco themes.
 
 `npm run release:artifacts` removes old versioned StyleKit assets, builds Chrome and Firefox, creates deterministic ZIPs with POSIX entry paths, and signs and verifies a CRX when `dist.pem` or `STYLEKIT_CRX_KEY` is available.
 

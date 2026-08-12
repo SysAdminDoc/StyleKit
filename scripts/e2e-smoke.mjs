@@ -25,6 +25,21 @@ const assertClassicContentScript = async (directory, file) => {
   assert.doesNotMatch(source, /^\s*(?:import|export)\s/m);
 };
 
+const assertMonacoRuntime = async directory => {
+  const iframeHtml = await readFile(
+    resolve(directory, 'monaco-editor/iframe/index.html'),
+    'utf8'
+  );
+  assert.match(iframeHtml, /<script type="module" src="index\.js"><\/script>/);
+  const loader = await readFile(
+    resolve(
+      directory,
+      'monaco-editor/iframe/node_modules/monaco-editor/min/vs/loader.js'
+    )
+  );
+  assert(loader.byteLength > 0, 'Monaco AMD loader must be packaged');
+};
+
 const waitForServiceWorker = async context => {
   const existingWorker = context
     .serviceWorkers()
@@ -156,13 +171,15 @@ try {
   assert.equal(chromeManifest.version, firefoxManifest.version);
   assert.equal(chromeManifest.manifest_version, 3);
   assert.equal(firefoxManifest.manifest_version, 3);
-  await Promise.all(
-    [chromeDist, firefoxDist].flatMap(directory =>
+  await Promise.all([
+    ...[chromeDist, firefoxDist].flatMap(directory =>
       chromeManifest.content_scripts.flatMap(entry =>
         entry.js.map(file => assertClassicContentScript(directory, file))
       )
-    )
-  );
+    ),
+    assertMonacoRuntime(chromeDist),
+    assertMonacoRuntime(firefoxDist),
+  ]);
   console.log(
     `✓ Chrome and Firefox MV3 builds agree on v${chromeManifest.version} with classic content scripts`
   );
@@ -201,7 +218,11 @@ try {
 
   const fixturePage = await context.newPage();
   const fixtureErrors = [];
+  const fixtureConsoleErrors = [];
   fixturePage.on('pageerror', error => fixtureErrors.push(error.message));
+  fixturePage.on('console', message => {
+    if (message.type() === 'error') fixtureConsoleErrors.push(message.text());
+  });
   await fixturePage.goto(fixtureServer.url, { waitUntil: 'domcontentloaded' });
   await fixturePage.getByText('StyleKit extension smoke fixture').waitFor();
 
@@ -622,7 +643,40 @@ try {
       const host = document.querySelector('#stylebot');
       return Boolean(host?.shadowRoot?.querySelector('iframe'));
     });
-    console.log('✓ Opened the editor and rendered its Monaco iframe');
+    const monacoFrame = fixturePage.frameLocator('#stylebot iframe');
+    const monacoTheme = monacoFrame.getByLabel('Monaco theme');
+    await monacoTheme.waitFor().catch(async error => {
+      const frameDiagnostics = await Promise.all(
+        fixturePage.frames().map(async frame => ({
+          url: frame.url(),
+          body: await frame
+            .locator('body')
+            .innerHTML()
+            .catch(() => '<unavailable>'),
+        }))
+      );
+      throw new Error(
+        `Monaco toolbar did not load: ${error.message}; page errors=${JSON.stringify(
+          fixtureErrors
+        )}; console errors=${JSON.stringify(
+          fixtureConsoleErrors
+        )}; frames=${JSON.stringify(frameDiagnostics)}`
+      );
+    });
+    await monacoTheme.selectOption('sepia');
+    await monacoFrame
+      .locator('#container[data-stylekit-monaco-theme="sepia"]')
+      .waitFor();
+    await fixturePage.locator('#stylebot iframe').evaluate(iframe => {
+      const src = iframe.getAttribute('src');
+      if (!src) throw new Error('Monaco iframe source is missing');
+      iframe.setAttribute('src', src);
+    });
+    await monacoTheme.waitFor();
+    assert.equal(await monacoTheme.inputValue(), 'sepia');
+    console.log(
+      '✓ Opened Monaco and persisted its Sepia theme across an iframe reload'
+    );
   }
 
   console.log('StyleKit extension E2E smoke passed.');
