@@ -24,7 +24,10 @@ export const getCachedOptions = async (): Promise<StylebotOptions> => {
   }
 
   const items = await chrome.storage.local.get('options');
-  cachedOptions = items['options'] || defaultOptions;
+  cachedOptions = {
+    ...defaultOptions,
+    ...(items['options'] || {}),
+  };
   return cachedOptions as StylebotOptions;
 };
 

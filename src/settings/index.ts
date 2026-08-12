@@ -38,6 +38,7 @@ export const defaultOptions: StylebotOptions = {
   darkMode: false,
   showReadability: false,
   autoLoadStyles: false,
+  minifyCssExport: false,
 };
 
 export const defaultCommands: StylebotCommands = {

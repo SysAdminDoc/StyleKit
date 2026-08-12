@@ -30,6 +30,8 @@ import {
   StyleSourceStatus,
   StyleSourceStatusMap,
 } from '@stylekit/types';
+import postcss from 'postcss';
+import normalizeWhitespace from 'postcss-normalize-whitespace';
 import {
   createImportPreview,
   createStyleImportEnvelope,
@@ -305,16 +307,30 @@ export const exportAsJSONFile = (styles: StyleMap): void => {
   downloadAnchorNode.remove();
 };
 
-export const exportAsCSSFile = (styles: StyleMap): void => {
+export const createCssExport = async (
+  styles: StyleMap,
+  minify = false
+): Promise<string> => {
   const parts: string[] = [];
+  const processor = minify ? postcss([normalizeWhitespace()]) : null;
 
-  Object.entries(styles).forEach(([url, style]) => {
+  for (const [url, style] of Object.entries(styles)) {
     if (style.css && style.css.trim()) {
-      parts.push(`/* ${url} */\n${style.css}`);
+      const css = processor
+        ? (await processor.process(style.css, { from: undefined })).css
+        : style.css;
+      parts.push(`/* ${url} */\n${css}`);
     }
-  });
+  }
 
-  const css = parts.join('\n\n');
+  return parts.join(minify ? '\n' : '\n\n');
+};
+
+export const exportAsCSSFile = async (
+  styles: StyleMap,
+  minify = false
+): Promise<void> => {
+  const css = await createCssExport(styles, minify);
   const dataStr = 'data:text/css;charset=utf-8,' + encodeURIComponent(css);
   const downloadAnchorNode = document.createElement('a');
   downloadAnchorNode.setAttribute('href', dataStr);

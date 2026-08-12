@@ -71,6 +71,7 @@ export type StylebotOptions = {
   darkMode: boolean;
   showReadability: boolean;
   autoLoadStyles: boolean;
+  minifyCssExport: boolean;
 };
 
 export type Style = {

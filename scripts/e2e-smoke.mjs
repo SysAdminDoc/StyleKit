@@ -414,6 +414,58 @@ try {
     '✓ Applied opted-in CSS to a dynamic open shadow root and rendered its options state'
   );
 
+  await optionsPage
+    .locator('.navigation-item')
+    .filter({ hasText: 'Sync' })
+    .click();
+  const minifyCssExport = optionsPage.getByRole('checkbox', {
+    name: 'Minify CSS export',
+  });
+  await minifyCssExport.check();
+  await optionsPage.evaluate(() => {
+    window.__stylekitE2eDownload = null;
+    HTMLAnchorElement.prototype.click = function () {
+      window.__stylekitE2eDownload = {
+        download: this.download,
+        href: this.href,
+      };
+    };
+  });
+  await optionsPage.getByRole('button', { name: 'Export as CSS' }).click();
+  await optionsPage.waitForFunction(() => window.__stylekitE2eDownload);
+  const cssDownload = await optionsPage.evaluate(
+    () => window.__stylekitE2eDownload
+  );
+  assert.equal(cssDownload.download, 'stylekit_export.css');
+  const exportedCss = decodeURIComponent(
+    cssDownload.href.slice(cssDownload.href.indexOf(',') + 1)
+  );
+  assert(exportedCss.startsWith(`/* ${styleKey} */\n`));
+  assert.match(
+    exportedCss,
+    /#fixture, ?#shadow-fixture\{color:rgb\(12,34,56\)!important\}/
+  );
+  assert.equal(
+    await popupPage.evaluate(async url => {
+      const styles = await chrome.runtime.sendMessage({ name: 'GetAllStyles' });
+      return styles[url]?.css;
+    }, styleKey),
+    css
+  );
+  await optionsPage.reload();
+  await optionsPage
+    .locator('.navigation-item')
+    .filter({ hasText: 'Sync' })
+    .click();
+  assert(
+    await optionsPage
+      .getByRole('checkbox', { name: 'Minify CSS export' })
+      .isChecked()
+  );
+  console.log(
+    '✓ Exported minified CSS without mutating styles and persisted the preference'
+  );
+
   const reloadStatus = await popupPage.evaluate(async url => {
     return chrome.runtime.sendMessage({ name: 'ReloadStyleSource', url });
   }, styleKey);

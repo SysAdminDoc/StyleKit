@@ -62,6 +62,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **Import dry runs** -- JSON, Gist, URL, and UserStyles.world imports validate schema/content and show add/change/remove counts before replacing styles
 - **JSON export** -- versioned format with metadata (`{version, app, exportedAt, styles}`)
 - **CSS export** -- all styles as a single `.css` file with URL comments
+- **Optional minified CSS export** -- remove redundant whitespace while preserving per-site boundaries, without changing saved styles or JSON backups
 - **JSON import** -- validates structure, supports both versioned and legacy formats
 - **Privacy-safe diagnostics** -- export version, browser, permissions, storage usage, and recent redacted errors without CSS or tokens
 
@@ -121,7 +122,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (42/42 suites, 199 tests)
+npm test               # Run tests (42/42 suites, 201 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run locales:check  # Validate locale keys and placeholders against English

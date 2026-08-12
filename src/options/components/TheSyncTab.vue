@@ -69,6 +69,22 @@
       {{ t('backup_description') }}
     </b-row>
 
+    <b-row no-gutters class="mb-3">
+      <b-col>
+        <b-form-checkbox v-model="minifyCssExport" switch>
+          Minify CSS export
+        </b-form-checkbox>
+        <div class="description mt-1">
+          Remove unnecessary whitespace from downloaded CSS. Saved styles and
+          JSON backups are not changed.
+        </div>
+      </b-col>
+    </b-row>
+
+    <b-alert v-if="cssExportError" show variant="danger" role="alert">
+      CSS export failed: {{ cssExportError }}
+    </b-alert>
+
     <b-row v-if="lastRollbackSnapshot" no-gutters class="rollback-panel mb-4">
       <b-col>
         <div class="rollback-title">Last rollback snapshot</div>
@@ -85,8 +101,8 @@
           {{ t('export') }}
         </app-button>
 
-        <app-button class="mr-4" @click="exportCss">
-          {{ t('export_css') }}
+        <app-button class="mr-4" :disabled="exportingCss" @click="exportCss">
+          {{ exportingCss ? 'Exporting CSS...' : t('export_css') }}
         </app-button>
 
         <app-button @click="importJson">
@@ -160,6 +176,8 @@ export default defineComponent({
     restoringRollback: boolean;
     pendingJsonImport: StyleImportPreview | null;
     exportingDiagnostics: boolean;
+    exportingCss: boolean;
+    cssExportError: string;
     diagnosticsError: string;
   } {
     return {
@@ -172,6 +190,8 @@ export default defineComponent({
       restoringRollback: false,
       pendingJsonImport: null,
       exportingDiagnostics: false,
+      exportingCss: false,
+      cssExportError: '',
       diagnosticsError: '',
     };
   },
@@ -204,6 +224,19 @@ export default defineComponent({
         ? getImportDiffText(this.pendingJsonImport.diff)
         : '';
     },
+
+    minifyCssExport: {
+      get(): boolean {
+        return this.$store.state.options?.minifyCssExport ?? false;
+      },
+
+      set(value: boolean): void {
+        this.$store.dispatch('setOption', {
+          name: 'minifyCssExport',
+          value,
+        });
+      },
+    },
   },
 
   created() {
@@ -215,8 +248,21 @@ export default defineComponent({
       exportAsJSONFile(this.$store.state.styles);
     },
 
-    exportCss(): void {
-      exportAsCSSFile(this.$store.state.styles);
+    async exportCss(): Promise<void> {
+      this.exportingCss = true;
+      this.cssExportError = '';
+
+      try {
+        await exportAsCSSFile(
+          this.$store.state.styles,
+          this.minifyCssExport
+        );
+      } catch (error) {
+        this.cssExportError =
+          error instanceof Error ? error.message : 'Unknown error';
+      } finally {
+        this.exportingCss = false;
+      }
     },
 
     async importJson(): Promise<void> {
