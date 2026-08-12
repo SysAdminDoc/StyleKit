@@ -17,6 +17,7 @@ import { getCachedStyles, setCachedStyles } from './cache';
 import { StyleIndex } from './style-index';
 import { setAllStylesInStorage } from './style-storage';
 import { applyUserOriginStylesToFrame } from './style-applier';
+import { recordDiagnostic } from './diagnostics';
 
 const LAST_STYLES_ROLLBACK_SNAPSHOT_KEY = 'styles-rollback-last';
 const STYLE_TOMBSTONES_KEY = 'style-tombstones';
@@ -29,11 +30,10 @@ const cloneTombstones = (
   tombstones: StyleSyncTombstoneMap
 ): StyleSyncTombstoneMap => JSON.parse(JSON.stringify(tombstones));
 
-export const getStyleTombstones =
-  async (): Promise<StyleSyncTombstoneMap> => {
-    const items = await chrome.storage.local.get(STYLE_TOMBSTONES_KEY);
-    return items[STYLE_TOMBSTONES_KEY] || {};
-  };
+export const getStyleTombstones = async (): Promise<StyleSyncTombstoneMap> => {
+  const items = await chrome.storage.local.get(STYLE_TOMBSTONES_KEY);
+  return items[STYLE_TOMBSTONES_KEY] || {};
+};
 
 export const setStyleTombstones = async (
   tombstones: StyleSyncTombstoneMap
@@ -84,29 +84,39 @@ export const applyStylesToAllTabs = async (): Promise<void> => {
   const allStyles = await getAll();
   const tabs = await chrome.tabs.query({});
 
-  await Promise.all(tabs.map(async tab => {
-    if (tab && tab.url && tab.id) {
-      const { styles, defaultStyle } = getStylesForPage(tab.url, allStyles);
-      const userOriginApplied = await applyUserOriginStylesToFrame(
-        tab.id,
-        0,
-        styles
-      );
+  await Promise.all(
+    tabs.map(async tab => {
+      if (tab && tab.url && tab.id) {
+        const { styles, defaultStyle } = getStylesForPage(tab.url, allStyles);
+        const userOriginApplied = await applyUserOriginStylesToFrame(
+          tab.id,
+          0,
+          styles
+        );
 
-      const message: ApplyStylesToTab = {
-        name: 'ApplyStylesToTab',
-        defaultStyle,
-        styles,
-        userOriginApplied,
-      };
+        const message: ApplyStylesToTab = {
+          name: 'ApplyStylesToTab',
+          defaultStyle,
+          styles,
+          userOriginApplied,
+        };
 
-      chrome.tabs.sendMessage(tab.id, message).catch(e => console.warn('StyleKit: failed to send styles to tab', tab.id, e));
+        chrome.tabs.sendMessage(tab.id, message).catch(error => {
+          console.warn('StyleKit: failed to send styles to tab', tab.id, error);
+          recordDiagnostic({
+            category: 'message',
+            operation: 'apply-styles-to-tab',
+            error,
+            level: 'warning',
+          }).catch(() => undefined);
+        });
 
-      if (tab.active) {
-        updateIcon(tab, styles, defaultStyle);
+        if (tab.active) {
+          updateIcon(tab, styles, defaultStyle);
+        }
       }
-    }
-  }));
+    })
+  );
 };
 
 export const getAll = async (): Promise<StyleMap> => {
@@ -208,9 +218,7 @@ export const getStylesForPage = (
     if (!allStyles[url]) continue;
 
     const rawCss = allStyles[url].css || '';
-    const css = important
-      ? appendImportantToDeclarations(rawCss)
-      : rawCss;
+    const css = important ? appendImportantToDeclarations(rawCss) : rawCss;
 
     const { enabled, readability, modifiedTime } = allStyles[url];
     const style = { url, css, enabled, readability, modifiedTime };
@@ -429,37 +437,30 @@ export const move = async (src: string, dest: string): Promise<void> => {
   }
 };
 
-export const getImportCss = (url: string): Promise<string> => {
-  return new Promise(resolve => {
+export const getImportCss = async (url: string): Promise<string> => {
+  try {
     // Only allow CSS imports from HTTPS URLs
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol !== 'https:') { resolve(''); return; }
-    } catch { resolve(''); return; }
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') {
+      throw new Error('CSS import URL must use HTTPS');
+    }
 
-    fetch(url)
-      .then(response => {
-        if (!response.ok) {
-          resolve('');
-          return;
-        }
-        if (!isSafeCssContentType(response.headers.get('content-type'))) {
-          resolve('');
-          return;
-        }
-        return response.text();
-      })
-      .then(css => {
-        if (!css) {
-          resolve('');
-          return;
-        }
-        safeParse(css);
-        resolve(css);
-      })
-      .catch(() => {
-        // if css is invalid, return back empty css
-        resolve('');
-      });
-  });
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`CSS import HTTP ${response.status}`);
+    if (!isSafeCssContentType(response.headers.get('content-type'))) {
+      throw new Error('CSS import content type is not supported');
+    }
+
+    const css = await response.text();
+    if (!css) throw new Error('CSS import response was empty');
+    safeParse(css);
+    return css;
+  } catch (error) {
+    await recordDiagnostic({
+      category: 'import',
+      operation: 'import-rule-fetch',
+      error,
+    }).catch(() => undefined);
+    return '';
+  }
 };

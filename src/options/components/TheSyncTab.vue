@@ -11,7 +11,8 @@
     <b-alert v-if="pendingJsonImport" show variant="warning" class="mb-4">
       <div class="import-preview-title">JSON import preview</div>
       <div class="description mb-3">
-        {{ pendingJsonImportSummary }}. Existing styles are unchanged until applied.
+        {{ pendingJsonImportSummary }}. Existing styles are unchanged until
+        applied.
       </div>
       <app-button
         class="mr-2"
@@ -23,11 +24,19 @@
       <app-button @click="pendingJsonImport = null">Cancel</app-button>
     </b-alert>
 
-    <b-alert v-model="showRollbackRestoreSuccessAlert" variant="success" dismissible>
+    <b-alert
+      v-model="showRollbackRestoreSuccessAlert"
+      variant="success"
+      dismissible
+    >
       Restored styles from the last rollback snapshot.
     </b-alert>
 
-    <b-alert v-model="showRollbackRestoreErrorAlert" variant="danger" dismissible>
+    <b-alert
+      v-model="showRollbackRestoreErrorAlert"
+      variant="danger"
+      dismissible
+    >
       Restore failed: {{ rollbackRestoreError }}
     </b-alert>
 
@@ -42,8 +51,8 @@
     </b-row>
 
     <b-row no-gutters class="description mb-3">
-      Backup and restore styles to a private GitHub Gist.
-      Requires a Personal Access Token with gist scope.
+      Backup and restore styles to a private GitHub Gist. Requires a Personal
+      Access Token with gist scope.
     </b-row>
 
     <b-row no-gutters class="mb-4">
@@ -60,18 +69,11 @@
       {{ t('backup_description') }}
     </b-row>
 
-    <b-row
-      v-if="lastRollbackSnapshot"
-      no-gutters
-      class="rollback-panel mb-4"
-    >
+    <b-row v-if="lastRollbackSnapshot" no-gutters class="rollback-panel mb-4">
       <b-col>
         <div class="rollback-title">Last rollback snapshot</div>
         <div class="description mb-2">{{ lastRollbackDescription }}</div>
-        <app-button
-          :disabled="restoringRollback"
-          @click="restoreLastRollback"
-        >
+        <app-button :disabled="restoringRollback" @click="restoreLastRollback">
           {{ restoringRollback ? 'Restoring...' : 'Restore last rollback' }}
         </app-button>
       </b-col>
@@ -92,6 +94,32 @@
         </app-button>
       </b-col>
     </b-row>
+
+    <b-row no-gutters class="mt-5">
+      <h2>Diagnostics</h2>
+    </b-row>
+
+    <b-row no-gutters class="description mb-3">
+      Export a privacy-safe support bundle with version, browser, permissions,
+      storage usage, and recent errors. Saved CSS, tokens, and account data are
+      excluded.
+    </b-row>
+
+    <b-alert v-if="diagnosticsError" show variant="danger" role="alert">
+      Diagnostics export failed: {{ diagnosticsError }}
+    </b-alert>
+
+    <b-row no-gutters>
+      <b-col>
+        <app-button :disabled="exportingDiagnostics" @click="exportDiagnostics">
+          {{
+            exportingDiagnostics
+              ? 'Exporting diagnostics...'
+              : 'Export diagnostics'
+          }}
+        </app-button>
+      </b-col>
+    </b-row>
   </div>
 </template>
 
@@ -108,7 +136,9 @@ import {
   importStylesWithFilePicker,
   exportAsJSONFile,
   exportAsCSSFile,
+  exportDiagnosticsAsJSONFile,
   getImportDiffText,
+  reportDiagnostic,
 } from '../utils';
 
 export default defineComponent({
@@ -129,6 +159,8 @@ export default defineComponent({
     rollbackRestoreError: string;
     restoringRollback: boolean;
     pendingJsonImport: StyleImportPreview | null;
+    exportingDiagnostics: boolean;
+    diagnosticsError: string;
   } {
     return {
       importError: null,
@@ -139,6 +171,8 @@ export default defineComponent({
       rollbackRestoreError: '',
       restoringRollback: false,
       pendingJsonImport: null,
+      exportingDiagnostics: false,
+      diagnosticsError: '',
     };
   },
 
@@ -197,6 +231,7 @@ export default defineComponent({
         this.importError = e;
         this.showImportErrorAlert = true;
         this.showImportSuccessAlert = false;
+        reportDiagnostic('import', 'json-preview', e).catch(() => undefined);
       }
     },
 
@@ -216,6 +251,7 @@ export default defineComponent({
         this.importError = e;
         this.showImportErrorAlert = true;
         this.showImportSuccessAlert = false;
+        reportDiagnostic('import', 'json-apply', e).catch(() => undefined);
       }
     },
 
@@ -241,6 +277,20 @@ export default defineComponent({
         this.showRollbackRestoreSuccessAlert = false;
       } finally {
         this.restoringRollback = false;
+      }
+    },
+
+    async exportDiagnostics(): Promise<void> {
+      this.exportingDiagnostics = true;
+      this.diagnosticsError = '';
+
+      try {
+        await exportDiagnosticsAsJSONFile();
+      } catch (error) {
+        this.diagnosticsError =
+          error instanceof Error ? error.message : 'Unknown error';
+      } finally {
+        this.exportingDiagnostics = false;
       }
     },
   },

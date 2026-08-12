@@ -50,6 +50,8 @@ import {
   ApplyPreviewStyleToTab as ApplyPreviewStyleToTabType,
   RemovePreviewStyleFromTab as RemovePreviewStyleFromTabType,
   ReportUserstylesProviderError as ReportUserstylesProviderErrorType,
+  RecordDiagnostic as RecordDiagnosticType,
+  GetDiagnosticsBundle as GetDiagnosticsBundleType,
   GetCommandsResponse,
   GetAllOptionsResponse,
   GetAllStylesResponse,
@@ -68,6 +70,8 @@ import {
   SetGoogleFontsCacheResponse,
   GetUserstylesIndexResponse,
   GetUserstylesProviderHealthResponse,
+  GetDiagnosticsBundleResponse,
+  RecordDiagnosticResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 import {
@@ -81,6 +85,7 @@ import {
   getUserstylesProviderHealth,
   recordUserstylesProviderFailure,
 } from './userstyles-provider';
+import { getDiagnosticsBundle, recordDiagnostic } from './diagnostics';
 
 import {
   get as getReadabilitySettings,
@@ -135,13 +140,24 @@ export const SetAllStyles = async (
   message: SetAllStylesType,
   sendResponse: (response: SetAllStylesResponse) => void
 ): Promise<void> => {
-  if (message.rollbackReason) {
-    await createStylesRollbackSnapshot(message.rollbackReason);
-  }
+  try {
+    if (message.rollbackReason) {
+      await createStylesRollbackSnapshot(message.rollbackReason);
+    }
 
-  await setAll(message.styles);
-  await applyStylesToAllTabs();
-  sendResponse();
+    await setAll(message.styles);
+    await applyStylesToAllTabs();
+    sendResponse();
+  } catch (error) {
+    if (message.rollbackReason) {
+      await recordDiagnostic({
+        category: 'import',
+        operation: message.rollbackReason,
+        error,
+      }).catch(() => undefined);
+    }
+    throw error;
+  }
 };
 
 export const GetStylesForIframe = async (
@@ -265,8 +281,17 @@ export const GetImportCss = async (
 
   sendResponse: (response: GetImportCssResponse) => void
 ): Promise<void> => {
-  const css = await getImportCss(message.url);
-  sendResponse(css);
+  try {
+    const css = await getImportCss(message.url);
+    sendResponse(css);
+  } catch (error) {
+    await recordDiagnostic({
+      category: 'import',
+      operation: 'remote-css-fetch',
+      error,
+    }).catch(() => undefined);
+    throw error;
+  }
 };
 
 export const GetThumbnail = async (
@@ -276,24 +301,37 @@ export const GetThumbnail = async (
   // Return from cache if available
   if (message.styleId !== undefined) {
     const cached = await getCachedThumb(message.styleId);
-    if (cached) { sendResponse(cached); return; }
+    if (cached) {
+      sendResponse(cached);
+      return;
+    }
   }
 
   try {
     const thumbUrl = new URL(message.url);
-    if (!['https://userstyles.world', 'https://img.userstyles.world'].some(
-      origin => thumbUrl.origin === origin || thumbUrl.origin.endsWith('.userstyles.world')
-    )) {
-      sendResponse(''); return;
+    if (
+      !['https://userstyles.world', 'https://img.userstyles.world'].some(
+        origin =>
+          thumbUrl.origin === origin ||
+          thumbUrl.origin.endsWith('.userstyles.world')
+      )
+    ) {
+      sendResponse('');
+      return;
     }
     const res = await fetch(message.url, { referrerPolicy: 'no-referrer' });
-    if (!res.ok) { sendResponse(''); return; }
+    if (!res.ok) {
+      sendResponse('');
+      return;
+    }
     const buffer = await res.arrayBuffer();
     const uint8 = new Uint8Array(buffer);
     const CHUNK = 8192;
     let binary = '';
     for (let i = 0; i < uint8.length; i += CHUNK) {
-      binary += String.fromCharCode(...(Array.from(uint8.subarray(i, i + CHUNK))));
+      binary += String.fromCharCode(
+        ...Array.from(uint8.subarray(i, i + CHUNK))
+      );
     }
     const contentType = res.headers.get('content-type') || 'image/png';
     const dataUrl = `data:${contentType};base64,${btoa(binary)}`;
@@ -310,8 +348,17 @@ export const RunGoogleDriveSync = async (
   _message: RunGoogleDriveSyncType,
   sendResponse: (response: RunGoogleDriveSyncResponse) => void
 ): Promise<void> => {
-  const report = await runGoogleDriveSync();
-  sendResponse(report);
+  try {
+    const report = await runGoogleDriveSync();
+    sendResponse(report);
+  } catch (error) {
+    await recordDiagnostic({
+      category: 'sync',
+      operation: 'google-drive',
+      error,
+    }).catch(() => undefined);
+    throw error;
+  }
 };
 
 export const GetLastStylesRollbackSnapshot = async (
@@ -428,4 +475,24 @@ export const ReportUserstylesProviderError = async (
     message.errorMessage
   );
   sendResponse(response);
+};
+
+export const RecordDiagnostic = async (
+  message: RecordDiagnosticType,
+  sendResponse: (response: RecordDiagnosticResponse) => void
+): Promise<void> => {
+  await recordDiagnostic({
+    category: message.category,
+    operation: message.operation,
+    error: message.errorMessage,
+    level: message.level,
+  });
+  sendResponse();
+};
+
+export const GetDiagnosticsBundle = async (
+  _message: GetDiagnosticsBundleType,
+  sendResponse: (response: GetDiagnosticsBundleResponse) => void
+): Promise<void> => {
+  sendResponse(await getDiagnosticsBundle());
 };

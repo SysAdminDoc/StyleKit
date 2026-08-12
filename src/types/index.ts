@@ -180,6 +180,48 @@ export type GetUserstylesIndexResponse = {
   error?: string;
 };
 
+export type DiagnosticCategory =
+  | 'sync'
+  | 'import'
+  | 'provider'
+  | 'fonts'
+  | 'message';
+
+export type DiagnosticEvent = {
+  id: string;
+  timestamp: string;
+  category: DiagnosticCategory;
+  operation: string;
+  level: 'warning' | 'error';
+  message: string;
+};
+
+export type DiagnosticsBundle = {
+  schemaVersion: 1;
+  generatedAt: string;
+  extension: {
+    name: 'StyleKit';
+    version: string;
+  };
+  browser: {
+    name: string;
+    userAgent: string;
+    platform?: {
+      os: string;
+      arch: string;
+      naclArch: string;
+    };
+  };
+  permissions: {
+    api: string[];
+    origins: string[];
+  };
+  storage: {
+    localBytes: number | null;
+  };
+  events: DiagnosticEvent[];
+};
+
 export * from './TabMessage';
 export * from './BackgroundPageMessage';
 export * from './BackgroundPageMessageResponse';

@@ -56,6 +56,7 @@ import { getCurrentTimestamp } from '@stylekit/utils';
 import { StyleMap } from '@stylekit/types';
 
 import AppButton from '../AppButton.vue';
+import { reportDiagnostic } from '../../utils';
 import {
   assertValidImportCss,
   createImportPreview,
@@ -129,14 +130,16 @@ export default defineComponent({
       try {
         const response = await fetch(this.url);
         if (!response.ok) {
-          this.error = `Failed to fetch: ${response.status} ${response.statusText}`;
-          return;
+          throw new Error(
+            `Failed to fetch: ${response.status} ${response.statusText}`
+          );
         }
 
         const contentType = response.headers.get('content-type') || '';
         if (!isSafeCssContentType(contentType)) {
-          this.error = `Unexpected content type: ${contentType}. Expected CSS or plain text.`;
-          return;
+          throw new Error(
+            `Unexpected content type: ${contentType}. Expected CSS or plain text.`
+          );
         }
 
         const text = await response.text();
@@ -144,9 +147,11 @@ export default defineComponent({
 
         this.preview = text;
       } catch (e) {
-        this.error = e instanceof Error
-          ? e.message
-          : 'Failed to fetch CSS. The URL may be invalid or blocked by CORS.';
+        this.error =
+          e instanceof Error
+            ? e.message
+            : 'Failed to fetch CSS. The URL may be invalid or blocked by CORS.';
+        reportDiagnostic('import', 'url-css-preview', e).catch(() => undefined);
       } finally {
         this.fetching = false;
       }
@@ -166,6 +171,7 @@ export default defineComponent({
         });
       } catch (e) {
         this.error = e instanceof Error ? e.message : 'Invalid CSS import';
+        reportDiagnostic('import', 'url-css-apply', e).catch(() => undefined);
       }
     },
   },

@@ -69,6 +69,7 @@ import {
   createStyleImportEnvelope,
   getImportDiffText,
   parseStyleImportPayload,
+  reportDiagnostic,
 } from '../../utils';
 
 export default defineComponent({
@@ -106,12 +107,18 @@ export default defineComponent({
 
   computed: {
     pendingImportSummary(): string {
-      return this.pendingImport ? getImportDiffText(this.pendingImport.diff) : '';
+      return this.pendingImport
+        ? getImportDiffText(this.pendingImport.diff)
+        : '';
     },
   },
 
   async created() {
-    const items = await chrome.storage.local.get(['gistToken', 'gistId', 'gistUrl']);
+    const items = await chrome.storage.local.get([
+      'gistToken',
+      'gistId',
+      'gistUrl',
+    ]);
     this.token = items.gistToken || '';
     this.gistId = items.gistId || '';
     this.gistUrl = items.gistUrl || '';
@@ -140,7 +147,11 @@ export default defineComponent({
 
       try {
         const styles = this.$store.state.styles;
-        const content = JSON.stringify(createStyleImportEnvelope(styles), null, 2);
+        const content = JSON.stringify(
+          createStyleImportEnvelope(styles),
+          null,
+          2
+        );
 
         const body: Record<string, unknown> = {
           description: 'StyleKit CSS Styles Backup',
@@ -188,6 +199,7 @@ export default defineComponent({
       } catch (e) {
         this.status = `Export failed: ${e instanceof Error ? e.message : 'Unknown error'}`;
         this.statusType = 'error';
+        reportDiagnostic('sync', 'gist-export', e).catch(() => undefined);
       } finally {
         this.exporting = false;
       }
@@ -230,6 +242,9 @@ export default defineComponent({
       } catch (e) {
         this.status = `Import failed: ${e instanceof Error ? e.message : 'Unknown error'}`;
         this.statusType = 'error';
+        reportDiagnostic('sync', 'gist-import-preview', e).catch(
+          () => undefined
+        );
       } finally {
         this.importing = false;
       }
@@ -250,6 +265,7 @@ export default defineComponent({
       } catch (e) {
         this.status = `Import failed: ${e instanceof Error ? e.message : 'Unknown error'}`;
         this.statusType = 'error';
+        reportDiagnostic('sync', 'gist-import-apply', e).catch(() => undefined);
       }
     },
   },

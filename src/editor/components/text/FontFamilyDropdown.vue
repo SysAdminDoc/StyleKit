@@ -22,7 +22,10 @@
           />
         </div>
 
-        <b-dropdown-item v-if="!hideDefault && !search" @click="$emit('select', '')">
+        <b-dropdown-item
+          v-if="!hideDefault && !search"
+          @click="$emit('select', '')"
+        >
           {{ t('default') }}
         </b-dropdown-item>
 
@@ -53,7 +56,9 @@
 
         <template v-if="filteredGoogleFonts.length > 0">
           <b-dropdown-divider />
-          <b-dropdown-header>Google Fonts{{ googleFontsLoading ? ' (loading...)' : '' }}</b-dropdown-header>
+          <b-dropdown-header>
+            Google Fonts{{ googleFontsLoading ? ' (loading...)' : '' }}
+          </b-dropdown-header>
           <b-dropdown-item
             v-for="font in filteredGoogleFonts"
             :key="'gf-' + font"
@@ -63,7 +68,14 @@
           </b-dropdown-item>
         </template>
 
-        <div v-if="search && filteredSystemFonts.length === 0 && filteredGoogleFonts.length === 0" class="font-no-results">
+        <div
+          v-if="
+            search &&
+            filteredSystemFonts.length === 0 &&
+            filteredGoogleFonts.length === 0
+          "
+          class="font-no-results"
+        >
           No fonts matching "{{ search }}"
         </div>
 
@@ -83,6 +95,7 @@ import { t } from '@stylekit/i18n';
 import {
   getGoogleFontsCache,
   openOptionsPage,
+  reportDiagnostic,
   setGoogleFontsCache,
 } from '../../utils/chrome';
 
@@ -159,7 +172,9 @@ export default defineComponent({
     filteredGoogleFonts(): string[] {
       if (!this.search) return this.googleFonts.slice(0, 50);
       const q = this.search.toLowerCase();
-      return this.googleFonts.filter(f => f.toLowerCase().includes(q)).slice(0, 50);
+      return this.googleFonts
+        .filter(f => f.toLowerCase().includes(q))
+        .slice(0, 50);
     },
   },
 
@@ -190,7 +205,9 @@ export default defineComponent({
           { referrerPolicy: 'no-referrer' }
         );
 
-        if (!res.ok) return;
+        if (!res.ok) {
+          throw new Error(`Google Fonts HTTP ${res.status}`);
+        }
 
         const text = await res.text();
         // Google's metadata endpoint returns JSON with a )]}' prefix
@@ -203,6 +220,9 @@ export default defineComponent({
         await setGoogleFontsCache({ fonts, ts: Date.now() });
       } catch (e) {
         console.warn('StyleKit: failed to load Google Fonts list', e);
+        reportDiagnostic('fonts', 'catalog-fetch', e, 'warning').catch(
+          () => undefined
+        );
       } finally {
         this.googleFontsLoading = false;
       }

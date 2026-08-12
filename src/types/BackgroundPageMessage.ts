@@ -5,6 +5,7 @@ import {
   ReadabilitySettings,
   StyleMap,
   StylesRollbackReason,
+  DiagnosticCategory,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -173,6 +174,18 @@ export type ReportUserstylesProviderError = {
   errorMessage: string;
 };
 
+export type RecordDiagnostic = {
+  name: 'RecordDiagnostic';
+  category: DiagnosticCategory;
+  operation: string;
+  errorMessage: string;
+  level?: 'warning' | 'error';
+};
+
+export type GetDiagnosticsBundle = {
+  name: 'GetDiagnosticsBundle';
+};
+
 type BackgroundPageMessage =
   | SetStyle
   | EnableStyle
@@ -205,6 +218,8 @@ type BackgroundPageMessage =
   | RemovePreviewStyleFromTab
   | GetUserstylesIndex
   | GetUserstylesProviderHealth
-  | ReportUserstylesProviderError;
+  | ReportUserstylesProviderError
+  | RecordDiagnostic
+  | GetDiagnosticsBundle;
 
 export default BackgroundPageMessage;

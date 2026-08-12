@@ -3,6 +3,7 @@ import {
   UserstylesIndexEntry,
   UserstylesProviderHealth,
 } from '@stylekit/types';
+import { recordDiagnostic } from './diagnostics';
 
 const INDEX_LOCAL_KEY = 'stylekit-usw-index-cache';
 const HEALTH_LOCAL_KEY = 'stylekit-usw-provider-health';
@@ -70,12 +71,14 @@ export const getUserstylesProviderHealth =
     return result[HEALTH_LOCAL_KEY] || createDefaultHealth();
   };
 
-const writeProviderHealth = (
-  health: UserstylesProviderHealth
-): Promise<void> => chrome.storage.local.set({ [HEALTH_LOCAL_KEY]: health });
+const writeProviderHealth = (health: UserstylesProviderHealth): Promise<void> =>
+  chrome.storage.local.set({ [HEALTH_LOCAL_KEY]: health });
 
 const getBackoffMs = (failureCount: number): number =>
-  Math.min(MAX_BACKOFF_MS, BASE_BACKOFF_MS * 2 ** Math.max(0, failureCount - 1));
+  Math.min(
+    MAX_BACKOFF_MS,
+    BASE_BACKOFF_MS * 2 ** Math.max(0, failureCount - 1)
+  );
 
 const fetchProviderIndex = async (): Promise<UserstylesIndexEntry[]> => {
   const controller = new AbortController();
@@ -130,8 +133,21 @@ export const recordUserstylesProviderFailure = async (
     getUserstylesProviderHealth(),
     readIndexCache(),
   ]);
-  const health = makeFailureHealth(previous, error, operation, Boolean(cache), now);
-  await writeProviderHealth(health);
+  const health = makeFailureHealth(
+    previous,
+    error,
+    operation,
+    Boolean(cache),
+    now
+  );
+  await Promise.all([
+    writeProviderHealth(health),
+    recordDiagnostic({
+      category: 'provider',
+      operation,
+      error,
+    }),
+  ]);
   return health;
 };
 
@@ -219,7 +235,14 @@ export const getUserstylesIndex = async (
       Boolean(cache),
       now
     );
-    await writeProviderHealth(health);
+    await Promise.all([
+      writeProviderHealth(health),
+      recordDiagnostic({
+        category: 'provider',
+        operation: 'index',
+        error,
+      }),
+    ]);
 
     return {
       data: cache?.data || [],

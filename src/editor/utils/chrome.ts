@@ -23,6 +23,8 @@ import {
   GetGoogleFontsCacheResponse,
   SetGoogleFontsCache,
   GoogleFontsCache,
+  DiagnosticCategory,
+  RecordDiagnostic,
 } from '@stylekit/types';
 
 export const getAllOptions = async (): Promise<StylebotOptions> => {
@@ -126,15 +128,14 @@ export const getCommands = async (): Promise<GetCommandsResponse> => {
   return chrome.runtime.sendMessage(message);
 };
 
-export const getReadabilitySettings = async (): Promise<
-  GetReadabilitySettingsResponse
-> => {
-  const message: GetReadabilitySettings = {
-    name: 'GetReadabilitySettings',
-  };
+export const getReadabilitySettings =
+  async (): Promise<GetReadabilitySettingsResponse> => {
+    const message: GetReadabilitySettings = {
+      name: 'GetReadabilitySettings',
+    };
 
-  return chrome.runtime.sendMessage(message);
-};
+    return chrome.runtime.sendMessage(message);
+  };
 
 export const setReadabilitySettings = (value: ReadabilitySettings): void => {
   const message: SetReadabilitySettings = {
@@ -172,12 +173,30 @@ export const getGoogleFontsCache =
     return chrome.runtime.sendMessage(message);
   };
 
-export const setGoogleFontsCache = (
-  value: GoogleFontsCache
-): Promise<void> => {
+export const setGoogleFontsCache = (value: GoogleFontsCache): Promise<void> => {
   const message: SetGoogleFontsCache = {
     name: 'SetGoogleFontsCache',
     value,
+  };
+
+  return chrome.runtime.sendMessage(message);
+};
+
+export const reportDiagnostic = (
+  category: DiagnosticCategory,
+  operation: string,
+  error: unknown,
+  level: 'warning' | 'error' = 'error'
+): Promise<void> => {
+  const message: RecordDiagnostic = {
+    name: 'RecordDiagnostic',
+    category,
+    operation,
+    errorMessage:
+      error instanceof Error
+        ? `${error.name}: ${error.message}`
+        : String(error),
+    level,
   };
 
   return chrome.runtime.sendMessage(message);

@@ -1,4 +1,8 @@
-import { getUserstylesIndex, matchesUserstylesDomain } from './userstyles-provider';
+import {
+  getUserstylesIndex,
+  matchesUserstylesDomain,
+} from './userstyles-provider';
+import { recordDiagnostic } from './diagnostics';
 
 const THUMB_LOCAL_KEY = 'stylekit-usw-thumbs';
 
@@ -11,7 +15,9 @@ async function fetchDataUrl(url: string): Promise<string> {
     const CHUNK = 8192;
     let binary = '';
     for (let i = 0; i < uint8.length; i += CHUNK) {
-      binary += String.fromCharCode(...Array.from(uint8.subarray(i, i + CHUNK)));
+      binary += String.fromCharCode(
+        ...Array.from(uint8.subarray(i, i + CHUNK))
+      );
     }
     const contentType = res.headers.get('content-type') || 'image/webp';
     return `data:${contentType};base64,${btoa(binary)}`;
@@ -37,7 +43,8 @@ export async function setCachedThumb(
 }
 
 export async function preloadForDomain(domain: string): Promise<void> {
-  if (!domain || domain.startsWith('chrome') || domain.startsWith('edge')) return;
+  if (!domain || domain.startsWith('chrome') || domain.startsWith('edge'))
+    return;
 
   try {
     const { data: index } = await getUserstylesIndex();
@@ -51,7 +58,8 @@ export async function preloadForDomain(domain: string): Promise<void> {
     if (!matches.length) return;
 
     const thumbResult = await chrome.storage.local.get(THUMB_LOCAL_KEY);
-    const thumbs = (thumbResult[THUMB_LOCAL_KEY] as Record<number, string>) || {};
+    const thumbs =
+      (thumbResult[THUMB_LOCAL_KEY] as Record<number, string>) || {};
 
     const toFetch = matches.filter(s => s.sn && !thumbs[s.i]).slice(0, 10);
     if (!toFetch.length) return;
@@ -65,7 +73,12 @@ export async function preloadForDomain(domain: string): Promise<void> {
     }
 
     await chrome.storage.local.set({ [THUMB_LOCAL_KEY]: thumbs });
-  } catch {
-    // silent — background optimization only
+  } catch (error) {
+    await recordDiagnostic({
+      category: 'provider',
+      operation: 'thumbnail-preload',
+      error,
+      level: 'warning',
+    }).catch(() => undefined);
   }
 }

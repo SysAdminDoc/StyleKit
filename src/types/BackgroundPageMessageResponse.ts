@@ -9,6 +9,7 @@ import {
   GoogleDriveSyncReport,
   GetUserstylesIndexResponse,
   UserstylesProviderHealth,
+  DiagnosticsBundle,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -48,6 +49,8 @@ export type SetEditorOnboardingDoneResponse = void;
 export type GetGoogleFontsCacheResponse = GoogleFontsCache | null;
 export type SetGoogleFontsCacheResponse = void;
 export type GetUserstylesProviderHealthResponse = UserstylesProviderHealth;
+export type GetDiagnosticsBundleResponse = DiagnosticsBundle;
+export type RecordDiagnosticResponse = void;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -67,6 +70,8 @@ type BackgroundPageMessageResponse =
   | GetGoogleFontsCacheResponse
   | SetGoogleFontsCacheResponse
   | GetUserstylesProviderHealthResponse
-  | GetUserstylesIndexResponse;
+  | GetUserstylesIndexResponse
+  | GetDiagnosticsBundleResponse
+  | RecordDiagnosticResponse;
 
 export default BackgroundPageMessageResponse;

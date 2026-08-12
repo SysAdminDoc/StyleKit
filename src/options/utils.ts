@@ -16,6 +16,10 @@ import {
   GetLastStylesRollbackSnapshot,
   RestoreLastStylesRollbackSnapshot,
   GoogleDriveSyncReport,
+  DiagnosticCategory,
+  DiagnosticsBundle,
+  GetDiagnosticsBundle,
+  RecordDiagnostic,
 } from '@stylekit/types';
 import {
   createImportPreview,
@@ -120,6 +124,49 @@ export const restoreLastStylesRollbackSnapshot =
     return chrome.runtime.sendMessage(message);
   };
 
+const getDiagnosticErrorMessage = (error: unknown): string =>
+  error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+
+export const reportDiagnostic = (
+  category: DiagnosticCategory,
+  operation: string,
+  error: unknown,
+  level: 'warning' | 'error' = 'error'
+): Promise<void> => {
+  const message: RecordDiagnostic = {
+    name: 'RecordDiagnostic',
+    category,
+    operation,
+    errorMessage: getDiagnosticErrorMessage(error),
+    level,
+  };
+
+  return chrome.runtime.sendMessage(message);
+};
+
+export const getDiagnosticsBundle = async (): Promise<DiagnosticsBundle> => {
+  const message: GetDiagnosticsBundle = {
+    name: 'GetDiagnosticsBundle',
+  };
+
+  return chrome.runtime.sendMessage(message);
+};
+
+export const exportDiagnosticsAsJSONFile = async (): Promise<void> => {
+  const bundle = await getDiagnosticsBundle();
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], {
+    type: 'application/json',
+  });
+  const objectUrl = URL.createObjectURL(blob);
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.href = objectUrl;
+  downloadAnchor.download = `stylekit-diagnostics-${bundle.generatedAt.slice(0, 10)}.json`;
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+};
+
 export const importStylesWithFilePicker = (
   currentStyles: StyleMap
 ): Promise<StyleImportPreview> => {
@@ -146,7 +193,9 @@ export const importStylesWithFilePicker = (
               JSON.parse(reader.result as string)
             );
 
-            resolve(createImportPreview(currentStyles, parsed.styles, 'replace'));
+            resolve(
+              createImportPreview(currentStyles, parsed.styles, 'replace')
+            );
           } catch (e) {
             reject(
               e instanceof Error

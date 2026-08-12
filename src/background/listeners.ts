@@ -34,6 +34,8 @@ import {
   GetUserstylesIndex,
   GetUserstylesProviderHealth,
   ReportUserstylesProviderError,
+  RecordDiagnostic,
+  GetDiagnosticsBundle,
 } from './messages';
 
 import { get as getOption } from './options';
@@ -69,11 +71,18 @@ chrome.tabs.onUpdated.addListener(async (tabId, _, tab) => {
     ContextMenu.update(tab);
 
     const autoLoad = await getOption('autoLoadStyles');
-    if (autoLoad && tab.url && !tab.url.startsWith('chrome') && !tab.url.startsWith('edge')) {
+    if (
+      autoLoad &&
+      tab.url &&
+      !tab.url.startsWith('chrome') &&
+      !tab.url.startsWith('edge')
+    ) {
       try {
         const domain = new URL(tab.url).hostname;
         preloadForDomain(domain);
-      } catch { /* ignore invalid URLs */ }
+      } catch {
+        /* ignore invalid URLs */
+      }
     }
 
     const message: TabUpdated = {
@@ -122,6 +131,8 @@ const ASYNC_MESSAGES = new Set([
   'GetUserstylesIndex',
   'GetUserstylesProviderHealth',
   'ReportUserstylesProviderError',
+  'RecordDiagnostic',
+  'GetDiagnosticsBundle',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -241,6 +252,12 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'ReportUserstylesProviderError':
         ReportUserstylesProviderError(message, sendResponse);
+        break;
+      case 'RecordDiagnostic':
+        RecordDiagnostic(message, sendResponse);
+        break;
+      case 'GetDiagnosticsBundle':
+        GetDiagnosticsBundle(message, sendResponse);
         break;
     }
 
