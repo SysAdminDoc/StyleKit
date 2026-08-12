@@ -11,6 +11,10 @@ import {
   OpenDonatePage,
   SetStyle,
   GetStyleVersion,
+  GetUserRecipes,
+  SaveUserRecipe,
+  DeleteUserRecipe,
+  ImportUserRecipes,
   SetStyleShadowRoots,
   PreviewStyleSource,
   SetStyleSource,
@@ -146,6 +150,10 @@ const ASYNC_MESSAGES = new Set([
   'RollbackStyleSource',
   'GetStyleSourceStatuses',
   'GetStyleVersion',
+  'GetUserRecipes',
+  'SaveUserRecipe',
+  'DeleteUserRecipe',
+  'ImportUserRecipes',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -189,6 +197,18 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'GetStyleVersion':
         GetStyleVersion(message, sendResponse);
+        break;
+      case 'GetUserRecipes':
+        GetUserRecipes(sendResponse);
+        break;
+      case 'SaveUserRecipe':
+        SaveUserRecipe(message, sendResponse);
+        break;
+      case 'DeleteUserRecipe':
+        DeleteUserRecipe(message, sendResponse);
+        break;
+      case 'ImportUserRecipes':
+        ImportUserRecipes(message, sendResponse);
         break;
       case 'SetStyleShadowRoots':
         SetStyleShadowRoots(message);

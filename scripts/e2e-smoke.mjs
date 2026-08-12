@@ -690,6 +690,51 @@ try {
     console.log(
       '✓ Applied and replayed a selector-scoped animation from visual keyframe markers'
     );
+    const recipesSection = fixturePage
+      .locator('#stylebot .section')
+      .filter({ hasText: 'Site Recipes' });
+    await recipesSection.locator('.collapse-btn').click();
+    await recipesSection.getByRole('button', { name: 'New', exact: true }).click();
+    await recipesSection.getByLabel('Recipe name').fill('E2E Focus Recipe');
+    await recipesSection
+      .getByLabel('Recipe description')
+      .fill('Created by the browser smoke');
+    await recipesSection
+      .getByLabel('Recipe CSS')
+      .fill('#fixture { border-top: 7px solid rgb(1, 2, 3) !important; }');
+    await recipesSection.getByRole('button', { name: 'Save recipe' }).click();
+    await recipesSection.getByRole('status').getByText('Recipe saved.').waitFor();
+    const userRecipe = recipesSection
+      .locator('.user-recipe-item')
+      .filter({ hasText: 'E2E Focus Recipe' });
+    await userRecipe.getByRole('button', { name: 'Apply' }).click();
+    await fixturePage.waitForFunction(
+      () => getComputedStyle(document.querySelector('#fixture')).borderTopWidth === '7px'
+    );
+    const [recipeDownload] = await Promise.all([
+      fixturePage.waitForEvent('download'),
+      userRecipe.getByRole('button', { name: 'Export' }).click(),
+    ]);
+    assert.match(
+      recipeDownload.suggestedFilename(),
+      /^stylekit-recipe-.+\.json$/
+    );
+    const recipeDownloadPath = await recipeDownload.path();
+    assert(recipeDownloadPath, 'Recipe JSON download did not produce a file');
+    const recipeExport = JSON.parse(await readFile(recipeDownloadPath, 'utf8'));
+    assert.equal(recipeExport.kind, 'recipes');
+    assert.equal(recipeExport.recipes[0]?.name, 'E2E Focus Recipe');
+    assert(
+      await serviceWorker.evaluate(async () => {
+        const stored = await chrome.storage.local.get('stylekit-user-recipes');
+        return stored['stylekit-user-recipes']?.some(
+          recipe => recipe.name === 'E2E Focus Recipe'
+        );
+      })
+    );
+    console.log(
+      '✓ Created, applied, persisted, and exported a user-authored recipe'
+    );
     await fixturePage.getByRole('button', { name: 'View changes' }).click();
     const savedDiff = fixturePage.getByRole('dialog', { name: 'CSS Changes' });
     await savedDiff.getByText('Compared with saved version from').waitFor();

@@ -53,6 +53,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 ### Site Recipes & Snippets
 - **20+ pre-built recipe packs** for YouTube, Reddit, GitHub, Twitter, and more
 - **Universal recipes** (dark mode, compact layout, etc.)
+- **User-created recipes** -- capture, edit, preview, apply, delete, and share reusable site or universal recipes through validated versioned JSON
 - **Snippet library** with ready-made CSS effects
 
 ### Sync & Backup
@@ -122,7 +123,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (44/44 suites, 207 tests)
+npm test               # Run tests (47/47 suites, 214 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run locales:check  # Validate locale keys and placeholders against English
@@ -132,7 +133,7 @@ npm run dependencies:check # Report safe and compatibility-review dependency upd
 npm run release:artifacts  # Build and verify versioned ZIP/CRX release assets
 ```
 
-`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to document and open-shadow-root fixtures, verifies minified export, saved-version diffs, loopback live-source reload/rollback, Shift-click multi-selection, grid/flex context visualization, variable-font axes, conic-gradient controls, visual keyframe animations, and persisted Monaco themes/lint/Prettier settings.
+`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to document and open-shadow-root fixtures, verifies minified export, user-authored recipe persistence/export/application, saved-version diffs, loopback live-source reload/rollback, Shift-click multi-selection, grid/flex context visualization, variable-font axes, conic-gradient controls, visual keyframe animations, and persisted Monaco themes/lint/Prettier settings.
 
 `npm run release:artifacts` removes old versioned StyleKit assets, builds Chrome and Firefox, creates deterministic ZIPs with POSIX entry paths, and signs and verifies a CRX when `dist.pem` or `STYLEKIT_CRX_KEY` is available.
 

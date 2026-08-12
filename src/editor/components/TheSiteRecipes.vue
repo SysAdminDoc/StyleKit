@@ -1,5 +1,103 @@
 <template>
   <div class="site-recipes">
+    <div class="recipe-section">
+      <div class="recipe-section-heading">
+        <div class="recipe-section-title">My recipes</div>
+        <div class="recipe-management-actions">
+          <button type="button" @click="startCreate">New</button>
+          <button type="button" @click="importRecipes">Import</button>
+          <button
+            type="button"
+            :disabled="userRecipes.length === 0"
+            @click="exportRecipes(userRecipes)"
+          >
+            Export all
+          </button>
+        </div>
+      </div>
+
+      <div v-if="recipeError" class="recipe-error" role="alert">
+        {{ recipeError }}
+      </div>
+      <div v-if="recipeStatus" class="recipe-status" role="status">
+        {{ recipeStatus }}
+      </div>
+
+      <form v-if="editingRecipe" class="recipe-form" @submit.prevent="saveRecipe">
+        <label>
+          Name
+          <input v-model="recipeDraft.name" aria-label="Recipe name" />
+        </label>
+        <label>
+          Description
+          <input
+            v-model="recipeDraft.description"
+            aria-label="Recipe description"
+          />
+        </label>
+        <label>
+          Sites (comma separated; blank is universal)
+          <input v-model="recipeSites" aria-label="Recipe sites" />
+        </label>
+        <label>
+          CSS
+          <textarea
+            v-model="recipeDraft.css"
+            rows="6"
+            aria-label="Recipe CSS"
+          />
+        </label>
+        <div class="recipe-form-actions">
+          <button type="submit" :disabled="savingRecipe">
+            {{ savingRecipe ? 'Saving...' : 'Save recipe' }}
+          </button>
+          <button type="button" @click="cancelEdit">Cancel</button>
+        </div>
+      </form>
+
+      <div v-if="!loadingRecipes && userRecipes.length === 0" class="no-match-hint">
+        Save the current page CSS as a reusable recipe, or import a shared
+        StyleKit recipe JSON file.
+      </div>
+
+      <div
+        v-for="recipe in userRecipes"
+        :key="recipe.id"
+        class="recipe-item user-recipe-item"
+      >
+        <div class="recipe-header">
+          <span class="recipe-name">{{ recipe.name }}</span>
+          <span class="recipe-desc">{{ recipe.description }}</span>
+          <span class="recipe-sites">
+            {{ recipe.sites.length ? recipe.sites.join(', ') : 'Universal' }}
+          </span>
+        </div>
+        <div class="recipe-actions user-recipe-actions">
+          <button
+            type="button"
+            @mouseenter="previewRecipe(recipe)"
+            @mouseleave="removePreview"
+            @click="installRecipe(recipe)"
+          >
+            Apply
+          </button>
+          <button type="button" @click="startEdit(recipe)">Edit</button>
+          <button type="button" @click="exportRecipes([recipe])">Export</button>
+          <button
+            type="button"
+            :aria-label="
+              deleteConfirmId === recipe.id
+                ? `Confirm delete ${recipe.name}`
+                : `Delete ${recipe.name}`
+            "
+            @click="removeUserRecipe(recipe)"
+          >
+            {{ deleteConfirmId === recipe.id ? 'Sure?' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div v-if="matchingRecipes.length > 0" class="recipe-section">
       <div class="recipe-section-title">For this site</div>
       <div
@@ -58,6 +156,18 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import type { UserRecipe, UserRecipeDraft } from '@stylekit/types';
+import {
+  deleteUserRecipe,
+  getUserRecipes,
+  importUserRecipes,
+  saveUserRecipe,
+} from '../utils/chrome';
+import {
+  downloadUserRecipes,
+  pickUserRecipeFile,
+} from '../utils/user-recipes';
+import { normalizeRecipeSite } from '../../utils/user-recipes';
 
 interface Recipe {
   name: string;
@@ -203,9 +313,34 @@ const universalRecipes: Recipe[] = [
 export default defineComponent({
   name: 'TheSiteRecipes',
 
-  data() {
+  data(): {
+    previewStyle: HTMLStyleElement | null;
+    userRecipes: UserRecipe[];
+    loadingRecipes: boolean;
+    savingRecipe: boolean;
+    editingRecipe: boolean;
+    recipeDraft: UserRecipeDraft;
+    recipeSites: string;
+    recipeError: string;
+    recipeStatus: string;
+    deleteConfirmId: string | null;
+  } {
     return {
-      previewStyle: null as HTMLStyleElement | null,
+      previewStyle: null,
+      userRecipes: [],
+      loadingRecipes: true,
+      savingRecipe: false,
+      editingRecipe: false,
+      recipeDraft: {
+        name: '',
+        description: '',
+        sites: [],
+        css: '',
+      },
+      recipeSites: '',
+      recipeError: '',
+      recipeStatus: '',
+      deleteConfirmId: null,
     };
   },
 
@@ -226,11 +361,117 @@ export default defineComponent({
     },
   },
 
+  created() {
+    void this.loadUserRecipes();
+  },
+
   beforeUnmount() {
     this.removePreview();
   },
 
   methods: {
+    async loadUserRecipes(): Promise<void> {
+      this.loadingRecipes = true;
+      this.recipeError = '';
+      try {
+        this.userRecipes = await getUserRecipes();
+      } catch (error) {
+        this.recipeError =
+          error instanceof Error ? error.message : 'Recipes could not be loaded';
+      } finally {
+        this.loadingRecipes = false;
+      }
+    },
+
+    startCreate(): void {
+      const site = normalizeRecipeSite(this.currentUrl);
+      this.recipeDraft = {
+        name: '',
+        description: '',
+        sites: site ? [site] : [],
+        css: this.$store.state.css || '',
+      };
+      this.recipeSites = site;
+      this.recipeError = '';
+      this.recipeStatus = '';
+      this.editingRecipe = true;
+    },
+
+    startEdit(recipe: UserRecipe): void {
+      this.recipeDraft = {
+        id: recipe.id,
+        name: recipe.name,
+        description: recipe.description,
+        sites: [...recipe.sites],
+        css: recipe.css,
+      };
+      this.recipeSites = recipe.sites.join(', ');
+      this.recipeError = '';
+      this.recipeStatus = '';
+      this.editingRecipe = true;
+    },
+
+    cancelEdit(): void {
+      this.editingRecipe = false;
+      this.savingRecipe = false;
+    },
+
+    async saveRecipe(): Promise<void> {
+      this.savingRecipe = true;
+      this.recipeError = '';
+      try {
+        this.userRecipes = await saveUserRecipe({
+          ...this.recipeDraft,
+          sites: this.recipeSites.split(','),
+        });
+        this.editingRecipe = false;
+        this.recipeStatus = 'Recipe saved.';
+      } catch (error) {
+        this.recipeError =
+          error instanceof Error ? error.message : 'Recipe could not be saved';
+      } finally {
+        this.savingRecipe = false;
+      }
+    },
+
+    async removeUserRecipe(recipe: UserRecipe): Promise<void> {
+      if (this.deleteConfirmId !== recipe.id) {
+        this.deleteConfirmId = recipe.id;
+        return;
+      }
+      this.recipeError = '';
+      try {
+        this.userRecipes = await deleteUserRecipe(recipe.id);
+        this.recipeStatus = 'Recipe deleted.';
+      } catch (error) {
+        this.recipeError =
+          error instanceof Error ? error.message : 'Recipe could not be deleted';
+      } finally {
+        this.deleteConfirmId = null;
+      }
+    },
+
+    exportRecipes(recipes: UserRecipe[]): void {
+      const filename =
+        recipes.length === 1
+          ? `stylekit-recipe-${recipes[0].id}.json`
+          : 'stylekit-recipes.json';
+      downloadUserRecipes(recipes, filename);
+      this.recipeStatus = `${recipes.length} recipe${recipes.length === 1 ? '' : 's'} exported.`;
+    },
+
+    async importRecipes(): Promise<void> {
+      this.recipeError = '';
+      try {
+        const recipes = await pickUserRecipeFile();
+        this.userRecipes = await importUserRecipes(recipes);
+        this.recipeStatus = `${recipes.length} recipe${recipes.length === 1 ? '' : 's'} imported.`;
+      } catch (error) {
+        this.recipeError =
+          error instanceof Error ? error.message : 'Recipe import failed';
+      }
+    },
+
     installRecipe(recipe: Recipe): void {
       const currentCss = this.$store.state.css || '';
       const newCss = currentCss
@@ -276,6 +517,99 @@ export default defineComponent({
   color: #6c7086;
   margin-bottom: 6px;
   font-weight: 600;
+}
+
+.recipe-section-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.recipe-management-actions,
+.recipe-form-actions,
+.user-recipe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.recipe-management-actions button,
+.recipe-form-actions button,
+.user-recipe-actions button {
+  background: #313244;
+  border: 1px solid #45475a;
+  border-radius: 3px;
+  color: #cdd6f4;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 2px 5px;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.recipe-form {
+  background: #181825;
+  border: 1px solid #45475a;
+  border-radius: 5px;
+  display: grid;
+  gap: 6px;
+  margin: 6px 0;
+  padding: 8px;
+
+  label {
+    color: #a6adc8;
+    display: grid;
+    font-size: 10px;
+    gap: 2px;
+  }
+
+  input,
+  textarea {
+    background: #11111b;
+    border: 1px solid #45475a;
+    border-radius: 3px;
+    color: #cdd6f4;
+    font: inherit;
+    padding: 4px;
+    resize: vertical;
+  }
+}
+
+.recipe-error,
+.recipe-status {
+  border-radius: 3px;
+  font-size: 11px;
+  margin: 4px 0;
+  padding: 4px 6px;
+}
+
+.recipe-error {
+  background: rgba(243, 139, 168, 0.12);
+  color: #f38ba8;
+}
+
+.recipe-status {
+  background: rgba(166, 227, 161, 0.12);
+  color: #a6e3a1;
+}
+
+.recipe-sites {
+  color: #89b4fa;
+  display: block;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.user-recipe-item {
+  align-items: flex-start;
+}
+
+.user-recipe-actions {
+  justify-content: flex-end;
+  max-width: 124px;
 }
 
 .recipe-item {

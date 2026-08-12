@@ -7,6 +7,8 @@ import {
   StylesRollbackReason,
   DiagnosticCategory,
   StyleSourceConfig,
+  UserRecipe,
+  UserRecipeDraft,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -20,6 +22,25 @@ export type SetStyle = {
 export type GetStyleVersion = {
   name: 'GetStyleVersion';
   url: string;
+};
+
+export type GetUserRecipes = {
+  name: 'GetUserRecipes';
+};
+
+export type SaveUserRecipe = {
+  name: 'SaveUserRecipe';
+  recipe: UserRecipeDraft;
+};
+
+export type DeleteUserRecipe = {
+  name: 'DeleteUserRecipe';
+  id: string;
+};
+
+export type ImportUserRecipes = {
+  name: 'ImportUserRecipes';
+  recipes: UserRecipe[];
 };
 
 export type SetStyleShadowRoots = {
@@ -227,6 +248,10 @@ export type GetDiagnosticsBundle = {
 type BackgroundPageMessage =
   | SetStyle
   | GetStyleVersion
+  | GetUserRecipes
+  | SaveUserRecipe
+  | DeleteUserRecipe
+  | ImportUserRecipes
   | SetStyleShadowRoots
   | PreviewStyleSource
   | SetStyleSource

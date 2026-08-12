@@ -95,6 +95,33 @@ export type StyleVersionSnapshot = {
   savedAt: Timestamp;
 };
 
+export type UserRecipeDraft = {
+  id?: string;
+  name: string;
+  description: string;
+  sites: string[];
+  css: string;
+};
+
+export type UserRecipe = Omit<UserRecipeDraft, 'id'> & {
+  id: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
+
+export type UserRecipeExportEnvelope = {
+  version: 1;
+  app: 'StyleKit';
+  kind: 'recipes';
+  exportedAt: Timestamp;
+  recipes: UserRecipe[];
+};
+
+export type UserRecipesResponse = {
+  recipes: UserRecipe[];
+  error?: string;
+};
+
 export type StyleSyncTombstone = {
   deletedTime: Timestamp;
 };

@@ -14,6 +14,7 @@ import {
   StyleSourceStatus,
   StyleSourceStatusMap,
   StyleVersionSnapshot,
+  UserRecipesResponse,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -62,6 +63,7 @@ export type ReloadStyleSourceResponse = StyleSourceStatus;
 export type RollbackStyleSourceResponse = StyleSourceStatus;
 export type GetStyleSourceStatusesResponse = StyleSourceStatusMap;
 export type GetStyleVersionResponse = StyleVersionSnapshot | null;
+export type GetUserRecipesResponse = UserRecipesResponse;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -89,6 +91,7 @@ type BackgroundPageMessageResponse =
   | ReloadStyleSourceResponse
   | RollbackStyleSourceResponse
   | GetStyleSourceStatusesResponse
-  | GetStyleVersionResponse;
+  | GetStyleVersionResponse
+  | GetUserRecipesResponse;
 
 export default BackgroundPageMessageResponse;

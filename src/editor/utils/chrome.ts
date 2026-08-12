@@ -27,6 +27,13 @@ import {
   RecordDiagnostic,
   GetStyleVersion,
   GetStyleVersionResponse,
+  GetUserRecipes,
+  GetUserRecipesResponse,
+  SaveUserRecipe,
+  DeleteUserRecipe,
+  ImportUserRecipes,
+  UserRecipe,
+  UserRecipeDraft,
 } from '@stylekit/types';
 
 export const getAllOptions = async (): Promise<StylebotOptions> => {
@@ -72,6 +79,37 @@ export const getStyleVersion = async (
   };
 
   return chrome.runtime.sendMessage(message);
+};
+
+const unwrapUserRecipes = (response: GetUserRecipesResponse): UserRecipe[] => {
+  if (response.error) throw new Error(response.error);
+  return response.recipes;
+};
+
+export const getUserRecipes = async (): Promise<UserRecipe[]> => {
+  const message: GetUserRecipes = { name: 'GetUserRecipes' };
+  return unwrapUserRecipes(await chrome.runtime.sendMessage(message));
+};
+
+export const saveUserRecipe = async (
+  recipe: UserRecipeDraft
+): Promise<UserRecipe[]> => {
+  const message: SaveUserRecipe = { name: 'SaveUserRecipe', recipe };
+  return unwrapUserRecipes(await chrome.runtime.sendMessage(message));
+};
+
+export const deleteUserRecipe = async (
+  id: string
+): Promise<UserRecipe[]> => {
+  const message: DeleteUserRecipe = { name: 'DeleteUserRecipe', id };
+  return unwrapUserRecipes(await chrome.runtime.sendMessage(message));
+};
+
+export const importUserRecipes = async (
+  recipes: UserRecipe[]
+): Promise<UserRecipe[]> => {
+  const message: ImportUserRecipes = { name: 'ImportUserRecipes', recipes };
+  return unwrapUserRecipes(await chrome.runtime.sendMessage(message));
 };
 
 export const openOptionsPage = (): void => {

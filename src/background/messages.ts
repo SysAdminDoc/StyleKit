@@ -33,6 +33,9 @@ import {
   EnableStyle as EnableStyleType,
   SetStyle as SetStyleType,
   GetStyleVersion as GetStyleVersionType,
+  SaveUserRecipe as SaveUserRecipeType,
+  DeleteUserRecipe as DeleteUserRecipeType,
+  ImportUserRecipes as ImportUserRecipesType,
   SetStyleShadowRoots as SetStyleShadowRootsType,
   PreviewStyleSource as PreviewStyleSourceType,
   SetStyleSource as SetStyleSourceType,
@@ -84,6 +87,7 @@ import {
   ReloadStyleSourceResponse,
   RollbackStyleSourceResponse,
   GetStyleSourceStatusesResponse,
+  GetUserRecipesResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 import {
@@ -113,6 +117,12 @@ import {
   getStyleVersion,
   recordStyleVersion,
 } from './style-versions';
+import {
+  deleteUserRecipe,
+  getUserRecipes,
+  importUserRecipes,
+  saveUserRecipe,
+} from './user-recipes';
 
 import {
   get as getReadabilitySettings,
@@ -183,6 +193,56 @@ export const GetStyleVersion = async (
   sendResponse: (response: Awaited<ReturnType<typeof getStyleVersion>>) => void
 ): Promise<void> => {
   sendResponse(await getStyleVersion(message.url));
+};
+
+export const GetUserRecipes = async (
+  sendResponse: (response: GetUserRecipesResponse) => void
+): Promise<void> => {
+  sendResponse({ recipes: await getUserRecipes() });
+};
+
+const sendUserRecipeMutation = async (
+  operation: () => Promise<Awaited<ReturnType<typeof getUserRecipes>>>,
+  sendResponse: (response: GetUserRecipesResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({ recipes: await operation() });
+  } catch (error) {
+    sendResponse({
+      recipes: [],
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const SaveUserRecipe = async (
+  message: SaveUserRecipeType,
+  sendResponse: (response: GetUserRecipesResponse) => void
+): Promise<void> => {
+  await sendUserRecipeMutation(
+    () => saveUserRecipe(message.recipe),
+    sendResponse
+  );
+};
+
+export const DeleteUserRecipe = async (
+  message: DeleteUserRecipeType,
+  sendResponse: (response: GetUserRecipesResponse) => void
+): Promise<void> => {
+  await sendUserRecipeMutation(
+    () => deleteUserRecipe(message.id),
+    sendResponse
+  );
+};
+
+export const ImportUserRecipes = async (
+  message: ImportUserRecipesType,
+  sendResponse: (response: GetUserRecipesResponse) => void
+): Promise<void> => {
+  await sendUserRecipeMutation(
+    () => importUserRecipes(message.recipes),
+    sendResponse
+  );
 };
 
 export const SetStyleShadowRoots = async (
