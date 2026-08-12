@@ -376,6 +376,10 @@ try {
     .getByText(/remain readable when the original website is unavailable/)
     .waitFor();
   await optionsPage.getByRole('button', { name: 'Read aloud' }).waitFor();
+  await optionsPage
+    .locator('.reading-metrics')
+    .getByText(/\d+ words · 1 min read/)
+    .waitFor();
   const readingSpeed = optionsPage.getByLabel('Reading speed');
   await readingSpeed.selectOption('1.5');
   assert.equal(await readingSpeed.inputValue(), '1.5');

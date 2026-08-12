@@ -12,6 +12,7 @@
         :byline="article.byline"
       />
 
+      <the-reading-metrics :text="article.textContent || ''" />
       <the-speech-controls :text="article.textContent || ''" />
 
       <!-- eslint-disable vue/no-v-html - html is generated with the readability project -->
@@ -36,6 +37,7 @@ import {
 } from '@stylekit/types';
 
 import TheReaderHeader from './TheReaderHeader.vue';
+import TheReadingMetrics from './TheReadingMetrics.vue';
 import TheSpeechControls from './TheSpeechControls.vue';
 
 export default defineComponent({
@@ -43,6 +45,7 @@ export default defineComponent({
 
   components: {
     TheReaderHeader,
+    TheReadingMetrics,
     TheSpeechControls,
   },
 

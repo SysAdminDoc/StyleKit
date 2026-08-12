@@ -37,6 +37,7 @@
         <p v-if="selectedItem.byline" class="offline-byline">
           {{ selectedItem.byline }}
         </p>
+        <the-reading-metrics :text="selectedItem.textContent" />
         <the-speech-controls :text="selectedItem.textContent" />
         <!-- eslint-disable-next-line vue/no-v-html -- snapshots are allowlist-sanitized before storage -->
         <div class="offline-content" v-html="selectedItem.content" />
@@ -82,6 +83,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import AppButton from './AppButton.vue';
+import TheReadingMetrics from '../../readability/components/TheReadingMetrics.vue';
 import TheSpeechControls from '../../readability/components/TheSpeechControls.vue';
 import type {
   DeleteReadingListItem,
@@ -95,7 +97,7 @@ import type {
 export default defineComponent({
   name: 'TheReadingListTab',
 
-  components: { AppButton, TheSpeechControls },
+  components: { AppButton, TheReadingMetrics, TheSpeechControls },
 
   data(): {
     items: ReadingListItem[];
