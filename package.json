@@ -18,6 +18,7 @@
   "scripts": {
     "build": "vite build",
     "build:firefox": "cross-env BROWSER=firefox vite build",
+    "dependencies:check": "node scripts/dependency-report.mjs",
     "watch": "vite build --watch",
     "watch:firefox": "cross-env BROWSER=firefox vite build --watch",
     "start:firefox": "web-ext run --source-dir ./firefox-dist/",
