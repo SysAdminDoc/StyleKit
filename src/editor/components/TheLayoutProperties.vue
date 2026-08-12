@@ -2,6 +2,7 @@
   <div>
     <visibility />
     <box-model class="mt-2" />
+    <layout-context-overlay />
   </div>
 </template>
 
@@ -9,6 +10,7 @@
 import { defineComponent } from 'vue';
 import BoxModel from './layout/BoxModel.vue';
 import Visibility from './layout/Visibility.vue';
+import LayoutContextOverlay from './layout/LayoutContextOverlay.vue';
 
 export default defineComponent({
   name: 'TheLayoutProperties',
@@ -16,6 +18,7 @@ export default defineComponent({
   components: {
     BoxModel,
     Visibility,
+    LayoutContextOverlay,
   },
 });
 </script>

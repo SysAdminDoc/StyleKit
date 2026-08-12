@@ -113,8 +113,10 @@ const createFixtureServer = () => {
       <html>
         <head><title>StyleKit E2E Fixture</title></head>
         <body>
-          <main id="fixture">StyleKit extension smoke fixture</main>
-          <aside id="secondary">Secondary selector fixture</aside>
+          <section id="layout-context" style="display: flex; gap: 12px">
+            <main id="fixture">StyleKit extension smoke fixture</main>
+            <aside id="secondary">Secondary selector fixture</aside>
+          </section>
         </body>
       </html>`);
   });
@@ -462,6 +464,29 @@ try {
     await inspectorButton.click();
     console.log(
       '✓ Built a deduplicated multi-selector with Shift-click while inspection stayed active'
+    );
+    const layoutSection = fixturePage
+      .locator('#stylebot .section')
+      .filter({ hasText: 'Layout' });
+    await layoutSection
+      .getByRole('button', { name: 'Show flex overlay' })
+      .click();
+    const layoutOverlayState = await fixturePage
+      .locator('[data-stylekit-layout-overlay]')
+      .evaluate(overlay => ({
+        items: overlay.querySelectorAll('.stylekit-layout-item').length,
+        label: overlay.querySelector('.stylekit-layout-label')?.textContent,
+      }));
+    assert.equal(layoutOverlayState.items, 2);
+    assert.match(layoutOverlayState.label || '', /flex · 2 items/);
+    await layoutSection
+      .getByRole('button', { name: 'Hide layout overlay' })
+      .click();
+    await fixturePage
+      .locator('[data-stylekit-layout-overlay]')
+      .waitFor({ state: 'detached' });
+    console.log(
+      '✓ Visualized and removed the selected elements’ flex layout context'
     );
     const sectionState = await fixturePage
       .locator('#stylebot')

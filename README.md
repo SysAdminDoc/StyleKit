@@ -21,6 +21,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **1,500+ Google Fonts** -- full Google Fonts catalog with search/filter, cached for 1 week
 - **Gradient generator** -- visual linear/radial/conic builder with live preview, sortable color stops, numeric/range/preset angles, radial/conic centers, and Copy CSS
 - **Animation editor** -- build selector-scoped CSS animations with visual keyframe markers, timing controls, editable declarations, and one-click replay
+- **Grid/flex context overlay** -- visualize a selected container or its parent layout with item bounds, grid tracks or flex axis, gaps, and selection highlights
 - **Accessibility overlay** -- shows ARIA role and WCAG contrast ratio (pass/fail) in the element tooltip during inspect
 - **Responsive preview** -- test styles at Mobile (375px), Tablet (768px), Laptop (1024px), and Desktop (1440px)
 - **Color preset palette** -- 15 quick-pick colors above the color picker
@@ -117,7 +118,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (35/35 suites, 177 tests)
+npm test               # Run tests (36/36 suites, 180 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run locales:check  # Validate locale keys and placeholders against English
@@ -127,7 +128,7 @@ npm run dependencies:check # Report safe and compatibility-review dependency upd
 npm run release:artifacts  # Build and verify versioned ZIP/CRX release assets
 ```
 
-`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to document and open-shadow-root fixtures, verifies loopback live-source reload/rollback, Shift-click multi-selection, conic-gradient controls, and visual keyframe animations, and opens the visual editor and Monaco iframe.
+`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to document and open-shadow-root fixtures, verifies loopback live-source reload/rollback, Shift-click multi-selection, grid/flex context visualization, conic-gradient controls, and visual keyframe animations, and opens the visual editor and Monaco iframe.
 
 `npm run release:artifacts` removes old versioned StyleKit assets, builds Chrome and Firefox, creates deterministic ZIPs with POSIX entry paths, and signs and verifies a CRX when `dist.pem` or `STYLEKIT_CRX_KEY` is available.
 
