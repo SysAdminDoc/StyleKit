@@ -62,6 +62,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 - **Google Drive sync** -- automatic bidirectional sync across devices
 - **GitHub Gist backup** -- export/import via private Gist with Bearer token auth
 - **Yjs collaborative packs** -- capture saved styles into bounded CRDT documents, merge concurrent teammate update files, and apply converged CSS with rollback protection
+- **Role-based team spaces** -- organize collaborative packs into named teams, assign owner/editor/viewer permissions, and exchange targeted invitations or update bundles through a trusted channel
 - **Rollback restore** -- JSON imports, Gist imports, and Google Drive sync overwrites save a local snapshot that can be restored from the Sync tab
 - **Import dry runs** -- JSON, Gist, URL, and UserStyles.world imports validate schema/content and show add/change/remove counts before replacing styles
 - **JSON export** -- versioned format with metadata (`{version, app, exportedAt, styles}`)
@@ -126,7 +127,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (52/52 suites, 227 tests)
+npm test               # Run tests (53/53 suites, 230 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run locales:check  # Validate locale keys and placeholders against English
@@ -136,7 +137,7 @@ npm run dependencies:check # Report safe and compatibility-review dependency upd
 npm run release:artifacts  # Build and verify versioned ZIP/CRX release assets
 ```
 
-`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to document and open-shadow-root fixtures, verifies minified export, user-authored recipe persistence/export/application, saved-version diffs, loopback live-source reload/rollback, Shift-click multi-selection, grid/flex context visualization, variable-font axes, conic-gradient controls, visual keyframe animations, and persisted Monaco themes/lint/Prettier settings.
+`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to document and open-shadow-root fixtures, verifies minified export, user-authored recipe persistence/export/application, saved-version diffs, loopback live-source reload/rollback, Shift-click multi-selection, grid/flex context visualization, variable-font axes, conic-gradient controls, visual keyframe animations, collaborative packs, role-based team invitations, and persisted Monaco themes/lint/Prettier settings.
 
 `npm run release:artifacts` removes old versioned StyleKit assets, builds Chrome and Firefox, creates deterministic ZIPs with POSIX entry paths, and signs and verifies a CRX when `dist.pem` or `STYLEKIT_CRX_KEY` is available.
 

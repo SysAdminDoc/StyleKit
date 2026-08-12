@@ -40,6 +40,16 @@ import {
   DeleteCollaborativePack,
   GetCollaborativePacksResponse,
   ExportCollaborativePackResponse,
+  TeamSpaceSummary,
+  TeamSpaceUpdateEnvelope,
+  TeamSpaceMutation,
+  GetTeamSpaces,
+  CreateTeamSpace,
+  MutateTeamSpace,
+  ExportTeamSpace,
+  ImportTeamSpace,
+  GetTeamSpacesResponse,
+  ExportTeamSpaceResponse,
 } from '@stylekit/types';
 import postcss from 'postcss';
 import normalizeWhitespace from 'postcss-normalize-whitespace';
@@ -291,6 +301,70 @@ export const deleteCollaborativePack = async (
     id,
   };
   return unwrapCollaborativePacks(await chrome.runtime.sendMessage(message));
+};
+
+const unwrapTeamSpaces = (
+  response: GetTeamSpacesResponse
+): TeamSpaceSummary[] => {
+  if (response.error) throw new Error(response.error);
+  return response.spaces;
+};
+
+export const getTeamSpaces = async (): Promise<TeamSpaceSummary[]> => {
+  const message: GetTeamSpaces = { name: 'GetTeamSpaces' };
+  return unwrapTeamSpaces(await chrome.runtime.sendMessage(message));
+};
+
+export const createTeamSpace = async (
+  spaceName: string,
+  ownerName: string
+): Promise<TeamSpaceSummary[]> => {
+  const message: CreateTeamSpace = {
+    name: 'CreateTeamSpace',
+    spaceName,
+    ownerName,
+  };
+  return unwrapTeamSpaces(await chrome.runtime.sendMessage(message));
+};
+
+export const mutateTeamSpace = async (
+  id: string,
+  mutation: TeamSpaceMutation
+): Promise<TeamSpaceSummary[]> => {
+  const message: MutateTeamSpace = {
+    name: 'MutateTeamSpace',
+    id,
+    mutation,
+  };
+  return unwrapTeamSpaces(await chrome.runtime.sendMessage(message));
+};
+
+export const exportTeamSpace = async (
+  id: string,
+  recipientId?: string
+): Promise<TeamSpaceUpdateEnvelope> => {
+  const message: ExportTeamSpace = {
+    name: 'ExportTeamSpace',
+    id,
+    recipientId,
+  };
+  const response = (await chrome.runtime.sendMessage(
+    message
+  )) as ExportTeamSpaceResponse;
+  if (response.error || !response.envelope) {
+    throw new Error(response.error || 'Team space export failed');
+  }
+  return response.envelope;
+};
+
+export const importTeamSpace = async (
+  envelope: TeamSpaceUpdateEnvelope
+): Promise<TeamSpaceSummary[]> => {
+  const message: ImportTeamSpace = {
+    name: 'ImportTeamSpace',
+    envelope,
+  };
+  return unwrapTeamSpaces(await chrome.runtime.sendMessage(message));
 };
 
 const getDiagnosticErrorMessage = (error: unknown): string =>

@@ -169,6 +169,60 @@ export type CollaborativePackExportResponse = {
   error?: string;
 };
 
+export type TeamSpaceRole = 'owner' | 'editor' | 'viewer';
+
+export type TeamSpaceMember = {
+  id: string;
+  name: string;
+  role: TeamSpaceRole;
+};
+
+export type TeamSpaceSummary = {
+  id: string;
+  name: string;
+  packId: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  currentMemberId: string;
+  currentRole: TeamSpaceRole;
+  styleCount: number;
+  members: TeamSpaceMember[];
+};
+
+export type TeamSpaceUpdateEnvelope = {
+  version: 1;
+  app: 'StyleKit';
+  kind: 'team-space-update';
+  exportedAt: Timestamp;
+  authorId: string;
+  recipientId?: string;
+  space: {
+    id: string;
+    name: string;
+    createdAt: Timestamp;
+    members: TeamSpaceMember[];
+  };
+  pack: CollaborativePackUpdateEnvelope;
+};
+
+export type TeamSpaceMutation =
+  | { type: 'capture' }
+  | { type: 'apply' }
+  | { type: 'delete' }
+  | { type: 'add-member'; name: string; role: TeamSpaceRole }
+  | { type: 'set-role'; memberId: string; role: TeamSpaceRole }
+  | { type: 'remove-member'; memberId: string };
+
+export type TeamSpacesResponse = {
+  spaces: TeamSpaceSummary[];
+  error?: string;
+};
+
+export type TeamSpaceExportResponse = {
+  envelope?: TeamSpaceUpdateEnvelope;
+  error?: string;
+};
+
 export type StyleSyncTombstone = {
   deletedTime: Timestamp;
 };

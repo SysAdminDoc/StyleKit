@@ -71,6 +71,16 @@
       </b-col>
     </b-row>
 
+    <b-row no-gutters class="mt-5 mb-1">
+      <h2>Team spaces</h2>
+    </b-row>
+
+    <b-row no-gutters class="mb-4">
+      <b-col>
+        <the-team-spaces />
+      </b-col>
+    </b-row>
+
     <b-row no-gutters class="mt-5">
       <h2>{{ t('backup') }}</h2>
     </b-row>
@@ -158,6 +168,7 @@ import AppButton from './AppButton.vue';
 import TheGoogleDriveSync from './sync/TheGoogleDriveSync.vue';
 import TheGistBackup from './sync/TheGistBackup.vue';
 import TheCollaborativePacks from './sync/TheCollaborativePacks.vue';
+import TheTeamSpaces from './sync/TheTeamSpaces.vue';
 
 import {
   importStylesWithFilePicker,
@@ -176,6 +187,7 @@ export default defineComponent({
     TheGoogleDriveSync,
     TheGistBackup,
     TheCollaborativePacks,
+    TheTeamSpaces,
   },
 
   data(): {

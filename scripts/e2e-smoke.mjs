@@ -873,7 +873,12 @@ try {
       .locator('#container[data-stylekit-lint-preset="strict"]')
       .waitFor();
     const prettierOnSave = monacoFrame.getByLabel('Prettier on save');
-    await prettierOnSave.check();
+    await prettierOnSave.evaluate(checkbox => {
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await prettierOnSave.waitFor();
+    assert(await prettierOnSave.isChecked());
     await monacoFrame.locator('#container').evaluate(() => {
       const model = window.monaco.editor.getModels()[0];
       if (!model) throw new Error('Monaco CSS model was not created');
@@ -985,6 +990,80 @@ try {
     );
     console.log(
       '✓ Created, exported, persisted, and applied a Yjs collaborative style pack'
+    );
+
+    await optionsPage.getByRole('heading', { name: 'Team spaces' }).waitFor();
+    const teamSpaces = optionsPage.locator('.team-spaces');
+    await teamSpaces.getByLabel('Team space name').fill('E2E Design Team');
+    await teamSpaces.getByLabel('Team owner name').fill('Alice');
+    await teamSpaces
+      .getByRole('button', { name: 'Create team space', exact: true })
+      .click();
+    await teamSpaces
+      .getByRole('status')
+      .getByText('Team space created with owner permissions.')
+      .waitFor();
+    const designTeam = teamSpaces
+      .locator('.team-card')
+      .filter({ hasText: 'E2E Design Team' });
+    await designTeam
+      .getByLabel('New member for E2E Design Team')
+      .fill('Bob');
+    await designTeam
+      .getByLabel('New member role for E2E Design Team')
+      .selectOption('viewer');
+    await designTeam
+      .getByRole('button', { name: 'Add member', exact: true })
+      .click();
+    await teamSpaces
+      .getByRole('status')
+      .getByText('Bob added as viewer.')
+      .waitFor();
+    assert.equal(
+      await designTeam.getByLabel('Role for Bob').inputValue(),
+      'viewer'
+    );
+    const bobRow = designTeam.locator('.member-row').filter({ hasText: 'Bob' });
+    const [invitationDownload] = await Promise.all([
+      optionsPage.waitForEvent('download'),
+      bobRow
+        .getByRole('button', { name: 'Export invite', exact: true })
+        .click(),
+    ]);
+    assert.equal(
+      invitationDownload.suggestedFilename(),
+      'stylekit-team-invite-e2e-design-team-bob.json'
+    );
+    const invitationPath = await invitationDownload.path();
+    assert(invitationPath, 'Team invitation did not produce a file');
+    const invitationEnvelope = JSON.parse(
+      await readFile(invitationPath, 'utf8')
+    );
+    assert.equal(invitationEnvelope.kind, 'team-space-update');
+    assert.equal(
+      invitationEnvelope.recipientId,
+      invitationEnvelope.space.members.find(member => member.name === 'Bob')
+        ?.id
+    );
+    assert.equal(
+      invitationEnvelope.space.members.find(member => member.name === 'Bob')
+        ?.role,
+      'viewer'
+    );
+    assert(
+      await serviceWorker.evaluate(async () => {
+        const stored = await chrome.storage.local.get('stylekit-team-spaces');
+        return stored['stylekit-team-spaces']?.some(
+          space =>
+            space.name === 'E2E Design Team' &&
+            space.members?.some(
+              member => member.name === 'Bob' && member.role === 'viewer'
+            )
+        );
+      })
+    );
+    console.log(
+      '✓ Created a team space, enforced viewer membership, and exported a targeted invitation'
     );
   }
 

@@ -11,6 +11,8 @@ import {
   UserRecipeDraft,
   RecipeMarketplaceSourceDraft,
   CollaborativePackUpdateEnvelope,
+  TeamSpaceMutation,
+  TeamSpaceUpdateEnvelope,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -96,6 +98,33 @@ export type ApplyCollaborativePack = {
 export type DeleteCollaborativePack = {
   name: 'DeleteCollaborativePack';
   id: string;
+};
+
+export type GetTeamSpaces = {
+  name: 'GetTeamSpaces';
+};
+
+export type CreateTeamSpace = {
+  name: 'CreateTeamSpace';
+  spaceName: string;
+  ownerName: string;
+};
+
+export type MutateTeamSpace = {
+  name: 'MutateTeamSpace';
+  id: string;
+  mutation: TeamSpaceMutation;
+};
+
+export type ExportTeamSpace = {
+  name: 'ExportTeamSpace';
+  id: string;
+  recipientId?: string;
+};
+
+export type ImportTeamSpace = {
+  name: 'ImportTeamSpace';
+  envelope: TeamSpaceUpdateEnvelope;
 };
 
 export type SetStyleShadowRoots = {
@@ -318,6 +347,11 @@ type BackgroundPageMessage =
   | ImportCollaborativePack
   | ApplyCollaborativePack
   | DeleteCollaborativePack
+  | GetTeamSpaces
+  | CreateTeamSpace
+  | MutateTeamSpace
+  | ExportTeamSpace
+  | ImportTeamSpace
   | SetStyleShadowRoots
   | PreviewStyleSource
   | SetStyleSource

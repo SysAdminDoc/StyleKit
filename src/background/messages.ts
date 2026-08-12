@@ -45,6 +45,10 @@ import {
   ImportCollaborativePack as ImportCollaborativePackType,
   ApplyCollaborativePack as ApplyCollaborativePackType,
   DeleteCollaborativePack as DeleteCollaborativePackType,
+  CreateTeamSpace as CreateTeamSpaceType,
+  MutateTeamSpace as MutateTeamSpaceType,
+  ExportTeamSpace as ExportTeamSpaceType,
+  ImportTeamSpace as ImportTeamSpaceType,
   SetStyleShadowRoots as SetStyleShadowRootsType,
   PreviewStyleSource as PreviewStyleSourceType,
   SetStyleSource as SetStyleSourceType,
@@ -100,6 +104,8 @@ import {
   GetRecipeMarketplaceResponse,
   GetCollaborativePacksResponse,
   ExportCollaborativePackResponse,
+  GetTeamSpacesResponse,
+  ExportTeamSpaceResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 import {
@@ -150,6 +156,13 @@ import {
   getCollaborativePacks,
   importCollaborativePack,
 } from './collaborative-packs';
+import {
+  createTeamSpace,
+  exportTeamSpace,
+  getTeamSpaces,
+  importTeamSpace,
+  mutateTeamSpace,
+} from './team-spaces';
 
 import {
   get as getReadabilitySettings,
@@ -402,6 +415,72 @@ export const DeleteCollaborativePack = async (
 ): Promise<void> => {
   await sendCollaborativePackMutation(
     () => deleteCollaborativePack(message.id),
+    sendResponse
+  );
+};
+
+const sendTeamSpaceMutation = async (
+  operation: () => Promise<Awaited<ReturnType<typeof getTeamSpaces>>>,
+  sendResponse: (response: GetTeamSpacesResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({ spaces: await operation() });
+  } catch (error) {
+    sendResponse({
+      spaces: [],
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const GetTeamSpaces = async (
+  sendResponse: (response: GetTeamSpacesResponse) => void
+): Promise<void> => {
+  sendResponse({ spaces: await getTeamSpaces() });
+};
+
+export const CreateTeamSpace = async (
+  message: CreateTeamSpaceType,
+  sendResponse: (response: GetTeamSpacesResponse) => void
+): Promise<void> => {
+  await sendTeamSpaceMutation(
+    () => createTeamSpace(message.spaceName, message.ownerName),
+    sendResponse
+  );
+};
+
+export const MutateTeamSpace = async (
+  message: MutateTeamSpaceType,
+  sendResponse: (response: GetTeamSpacesResponse) => void
+): Promise<void> => {
+  await sendTeamSpaceMutation(async () => {
+    const spaces = await mutateTeamSpace(message.id, message.mutation);
+    if (message.mutation.type === 'apply') await applyStylesToAllTabs();
+    return spaces;
+  }, sendResponse);
+};
+
+export const ExportTeamSpace = async (
+  message: ExportTeamSpaceType,
+  sendResponse: (response: ExportTeamSpaceResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({
+      envelope: await exportTeamSpace(message.id, message.recipientId),
+    });
+  } catch (error) {
+    sendResponse({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const ImportTeamSpace = async (
+  message: ImportTeamSpaceType,
+  sendResponse: (response: GetTeamSpacesResponse) => void
+): Promise<void> => {
+  await sendTeamSpaceMutation(
+    () => importTeamSpace(message.envelope),
     sendResponse
   );
 };

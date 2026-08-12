@@ -26,6 +26,11 @@ import {
   ImportCollaborativePack,
   ApplyCollaborativePack,
   DeleteCollaborativePack,
+  GetTeamSpaces,
+  CreateTeamSpace,
+  MutateTeamSpace,
+  ExportTeamSpace,
+  ImportTeamSpace,
   SetStyleShadowRoots,
   PreviewStyleSource,
   SetStyleSource,
@@ -176,6 +181,11 @@ const ASYNC_MESSAGES = new Set([
   'ImportCollaborativePack',
   'ApplyCollaborativePack',
   'DeleteCollaborativePack',
+  'GetTeamSpaces',
+  'CreateTeamSpace',
+  'MutateTeamSpace',
+  'ExportTeamSpace',
+  'ImportTeamSpace',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -264,6 +274,21 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'DeleteCollaborativePack':
         DeleteCollaborativePack(message, sendResponse);
+        break;
+      case 'GetTeamSpaces':
+        GetTeamSpaces(sendResponse);
+        break;
+      case 'CreateTeamSpace':
+        CreateTeamSpace(message, sendResponse);
+        break;
+      case 'MutateTeamSpace':
+        MutateTeamSpace(message, sendResponse);
+        break;
+      case 'ExportTeamSpace':
+        ExportTeamSpace(message, sendResponse);
+        break;
+      case 'ImportTeamSpace':
+        ImportTeamSpace(message, sendResponse);
         break;
       case 'SetStyleShadowRoots':
         SetStyleShadowRoots(message);
