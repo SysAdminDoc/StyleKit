@@ -114,9 +114,10 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (27/27 suites, 148 tests)
+npm test               # Run tests (28/28 suites, 151 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
+npm run locales:check  # Validate locale keys and placeholders against English
 npx playwright install chromium # One-time E2E browser install
 npm run test:e2e       # Build both targets and smoke-test a clean Chromium profile
 npm run dependencies:check # Report safe and compatibility-review dependency updates

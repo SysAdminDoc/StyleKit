@@ -2,12 +2,17 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, cpSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, cpSync } from 'fs';
 import cssnano from 'cssnano';
 import {
   collectImportedWebAccessibleResources,
   createWebAccessibleResourceRules,
 } from './src/extension/web-accessible-resources';
+import {
+  getLocaleIssues,
+  readLocaleCatalogs,
+  toChromeMessages,
+} from './scripts/locale-config.mjs';
 import type { BundleGraph } from './src/extension/web-accessible-resources';
 
 const outDir = process.env.BROWSER === 'firefox' ? 'firefox-dist' : 'dist';
@@ -31,33 +36,14 @@ function localePlugin() {
     name: 'locale-transform',
     closeBundle() {
       const localesDir = resolve(__dirname, 'src/_locales');
-      const files = readdirSync(localesDir).filter((f: string) => f.endsWith('.config'));
+      const catalogs = readLocaleCatalogs(localesDir);
+      const issues = getLocaleIssues(catalogs);
+      if (issues.length) {
+        throw new Error(`Locale completeness failed:\n- ${issues.join('\n- ')}`);
+      }
 
-      files.forEach((file: string) => {
-        const locale = file.replace('.config', '');
-        const raw = readFileSync(resolve(localesDir, file), 'utf-8');
-        const content = raw.replace(/^#.*?$/gm, '');
-        const messages: Record<string, any> = {};
-        const regex = /@([a-z0-9_]+)/gi;
-
-        let match;
-        while ((match = regex.exec(content))) {
-          const messageName = match[1];
-          const messageStart = match.index + match[0].length;
-          let messageEnd = content.indexOf('@', messageStart);
-          if (messageEnd < 0) messageEnd = content.length;
-
-          const message = content.substring(messageStart, messageEnd).trim();
-          messages[messageName] = { message };
-
-          const placeholderMatches = [...message.matchAll(/\$([^$]+)\$/g)];
-          if (placeholderMatches.length > 0) {
-            messages[messageName].placeholders = {};
-            placeholderMatches.forEach((m) => {
-              messages[messageName].placeholders[m[1]] = { content: '$1' };
-            });
-          }
-        }
+      catalogs.forEach((catalog: unknown, locale: string) => {
+        const messages = toChromeMessages(catalog);
 
         const outPath = resolve(__dirname, outDir, '_locales', locale);
         if (!existsSync(outPath)) mkdirSync(outPath, { recursive: true });
