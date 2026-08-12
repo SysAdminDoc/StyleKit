@@ -61,6 +61,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 ### Sync & Backup
 - **Google Drive sync** -- automatic bidirectional sync across devices
 - **GitHub Gist backup** -- export/import via private Gist with Bearer token auth
+- **Yjs collaborative packs** -- capture saved styles into bounded CRDT documents, merge concurrent teammate update files, and apply converged CSS with rollback protection
 - **Rollback restore** -- JSON imports, Gist imports, and Google Drive sync overwrites save a local snapshot that can be restored from the Sync tab
 - **Import dry runs** -- JSON, Gist, URL, and UserStyles.world imports validate schema/content and show add/change/remove counts before replacing styles
 - **JSON export** -- versioned format with metadata (`{version, app, exportedAt, styles}`)
@@ -125,7 +126,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (50/50 suites, 224 tests)
+npm test               # Run tests (52/52 suites, 227 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run locales:check  # Validate locale keys and placeholders against English

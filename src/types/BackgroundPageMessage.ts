@@ -10,6 +10,7 @@ import {
   UserRecipe,
   UserRecipeDraft,
   RecipeMarketplaceSourceDraft,
+  CollaborativePackUpdateEnvelope,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -60,6 +61,40 @@ export type RefreshRecipeMarketplaceSource = {
 
 export type DeleteRecipeMarketplaceSource = {
   name: 'DeleteRecipeMarketplaceSource';
+  id: string;
+};
+
+export type GetCollaborativePacks = {
+  name: 'GetCollaborativePacks';
+};
+
+export type CreateCollaborativePack = {
+  name: 'CreateCollaborativePack';
+  packName: string;
+};
+
+export type CaptureCollaborativePack = {
+  name: 'CaptureCollaborativePack';
+  id: string;
+};
+
+export type ExportCollaborativePack = {
+  name: 'ExportCollaborativePack';
+  id: string;
+};
+
+export type ImportCollaborativePack = {
+  name: 'ImportCollaborativePack';
+  envelope: CollaborativePackUpdateEnvelope;
+};
+
+export type ApplyCollaborativePack = {
+  name: 'ApplyCollaborativePack';
+  id: string;
+};
+
+export type DeleteCollaborativePack = {
+  name: 'DeleteCollaborativePack';
   id: string;
 };
 
@@ -276,6 +311,13 @@ type BackgroundPageMessage =
   | AddRecipeMarketplaceSource
   | RefreshRecipeMarketplaceSource
   | DeleteRecipeMarketplaceSource
+  | GetCollaborativePacks
+  | CreateCollaborativePack
+  | CaptureCollaborativePack
+  | ExportCollaborativePack
+  | ImportCollaborativePack
+  | ApplyCollaborativePack
+  | DeleteCollaborativePack
   | SetStyleShadowRoots
   | PreviewStyleSource
   | SetStyleSource

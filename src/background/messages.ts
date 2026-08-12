@@ -39,6 +39,12 @@ import {
   AddRecipeMarketplaceSource as AddRecipeMarketplaceSourceType,
   RefreshRecipeMarketplaceSource as RefreshRecipeMarketplaceSourceType,
   DeleteRecipeMarketplaceSource as DeleteRecipeMarketplaceSourceType,
+  CreateCollaborativePack as CreateCollaborativePackType,
+  CaptureCollaborativePack as CaptureCollaborativePackType,
+  ExportCollaborativePack as ExportCollaborativePackType,
+  ImportCollaborativePack as ImportCollaborativePackType,
+  ApplyCollaborativePack as ApplyCollaborativePackType,
+  DeleteCollaborativePack as DeleteCollaborativePackType,
   SetStyleShadowRoots as SetStyleShadowRootsType,
   PreviewStyleSource as PreviewStyleSourceType,
   SetStyleSource as SetStyleSourceType,
@@ -92,6 +98,8 @@ import {
   GetStyleSourceStatusesResponse,
   GetUserRecipesResponse,
   GetRecipeMarketplaceResponse,
+  GetCollaborativePacksResponse,
+  ExportCollaborativePackResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 import {
@@ -133,6 +141,15 @@ import {
   getRecipeMarketplaceSources,
   refreshRecipeMarketplaceSource,
 } from './recipe-marketplace';
+import {
+  applyCollaborativePack,
+  captureCollaborativePack,
+  createCollaborativePack,
+  deleteCollaborativePack,
+  exportCollaborativePack,
+  getCollaborativePacks,
+  importCollaborativePack,
+} from './collaborative-packs';
 
 import {
   get as getReadabilitySettings,
@@ -301,6 +318,90 @@ export const DeleteRecipeMarketplaceSource = async (
 ): Promise<void> => {
   await sendRecipeMarketplaceMutation(
     () => deleteRecipeMarketplaceSource(message.id),
+    sendResponse
+  );
+};
+
+const sendCollaborativePackMutation = async (
+  operation: () => Promise<Awaited<ReturnType<typeof getCollaborativePacks>>>,
+  sendResponse: (response: GetCollaborativePacksResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({ packs: await operation() });
+  } catch (error) {
+    sendResponse({
+      packs: [],
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const GetCollaborativePacks = async (
+  sendResponse: (response: GetCollaborativePacksResponse) => void
+): Promise<void> => {
+  sendResponse({ packs: await getCollaborativePacks() });
+};
+
+export const CreateCollaborativePack = async (
+  message: CreateCollaborativePackType,
+  sendResponse: (response: GetCollaborativePacksResponse) => void
+): Promise<void> => {
+  await sendCollaborativePackMutation(
+    () => createCollaborativePack(message.packName),
+    sendResponse
+  );
+};
+
+export const CaptureCollaborativePack = async (
+  message: CaptureCollaborativePackType,
+  sendResponse: (response: GetCollaborativePacksResponse) => void
+): Promise<void> => {
+  await sendCollaborativePackMutation(
+    () => captureCollaborativePack(message.id),
+    sendResponse
+  );
+};
+
+export const ExportCollaborativePack = async (
+  message: ExportCollaborativePackType,
+  sendResponse: (response: ExportCollaborativePackResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({ envelope: await exportCollaborativePack(message.id) });
+  } catch (error) {
+    sendResponse({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const ImportCollaborativePack = async (
+  message: ImportCollaborativePackType,
+  sendResponse: (response: GetCollaborativePacksResponse) => void
+): Promise<void> => {
+  await sendCollaborativePackMutation(
+    () => importCollaborativePack(message.envelope),
+    sendResponse
+  );
+};
+
+export const ApplyCollaborativePack = async (
+  message: ApplyCollaborativePackType,
+  sendResponse: (response: GetCollaborativePacksResponse) => void
+): Promise<void> => {
+  await sendCollaborativePackMutation(async () => {
+    const packs = await applyCollaborativePack(message.id);
+    await applyStylesToAllTabs();
+    return packs;
+  }, sendResponse);
+};
+
+export const DeleteCollaborativePack = async (
+  message: DeleteCollaborativePackType,
+  sendResponse: (response: GetCollaborativePacksResponse) => void
+): Promise<void> => {
+  await sendCollaborativePackMutation(
+    () => deleteCollaborativePack(message.id),
     sendResponse
   );
 };

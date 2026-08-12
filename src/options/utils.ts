@@ -29,6 +29,17 @@ import {
   StyleSourceConfig,
   StyleSourceStatus,
   StyleSourceStatusMap,
+  CollaborativePackSummary,
+  CollaborativePackUpdateEnvelope,
+  GetCollaborativePacks,
+  CreateCollaborativePack,
+  CaptureCollaborativePack,
+  ExportCollaborativePack,
+  ImportCollaborativePack,
+  ApplyCollaborativePack,
+  DeleteCollaborativePack,
+  GetCollaborativePacksResponse,
+  ExportCollaborativePackResponse,
 } from '@stylekit/types';
 import postcss from 'postcss';
 import normalizeWhitespace from 'postcss-normalize-whitespace';
@@ -201,6 +212,86 @@ export const restoreLastStylesRollbackSnapshot =
 
     return chrome.runtime.sendMessage(message);
   };
+
+const unwrapCollaborativePacks = (
+  response: GetCollaborativePacksResponse
+): CollaborativePackSummary[] => {
+  if (response.error) throw new Error(response.error);
+  return response.packs;
+};
+
+export const getCollaborativePacks = async (): Promise<
+  CollaborativePackSummary[]
+> => {
+  const message: GetCollaborativePacks = { name: 'GetCollaborativePacks' };
+  return unwrapCollaborativePacks(await chrome.runtime.sendMessage(message));
+};
+
+export const createCollaborativePack = async (
+  packName: string
+): Promise<CollaborativePackSummary[]> => {
+  const message: CreateCollaborativePack = {
+    name: 'CreateCollaborativePack',
+    packName,
+  };
+  return unwrapCollaborativePacks(await chrome.runtime.sendMessage(message));
+};
+
+export const captureCollaborativePack = async (
+  id: string
+): Promise<CollaborativePackSummary[]> => {
+  const message: CaptureCollaborativePack = {
+    name: 'CaptureCollaborativePack',
+    id,
+  };
+  return unwrapCollaborativePacks(await chrome.runtime.sendMessage(message));
+};
+
+export const exportCollaborativePack = async (
+  id: string
+): Promise<CollaborativePackUpdateEnvelope> => {
+  const message: ExportCollaborativePack = {
+    name: 'ExportCollaborativePack',
+    id,
+  };
+  const response = (await chrome.runtime.sendMessage(
+    message
+  )) as ExportCollaborativePackResponse;
+  if (response.error || !response.envelope) {
+    throw new Error(response.error || 'Collaborative pack export failed');
+  }
+  return response.envelope;
+};
+
+export const importCollaborativePack = async (
+  envelope: CollaborativePackUpdateEnvelope
+): Promise<CollaborativePackSummary[]> => {
+  const message: ImportCollaborativePack = {
+    name: 'ImportCollaborativePack',
+    envelope,
+  };
+  return unwrapCollaborativePacks(await chrome.runtime.sendMessage(message));
+};
+
+export const applyCollaborativePack = async (
+  id: string
+): Promise<CollaborativePackSummary[]> => {
+  const message: ApplyCollaborativePack = {
+    name: 'ApplyCollaborativePack',
+    id,
+  };
+  return unwrapCollaborativePacks(await chrome.runtime.sendMessage(message));
+};
+
+export const deleteCollaborativePack = async (
+  id: string
+): Promise<CollaborativePackSummary[]> => {
+  const message: DeleteCollaborativePack = {
+    name: 'DeleteCollaborativePack',
+    id,
+  };
+  return unwrapCollaborativePacks(await chrome.runtime.sendMessage(message));
+};
 
 const getDiagnosticErrorMessage = (error: unknown): string =>
   error instanceof Error ? `${error.name}: ${error.message}` : String(error);

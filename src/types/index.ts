@@ -138,6 +138,37 @@ export type RecipeMarketplaceResponse = {
   error?: string;
 };
 
+export type CollaborativePackSummary = {
+  id: string;
+  name: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  styleCount: number;
+  stateVector: string;
+};
+
+export type CollaborativePackUpdateEnvelope = {
+  version: 1;
+  app: 'StyleKit';
+  kind: 'collaborative-style-pack';
+  exportedAt: Timestamp;
+  pack: {
+    id: string;
+    name: string;
+  };
+  update: string;
+};
+
+export type CollaborativePacksResponse = {
+  packs: CollaborativePackSummary[];
+  error?: string;
+};
+
+export type CollaborativePackExportResponse = {
+  envelope?: CollaborativePackUpdateEnvelope;
+  error?: string;
+};
+
 export type StyleSyncTombstone = {
   deletedTime: Timestamp;
 };
@@ -161,7 +192,8 @@ export type GoogleDriveSyncReport = {
 export type StylesRollbackReason =
   | 'json-import'
   | 'gist-import'
-  | 'google-drive-sync';
+  | 'google-drive-sync'
+  | 'collaboration-merge';
 
 export type StylesRollbackSnapshot = {
   id: Timestamp;

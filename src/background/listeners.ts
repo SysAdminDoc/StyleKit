@@ -19,6 +19,13 @@ import {
   AddRecipeMarketplaceSource,
   RefreshRecipeMarketplaceSource,
   DeleteRecipeMarketplaceSource,
+  GetCollaborativePacks,
+  CreateCollaborativePack,
+  CaptureCollaborativePack,
+  ExportCollaborativePack,
+  ImportCollaborativePack,
+  ApplyCollaborativePack,
+  DeleteCollaborativePack,
   SetStyleShadowRoots,
   PreviewStyleSource,
   SetStyleSource,
@@ -162,6 +169,13 @@ const ASYNC_MESSAGES = new Set([
   'AddRecipeMarketplaceSource',
   'RefreshRecipeMarketplaceSource',
   'DeleteRecipeMarketplaceSource',
+  'GetCollaborativePacks',
+  'CreateCollaborativePack',
+  'CaptureCollaborativePack',
+  'ExportCollaborativePack',
+  'ImportCollaborativePack',
+  'ApplyCollaborativePack',
+  'DeleteCollaborativePack',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -229,6 +243,27 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'DeleteRecipeMarketplaceSource':
         DeleteRecipeMarketplaceSource(message, sendResponse);
+        break;
+      case 'GetCollaborativePacks':
+        GetCollaborativePacks(sendResponse);
+        break;
+      case 'CreateCollaborativePack':
+        CreateCollaborativePack(message, sendResponse);
+        break;
+      case 'CaptureCollaborativePack':
+        CaptureCollaborativePack(message, sendResponse);
+        break;
+      case 'ExportCollaborativePack':
+        ExportCollaborativePack(message, sendResponse);
+        break;
+      case 'ImportCollaborativePack':
+        ImportCollaborativePack(message, sendResponse);
+        break;
+      case 'ApplyCollaborativePack':
+        ApplyCollaborativePack(message, sendResponse);
+        break;
+      case 'DeleteCollaborativePack':
+        DeleteCollaborativePack(message, sendResponse);
         break;
       case 'SetStyleShadowRoots':
         SetStyleShadowRoots(message);

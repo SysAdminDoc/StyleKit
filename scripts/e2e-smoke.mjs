@@ -929,6 +929,63 @@ try {
     console.log(
       '✓ Persisted Monaco theme, site lint override, and Prettier-on-save formatting'
     );
+
+    await optionsPage
+      .locator('.navigation-item')
+      .filter({ hasText: 'Sync' })
+      .click();
+    await optionsPage.getByRole('heading', {
+      name: 'Collaborative style packs',
+    }).waitFor();
+    const collaborativePacks = optionsPage.locator('.collaborative-packs');
+    await collaborativePacks
+      .getByLabel('Collaborative pack name')
+      .fill('E2E Shared Pack');
+    await collaborativePacks
+      .getByRole('button', { name: 'Create from current styles' })
+      .click();
+    await collaborativePacks
+      .getByRole('status')
+      .getByText('Collaborative pack created')
+      .waitFor();
+    const sharedPack = collaborativePacks
+      .locator('.pack-card')
+      .filter({ hasText: 'E2E Shared Pack' });
+    const [collaborationDownload] = await Promise.all([
+      optionsPage.waitForEvent('download'),
+      sharedPack.getByRole('button', { name: 'Export update' }).click(),
+    ]);
+    assert.equal(
+      collaborationDownload.suggestedFilename(),
+      'stylekit-collab-e2e-shared-pack.json'
+    );
+    const collaborationPath = await collaborationDownload.path();
+    assert(collaborationPath, 'Collaborative update did not produce a file');
+    const collaborationEnvelope = JSON.parse(
+      await readFile(collaborationPath, 'utf8')
+    );
+    assert.equal(collaborationEnvelope.kind, 'collaborative-style-pack');
+    assert.match(collaborationEnvelope.update, /^[a-zA-Z0-9+/]+={0,2}$/);
+    await sharedPack
+      .getByRole('button', { name: 'Apply merged styles' })
+      .click();
+    await collaborativePacks
+      .getByRole('status')
+      .getByText('Merged pack applied')
+      .waitFor();
+    assert(
+      await serviceWorker.evaluate(async () => {
+        const stored = await chrome.storage.local.get(
+          'stylekit-collaborative-packs'
+        );
+        return stored['stylekit-collaborative-packs']?.some(
+          pack => pack.name === 'E2E Shared Pack' && pack.update
+        );
+      })
+    );
+    console.log(
+      '✓ Created, exported, persisted, and applied a Yjs collaborative style pack'
+    );
   }
 
   console.log('StyleKit extension E2E smoke passed.');

@@ -16,6 +16,8 @@ import {
   StyleVersionSnapshot,
   UserRecipesResponse,
   RecipeMarketplaceResponse,
+  CollaborativePacksResponse,
+  CollaborativePackExportResponse,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -66,6 +68,8 @@ export type GetStyleSourceStatusesResponse = StyleSourceStatusMap;
 export type GetStyleVersionResponse = StyleVersionSnapshot | null;
 export type GetUserRecipesResponse = UserRecipesResponse;
 export type GetRecipeMarketplaceResponse = RecipeMarketplaceResponse;
+export type GetCollaborativePacksResponse = CollaborativePacksResponse;
+export type ExportCollaborativePackResponse = CollaborativePackExportResponse;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -95,6 +99,8 @@ type BackgroundPageMessageResponse =
   | GetStyleSourceStatusesResponse
   | GetStyleVersionResponse
   | GetUserRecipesResponse
-  | GetRecipeMarketplaceResponse;
+  | GetRecipeMarketplaceResponse
+  | GetCollaborativePacksResponse
+  | ExportCollaborativePackResponse;
 
 export default BackgroundPageMessageResponse;
