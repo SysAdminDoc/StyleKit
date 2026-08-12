@@ -53,6 +53,9 @@ import {
   DeleteRemoteSyncConfig as DeleteRemoteSyncConfigType,
   RunRemoteSync as RunRemoteSyncType,
   SetSelectiveSyncConfig as SetSelectiveSyncConfigType,
+  SaveReadingListItem as SaveReadingListItemType,
+  SetReadingListItemRead as SetReadingListItemReadType,
+  DeleteReadingListItem as DeleteReadingListItemType,
   SetStyleShadowRoots as SetStyleShadowRootsType,
   PreviewStyleSource as PreviewStyleSourceType,
   SetStyleSource as SetStyleSourceType,
@@ -113,6 +116,9 @@ import {
   GetRemoteSyncSettingsResponse,
   RunRemoteSyncResponse,
   GetSelectiveSyncConfigResponse,
+  GetReadingListResponse,
+  SaveReadingListItemResponse,
+  SetReadingListItemReadResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 import {
@@ -138,10 +144,7 @@ import {
   reloadStyleSource,
   rollbackStyleSource,
 } from './style-source';
-import {
-  getStyleVersion,
-  recordStyleVersion,
-} from './style-versions';
+import { getStyleVersion, recordStyleVersion } from './style-versions';
 import {
   deleteUserRecipe,
   getUserRecipes,
@@ -180,6 +183,12 @@ import {
   getSelectiveSyncConfig,
   setSelectiveSyncConfig,
 } from './selective-sync';
+import {
+  deleteReadingListItem,
+  getReadingListItems,
+  saveReadingListItem,
+  setReadingListItemRead,
+} from './reading-list';
 
 import {
   get as getReadabilitySettings,
@@ -303,7 +312,9 @@ export const ImportUserRecipes = async (
 };
 
 const sendRecipeMarketplaceMutation = async (
-  operation: () => Promise<Awaited<ReturnType<typeof getRecipeMarketplaceSources>>>,
+  operation: () => Promise<
+    Awaited<ReturnType<typeof getRecipeMarketplaceSources>>
+  >,
   sendResponse: (response: GetRecipeMarketplaceResponse) => void
 ): Promise<void> => {
   try {
@@ -576,6 +587,62 @@ export const SetSelectiveSyncConfig = async (
     sendResponse({ config: await setSelectiveSyncConfig(message.config) });
   } catch (error) {
     sendResponse({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const GetReadingList = async (
+  sendResponse: (response: GetReadingListResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({ items: await getReadingListItems() });
+  } catch (error) {
+    sendResponse({
+      items: [],
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const SaveReadingListItem = async (
+  message: SaveReadingListItemType,
+  sendResponse: (response: SaveReadingListItemResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({ item: await saveReadingListItem(message.item) });
+  } catch (error) {
+    sendResponse({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const SetReadingListItemRead = async (
+  message: SetReadingListItemReadType,
+  sendResponse: (response: SetReadingListItemReadResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({
+      item: await setReadingListItemRead(message.url, message.read),
+    });
+  } catch (error) {
+    sendResponse({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const DeleteReadingListItem = async (
+  message: DeleteReadingListItemType,
+  sendResponse: (response: GetReadingListResponse) => void
+): Promise<void> => {
+  try {
+    await deleteReadingListItem(message.url);
+    sendResponse({ items: await getReadingListItems() });
+  } catch (error) {
+    sendResponse({
+      items: [],
       error: error instanceof Error ? error.message : String(error),
     });
   }

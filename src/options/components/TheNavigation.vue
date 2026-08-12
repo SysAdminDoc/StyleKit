@@ -3,7 +3,11 @@
     <div class="header mb-3">
       StyleKit
       <span class="light ml-1 d-md-inline-flex d-none">
-        {{ t(`${currentTab}_options`) }}
+        {{
+          currentTab === 'reading-list'
+            ? 'reading list'
+            : t(`${currentTab}_options`)
+        }}
       </span>
     </div>
 
@@ -16,7 +20,7 @@
         :active="currentTab === tab"
         @click="$emit('select', tab)"
       >
-        {{ t(`${tab}_options`) }}
+        {{ tab === 'reading-list' ? 'Reading list' : t(`${tab}_options`) }}
       </b-list-group-item>
     </b-list-group>
 

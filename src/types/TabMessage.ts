@@ -20,6 +20,10 @@ export type ToggleReadabilityForTab = {
   name: 'ToggleReadabilityForTab';
 };
 
+export type CaptureReadingListArticle = {
+  name: 'CaptureReadingListArticle';
+};
+
 export type ApplyStylesToTab = {
   name: 'ApplyStylesToTab';
   defaultStyle?: Style;
@@ -61,6 +65,7 @@ type TabMessage =
   | OpenStylebotInCodeMode
   | OpenStylebotFromContextMenu
   | ToggleReadabilityForTab
+  | CaptureReadingListArticle
   | ApplyStylesToTab
   | TabUpdated
   | GetIsStylebotOpen

@@ -61,7 +61,7 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 ### Sync & Backup
 - **Google Drive sync** -- automatic bidirectional sync across devices
 - **GitHub Gist backup** -- export/import via private Gist with Bearer token auth
-- **WebDAV and S3 sync** -- merge the versioned style/tombstone payload through an exact remote object URL with ETag-safe WebDAV writes or signed AWS Signature V4 requests
+- **WebDAV and S3 sync** -- merge the versioned style/tombstone and reading-list payload through an exact remote object URL with ETag-safe WebDAV writes or signed AWS Signature V4 requests
 - **Selective sync** -- choose individual URL-keyed styles for Google Drive, WebDAV, and S3 while excluded local styles remain private and untouched by remote merges
 - **Yjs collaborative packs** -- capture saved styles into bounded CRDT documents, merge concurrent teammate update files, and apply converged CSS with rollback protection
 - **Role-based team spaces** -- organize collaborative packs into named teams, assign owner/editor/viewer permissions, and exchange targeted invitations or update bundles through a trusted channel
@@ -76,6 +76,9 @@ Built on [Stylebot](https://github.com/ankit/stylebot) by Ankit Ahuja, StyleKit 
 ### Readability Mode
 - Distraction-free reader view with customizable font, size, width, line height, and theme
 - Works on SPAs with automatic re-application on navigation
+- **Read-later queue** -- save readable pages from the popup, mark them read/unread, and remove them from a dedicated options view
+- **Offline snapshots** -- keep bounded, allowlist-sanitized text-first article copies without scripts, forms, cookies, trackers, or remote image dependencies
+- **Cross-device reading sync** -- merge article updates and deletion tombstones through configured Google Drive, WebDAV, or S3 sync
 
 ### Other
 - **One-click hide element** -- right-click context menu
@@ -129,7 +132,7 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (60/60 suites, 246 tests)
+npm test               # Run tests (63/63 suites, 253 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
 npm run locales:check  # Validate locale keys and placeholders against English
@@ -139,7 +142,7 @@ npm run dependencies:check # Report safe and compatibility-review dependency upd
 npm run release:artifacts  # Build and verify versioned ZIP/CRX release assets
 ```
 
-`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to document and open-shadow-root fixtures, verifies minified export, user-authored recipe persistence/export/application, saved-version diffs, loopback live-source reload/rollback, selective WebDAV remote-object sync, Shift-click multi-selection, grid/flex context visualization, variable-font axes, conic-gradient controls, visual keyframe animations, collaborative packs, role-based team invitations, and persisted Monaco themes/lint/Prettier settings.
+`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, captures and opens a sanitized offline article, applies CSS to document and open-shadow-root fixtures, verifies minified export, user-authored recipe persistence/export/application, saved-version diffs, loopback live-source reload/rollback, selective WebDAV style/reading-list sync, Shift-click multi-selection, grid/flex context visualization, variable-font axes, conic-gradient controls, visual keyframe animations, collaborative packs, role-based team invitations, and persisted Monaco themes/lint/Prettier settings.
 
 `npm run release:artifacts` removes old versioned StyleKit assets, builds Chrome and Firefox, creates deterministic ZIPs with POSIX entry paths, and signs and verifies a CRX when `dist.pem` or `STYLEKIT_CRX_KEY` is available.
 
@@ -184,7 +187,7 @@ src/
 
 **StyleKit collects nothing. No analytics. No tracking. No telemetry. Period.**
 
-Your styles are stored locally in `chrome.storage.local`. Cloud sync (Google Drive, Gist) is opt-in and goes directly to your own account -- StyleKit never sees or stores your data.
+Your styles and offline reading snapshots are stored locally. Cloud sync (Google Drive, Gist, WebDAV, or S3) is opt-in and goes directly to storage you configure -- StyleKit never sees or stores your data. Reading snapshots contain extracted article text and links, never page cookies or credentials.
 
 ## Security
 
@@ -197,6 +200,7 @@ StyleKit includes comprehensive security hardening:
 - **URL validation** for thumbnail fetches, one-time CSS imports, and live sources (HTTPS plus explicit loopback/file contracts)
 - **RegExp safety** with try/catch to prevent ReDoS
 - **Content-type validation** on CSS imports
+- **Allowlist-sanitized offline articles** with active HTML, forms, remote images, and unsafe URL schemes rejected again at the background storage boundary
 
 ## Related Tools
 

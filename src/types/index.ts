@@ -333,6 +333,47 @@ export type ReadabilityArticle = {
   byline: string;
   content: string;
   siteName: string;
+  textContent?: string;
+  excerpt?: string;
+};
+
+export type ReadingListItemDraft = {
+  url: string;
+  title: string;
+  byline: string;
+  siteName: string;
+  excerpt: string;
+  content: string;
+  textContent: string;
+};
+
+export type ReadingListItem = ReadingListItemDraft & {
+  addedAt: Timestamp;
+  updatedAt: Timestamp;
+  readAt?: Timestamp;
+};
+
+export type ReadingListItemMap = {
+  [url: string]: ReadingListItem;
+};
+
+export type ReadingListTombstoneMap = {
+  [url: string]: StyleSyncTombstone;
+};
+
+export type ReadingListResponse = {
+  items: ReadingListItem[];
+  error?: string;
+};
+
+export type ReadingListItemResponse = {
+  item?: ReadingListItem;
+  error?: string;
+};
+
+export type ReadingListCaptureResponse = {
+  item?: ReadingListItemDraft;
+  error?: string;
 };
 
 export type ReadabilityTheme = 'light' | 'dark' | 'sepia';

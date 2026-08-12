@@ -47,6 +47,8 @@ export const filterSelectiveSyncState = (
     return {
       styles: { ...state.styles },
       tombstones: { ...state.tombstones },
+      readingList: { ...state.readingList },
+      readingListTombstones: { ...state.readingListTombstones },
     };
   }
   const selected = new Set(config.urls);
@@ -57,6 +59,8 @@ export const filterSelectiveSyncState = (
     tombstones: Object.fromEntries(
       Object.entries(state.tombstones).filter(([url]) => selected.has(url))
     ),
+    readingList: { ...state.readingList },
+    readingListTombstones: { ...state.readingListTombstones },
   };
 };
 
@@ -79,5 +83,10 @@ export const combineSelectiveSyncState = (
       tombstones[url] = filteredSynced.tombstones[url];
     }
   });
-  return { styles, tombstones };
+  return {
+    styles,
+    tombstones,
+    readingList: { ...synced.readingList },
+    readingListTombstones: { ...synced.readingListTombstones },
+  };
 };

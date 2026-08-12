@@ -1,21 +1,32 @@
-import { StyleMap, StyleSyncTombstoneMap, Timestamp } from '@stylekit/types';
+import {
+  ReadingListItemMap,
+  ReadingListTombstoneMap,
+  StyleMap,
+  StyleSyncTombstoneMap,
+  Timestamp,
+} from '@stylekit/types';
 import { getCurrentTimestamp } from '@stylekit/utils';
 import { isValidStyleMap } from '../../utils/style-import';
+import { normalizeReadingListSyncState } from '../../background/reading-list';
 
 export type GoogleDriveStyleSyncPayload = {
-  version: 3;
+  version: 4;
   app: 'StyleKit';
   exportedAt: Timestamp;
   styles: StyleMap;
   tombstones: StyleSyncTombstoneMap;
+  readingList: ReadingListItemMap;
+  readingListTombstones: ReadingListTombstoneMap;
 };
 
 export type StyleSyncState = {
   styles: StyleMap;
   tombstones: StyleSyncTombstoneMap;
+  readingList: ReadingListItemMap;
+  readingListTombstones: ReadingListTombstoneMap;
 };
 
-const PAYLOAD_VERSION = 3;
+const PAYLOAD_VERSION = 4;
 
 export const isValidTombstoneMap = (
   data: unknown
@@ -43,7 +54,9 @@ export const isValidTombstoneMap = (
 
 export const createGoogleDriveSyncPayload = (
   styles: StyleMap,
-  tombstones: StyleSyncTombstoneMap
+  tombstones: StyleSyncTombstoneMap,
+  readingList: ReadingListItemMap = {},
+  readingListTombstones: ReadingListTombstoneMap = {}
 ): GoogleDriveStyleSyncPayload => {
   if (!isValidStyleMap(styles)) {
     throw new Error('Invalid StyleKit styles object');
@@ -53,12 +66,18 @@ export const createGoogleDriveSyncPayload = (
     throw new Error('Invalid StyleKit tombstones object');
   }
 
+  const normalizedReadingList = normalizeReadingListSyncState({
+    readingList,
+    readingListTombstones,
+  });
+
   return {
     version: PAYLOAD_VERSION,
     app: 'StyleKit',
     exportedAt: getCurrentTimestamp(),
     styles,
     tombstones,
+    ...normalizedReadingList,
   };
 };
 
@@ -77,12 +96,15 @@ export const parseGoogleDriveSyncPayload = (data: unknown): StyleSyncState => {
     return {
       styles: record,
       tombstones: {},
+      readingList: {},
+      readingListTombstones: {},
     };
   }
 
   if (
     record.version !== 1 &&
     record.version !== 2 &&
+    record.version !== 3 &&
     record.version !== PAYLOAD_VERSION
   ) {
     throw new Error(`Unsupported StyleKit sync version: ${record.version}`);
@@ -97,8 +119,14 @@ export const parseGoogleDriveSyncPayload = (data: unknown): StyleSyncState => {
     throw new Error('Invalid sync file: expected StyleKit tombstones');
   }
 
+  const readingListState = normalizeReadingListSyncState({
+    readingList: record.readingList || {},
+    readingListTombstones: record.readingListTombstones || {},
+  });
+
   return {
     styles: record.styles,
     tombstones,
+    ...readingListState,
   };
 };

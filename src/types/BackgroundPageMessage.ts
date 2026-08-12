@@ -16,6 +16,7 @@ import {
   RemoteSyncConfig,
   RemoteSyncProvider,
   SelectiveSyncConfig,
+  ReadingListItemDraft,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -156,6 +157,26 @@ export type GetSelectiveSyncConfig = {
 export type SetSelectiveSyncConfig = {
   name: 'SetSelectiveSyncConfig';
   config: SelectiveSyncConfig;
+};
+
+export type GetReadingList = {
+  name: 'GetReadingList';
+};
+
+export type SaveReadingListItem = {
+  name: 'SaveReadingListItem';
+  item: ReadingListItemDraft;
+};
+
+export type SetReadingListItemRead = {
+  name: 'SetReadingListItemRead';
+  url: string;
+  read: boolean;
+};
+
+export type DeleteReadingListItem = {
+  name: 'DeleteReadingListItem';
+  url: string;
 };
 
 export type SetStyleShadowRoots = {
@@ -389,6 +410,10 @@ type BackgroundPageMessage =
   | RunRemoteSync
   | GetSelectiveSyncConfig
   | SetSelectiveSyncConfig
+  | GetReadingList
+  | SaveReadingListItem
+  | SetReadingListItemRead
+  | DeleteReadingListItem
   | SetStyleShadowRoots
   | PreviewStyleSource
   | SetStyleSource

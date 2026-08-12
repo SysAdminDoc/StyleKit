@@ -1,9 +1,11 @@
 import { Store } from 'vuex';
 
 import { State } from 'editor/store';
-import { TabMessage } from '@stylekit/types';
+import { ReadingListCaptureResponse, TabMessage } from '@stylekit/types';
 
 import { apply as applyReadability } from '@stylekit/readability';
+import { getReadabilityArticleFromDocument } from '../../readability/utils';
+import { createReadingListDraft } from '../../readability/reading-list';
 
 import {
   applyStyles,
@@ -16,7 +18,11 @@ const initChromeListener = (store: Store<State>): void => {
   const { state, commit, dispatch } = store;
 
   chrome.runtime.onMessage.addListener(
-    (message: TabMessage, _, sendResponse: (response: boolean) => void) => {
+    (
+      message: TabMessage,
+      _,
+      sendResponse: (response: boolean | ReadingListCaptureResponse) => void
+    ) => {
       if (window !== window.top) {
         return;
       }
@@ -56,6 +62,20 @@ const initChromeListener = (store: Store<State>): void => {
         }
       } else if (message.name === 'ToggleReadabilityForTab') {
         toggleReadability({ state, dispatch });
+      } else if (message.name === 'CaptureReadingListArticle') {
+        try {
+          const article = getReadabilityArticleFromDocument();
+          sendResponse({
+            item: createReadingListDraft(article, window.location.href),
+          });
+        } catch (error) {
+          sendResponse({
+            error:
+              error instanceof Error
+                ? error.message
+                : 'This page could not be saved for offline reading.',
+          });
+        }
       } else if (message.name === 'ApplyStylesToTab') {
         applyStyles(
           { dispatch },

@@ -27,6 +27,8 @@
 
       <readability v-if="showReadability" :initial-readability="readability" />
 
+      <reading-list :tab="tab" />
+
       <toggle-stylebot :is-open="isOpen" :tab="tab" />
 
       <find-styles :tab="tab" />
@@ -46,6 +48,7 @@ import { defineComponent } from 'vue';
 import StyleComponent from './components/Style.vue';
 import ViewOptions from './components/ViewOptions.vue';
 import Readability from './components/Readability.vue';
+import ReadingList from './components/ReadingList.vue';
 import SyncStylebot from './components/SyncStylebot.vue';
 import ToggleStylebot from './components/ToggleStylebot.vue';
 import FindStyles from './components/FindStyles.vue';
@@ -69,6 +72,7 @@ export default defineComponent({
     ToggleStylebot,
     FindStyles,
     Readability,
+    ReadingList,
     SyncStylebot,
     ReleaseNotification,
   },

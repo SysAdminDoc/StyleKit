@@ -79,9 +79,7 @@ describe('WebDAV and S3 remote sync', () => {
         redirect: 'error',
       })
     );
-    expect(put[1].headers.Authorization).toBe(
-      'Basic YWxpY2U6YXBwLXBhc3M='
-    );
+    expect(put[1].headers.Authorization).toBe('Basic YWxpY2U6YXBwLXBhc3M=');
     expect(put[1].headers['If-None-Match']).toBe('*');
     expect((await getRemoteSyncSettings()).metadata.webdav?.etag).toBe(
       '"created"'
@@ -124,6 +122,54 @@ describe('WebDAV and S3 remote sync', () => {
       { 'example.com': remoteStyle },
       { recordTombstones: false }
     );
+  });
+
+  it('merges a remote reading item without creating an unrelated style rollback', async () => {
+    const updatedAt = '2026-08-12T11:00:00.000Z';
+    const url = 'https://example.com/article';
+    const payload = createGoogleDriveSyncPayload(
+      { 'example.com': localStyle },
+      {},
+      {
+        [url]: {
+          url,
+          title: 'Offline article',
+          byline: '',
+          siteName: 'Example',
+          excerpt: 'Offline text.',
+          content: '<p>Offline text.</p>',
+          textContent: 'Offline text.',
+          addedAt: updatedAt,
+          updatedAt,
+        },
+      }
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Promise.resolve(
+          new Response(JSON.stringify(payload), {
+            status: 200,
+            headers: { etag: '"remote"' },
+          })
+        )
+      )
+    );
+    await saveRemoteSyncConfig({
+      provider: 'webdav',
+      url: 'https://dav.example.com/stylekit.json',
+      username: '',
+      password: '',
+    });
+
+    const result = await runRemoteSync('webdav');
+    expect(result.localChanged).toBe(true);
+    expect(createStylesRollbackSnapshot).not.toHaveBeenCalled();
+    expect(setAll).not.toHaveBeenCalled();
+    const storedReadingList = storageData['stylekit-reading-list'] as {
+      readingList: Record<string, { title: string }>;
+    };
+    expect(storedReadingList.readingList[url].title).toBe('Offline article');
   });
 
   it('preserves excluded local styles while applying a selected remote style', async () => {

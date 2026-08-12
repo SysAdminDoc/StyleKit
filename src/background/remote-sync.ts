@@ -26,6 +26,11 @@ import {
   setStyleTombstones,
 } from './styles';
 import { getSelectiveSyncConfig } from './selective-sync';
+import {
+  getReadingListSyncState,
+  setReadingListSyncState,
+} from './reading-list';
+import { mergeReadingLists } from '../sync/reading-list';
 
 const CONFIG_STORAGE_KEY = 'stylekit-remote-sync-configs';
 const METADATA_STORAGE_KEY = 'stylekit-remote-sync-metadata';
@@ -82,12 +87,12 @@ const isMetadata = (
 ): value is RemoteSyncMetadata =>
   Boolean(
     value &&
-      typeof value === 'object' &&
-      !Array.isArray(value) &&
-      (value as RemoteSyncMetadata).provider === provider &&
-      typeof (value as RemoteSyncMetadata).lastSyncedAt === 'string' &&
-      ((value as RemoteSyncMetadata).etag === undefined ||
-        typeof (value as RemoteSyncMetadata).etag === 'string')
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    (value as RemoteSyncMetadata).provider === provider &&
+    typeof (value as RemoteSyncMetadata).lastSyncedAt === 'string' &&
+    ((value as RemoteSyncMetadata).etag === undefined ||
+      typeof (value as RemoteSyncMetadata).etag === 'string')
   );
 
 const readMetadata = async (): Promise<
@@ -251,7 +256,12 @@ const writeRemoteObject = async (
   etag?: string | null
 ): Promise<string | undefined> => {
   const body = JSON.stringify(
-    createGoogleDriveSyncPayload(state.styles, state.tombstones)
+    createGoogleDriveSyncPayload(
+      state.styles,
+      state.tombstones,
+      state.readingList,
+      state.readingListTombstones
+    )
   );
   const response = await fetchRemote(config, 'PUT', body, etag);
   if (response.status === 412) {
@@ -266,10 +276,22 @@ const writeRemoteObject = async (
 const getLocalState = async (): Promise<StyleSyncState> => ({
   styles: await getAll(),
   tombstones: await getStyleTombstones(),
+  ...(await getReadingListSyncState()),
 });
 
 const statesEqual = (left: StyleSyncState, right: StyleSyncState): boolean =>
   JSON.stringify(left) === JSON.stringify(right);
+
+const stylesEqual = (left: StyleSyncState, right: StyleSyncState): boolean =>
+  JSON.stringify([left.styles, left.tombstones]) ===
+  JSON.stringify([right.styles, right.tombstones]);
+
+const readingListsEqual = (
+  left: StyleSyncState,
+  right: StyleSyncState
+): boolean =>
+  JSON.stringify([left.readingList, left.readingListTombstones]) ===
+  JSON.stringify([right.readingList, right.readingListTombstones]);
 
 const runSyncAttempt = async (
   config: RemoteSyncConfig,
@@ -298,10 +320,7 @@ const runSyncAttempt = async (
     };
   }
 
-  const remoteSelected = filterSelectiveSyncState(
-    remote.state,
-    selectiveSync
-  );
+  const remoteSelected = filterSelectiveSyncState(remote.state, selectiveSync);
   const merged = mergeStyles({
     localStyles: local.styles,
     remoteStyles: remoteSelected.styles,
@@ -312,6 +331,7 @@ const runSyncAttempt = async (
   const mergedState: StyleSyncState = {
     styles: merged.styles,
     tombstones: merged.tombstones,
+    ...mergeReadingLists(local, remoteSelected),
   };
   const localChanged = !statesEqual(local, mergedState);
   const remoteChanged = !statesEqual(remote.state, mergedState);
@@ -325,9 +345,14 @@ const runSyncAttempt = async (
       mergedState,
       selectiveSync
     );
-    await createStylesRollbackSnapshot('remote-sync');
-    await setStyleTombstones(combined.tombstones);
-    await setAll(combined.styles, { recordTombstones: false });
+    if (!stylesEqual(localFull, combined)) {
+      await createStylesRollbackSnapshot('remote-sync');
+      await setStyleTombstones(combined.tombstones);
+      await setAll(combined.styles, { recordTombstones: false });
+    }
+    if (!readingListsEqual(localFull, combined)) {
+      await setReadingListSyncState(combined);
+    }
   }
   await writeProviderRecord(METADATA_STORAGE_KEY, config.provider, {
     provider: config.provider,
@@ -348,7 +373,8 @@ export const runRemoteSync = (
 ): Promise<RemoteSyncResult> =>
   mutateRemoteSync(async () => {
     const config = (await readConfigs())[provider];
-    if (!config) throw new Error(`${provider.toUpperCase()} sync is not configured`);
+    if (!config)
+      throw new Error(`${provider.toUpperCase()} sync is not configured`);
     const metadata = (await readMetadata())[provider];
     for (let attempt = 0; attempt < MAX_SYNC_ATTEMPTS; attempt += 1) {
       try {

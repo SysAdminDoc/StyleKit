@@ -37,6 +37,10 @@ import {
   RunRemoteSync,
   GetSelectiveSyncConfig,
   SetSelectiveSyncConfig,
+  GetReadingList,
+  SaveReadingListItem,
+  SetReadingListItemRead,
+  DeleteReadingListItem,
   SetStyleShadowRoots,
   PreviewStyleSource,
   SetStyleSource,
@@ -198,6 +202,10 @@ const ASYNC_MESSAGES = new Set([
   'RunRemoteSync',
   'GetSelectiveSyncConfig',
   'SetSelectiveSyncConfig',
+  'GetReadingList',
+  'SaveReadingListItem',
+  'SetReadingListItemRead',
+  'DeleteReadingListItem',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -319,6 +327,18 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'SetSelectiveSyncConfig':
         SetSelectiveSyncConfig(message, sendResponse);
+        break;
+      case 'GetReadingList':
+        GetReadingList(sendResponse);
+        break;
+      case 'SaveReadingListItem':
+        SaveReadingListItem(message, sendResponse);
+        break;
+      case 'SetReadingListItemRead':
+        SetReadingListItemRead(message, sendResponse);
+        break;
+      case 'DeleteReadingListItem':
+        DeleteReadingListItem(message, sendResponse);
         break;
       case 'SetStyleShadowRoots':
         SetStyleShadowRoots(message);

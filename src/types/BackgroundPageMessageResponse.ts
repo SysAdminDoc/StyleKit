@@ -23,6 +23,8 @@ import {
   RemoteSyncSettingsResponse,
   RemoteSyncRunResponse,
   SelectiveSyncConfigResponse,
+  ReadingListResponse,
+  ReadingListItemResponse,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -80,6 +82,10 @@ export type ExportTeamSpaceResponse = TeamSpaceExportResponse;
 export type GetRemoteSyncSettingsResponse = RemoteSyncSettingsResponse;
 export type RunRemoteSyncResponse = RemoteSyncRunResponse;
 export type GetSelectiveSyncConfigResponse = SelectiveSyncConfigResponse;
+export type GetReadingListResponse = ReadingListResponse;
+export type SaveReadingListItemResponse = ReadingListItemResponse;
+export type SetReadingListItemReadResponse = ReadingListItemResponse;
+export type DeleteReadingListItemResponse = ReadingListResponse;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -116,6 +122,10 @@ type BackgroundPageMessageResponse =
   | ExportTeamSpaceResponse
   | GetRemoteSyncSettingsResponse
   | RunRemoteSyncResponse
-  | GetSelectiveSyncConfigResponse;
+  | GetSelectiveSyncConfigResponse
+  | GetReadingListResponse
+  | SaveReadingListItemResponse
+  | SetReadingListItemReadResponse
+  | DeleteReadingListItemResponse;
 
 export default BackgroundPageMessageResponse;

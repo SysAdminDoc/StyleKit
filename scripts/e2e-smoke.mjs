@@ -19,6 +19,13 @@ const fixtureHtml = `<!doctype html>
         <main id="fixture">StyleKit extension smoke fixture</main>
         <aside id="secondary">Secondary selector fixture</aside>
       </section>
+      <article id="reading-fixture">
+        <h1>StyleKit offline reading fixture</h1>
+        <p>This article contains enough useful prose to exercise the read-later capture path and preserve a safe offline snapshot.</p>
+        <p>The reading list stores the extracted article text without cookies, page scripts, forms, tracking pixels, or remote image dependencies.</p>
+        <p>Saved snapshots remain readable when the original website is unavailable and merge through configured cross-device sync providers.</p>
+        <p>A deterministic browser test verifies capture, queue state, offline rendering, and the remote sync envelope together.</p>
+      </article>
     </body>
   </html>`;
 
@@ -332,6 +339,49 @@ try {
     .click();
   await optionsPage.getByText('Add a new style', { exact: false }).waitFor();
   console.log('✓ Rendered and navigated the options page');
+
+  const capturedReadingItem = await serviceWorker.evaluate(async fixtureUrl => {
+    const tabs = await chrome.tabs.query({});
+    const fixtureTab = tabs.find(tab => tab.url === fixtureUrl);
+    if (!fixtureTab?.id) throw new Error('Fixture tab not found');
+    const response = await chrome.tabs.sendMessage(fixtureTab.id, {
+      name: 'CaptureReadingListArticle',
+    });
+    return JSON.parse(JSON.stringify(response));
+  }, fixtureServer.url);
+  assert(
+    capturedReadingItem?.item,
+    `Reading-list capture failed: ${JSON.stringify(capturedReadingItem)}`
+  );
+  assert.equal(capturedReadingItem.item.url, fixtureServer.url);
+  assert.match(capturedReadingItem.item?.content || '', /offline snapshot/i);
+  const savedReadingItem = await optionsPage.evaluate(async item => {
+    return chrome.runtime.sendMessage({ name: 'SaveReadingListItem', item });
+  }, capturedReadingItem.item);
+  assert.equal(savedReadingItem.item?.url, fixtureServer.url);
+  await optionsPage
+    .locator('.navigation-item')
+    .filter({ hasText: 'Reading list' })
+    .click();
+  await optionsPage
+    .getByRole('heading', { name: 'Reading list', exact: true })
+    .waitFor();
+  await optionsPage
+    .locator('.reading-list-open')
+    .filter({ hasText: capturedReadingItem.item.title })
+    .click();
+  await optionsPage.getByText('Back to queue').waitFor();
+  await optionsPage
+    .locator('.offline-content')
+    .getByText(/remain readable when the original website is unavailable/)
+    .waitFor();
+  console.log('✓ Captured and rendered a sanitized offline reading-list item');
+
+  await optionsPage
+    .locator('.navigation-item')
+    .filter({ hasText: 'Styles' })
+    .click();
+  await optionsPage.getByText('Add a new style', { exact: false }).waitFor();
 
   const styleKey = fixtureServer.url;
   const fixtureHostname = new URL(styleKey).hostname;
@@ -1039,6 +1089,10 @@ try {
     assert.equal(remotePayload.app, 'StyleKit');
     assert(remotePayload.styles[styleKey]);
     assert.equal(remotePayload.styles[excludedStyleKey], undefined);
+    assert.equal(
+      remotePayload.readingList[fixtureServer.url]?.title,
+      capturedReadingItem.item.title
+    );
     assert.equal(
       fixtureServer.getRemoteAuthorization(),
       'Basic YWxpY2U6YXBwLXBhc3M='

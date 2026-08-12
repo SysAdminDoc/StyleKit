@@ -18,6 +18,7 @@ describe('Google Drive sync payload', () => {
 
     expect(parsed.styles['example.com'].css).toBe('body { color: red; }');
     expect(parsed.tombstones).toEqual({});
+    expect(parsed.readingList).toEqual({});
   });
 
   it('round-trips versioned styles and tombstones', () => {
@@ -34,15 +35,31 @@ describe('Google Drive sync payload', () => {
         'deleted.com': {
           deletedTime: timestamp,
         },
+      },
+      {
+        'https://example.com/article': {
+          url: 'https://example.com/article',
+          title: 'Offline article',
+          byline: '',
+          siteName: 'Example',
+          excerpt: 'Saved text',
+          content: '<p>Saved text</p>',
+          textContent: 'Saved text',
+          addedAt: timestamp,
+          updatedAt: timestamp,
+        },
       }
     );
     const parsed = parseGoogleDriveSyncPayload(payload);
 
-    expect(payload.version).toBe(3);
+    expect(payload.version).toBe(4);
     expect(parsed.styles['example.com'].enabled).toBe(true);
     expect(parsed.tombstones['deleted.com']).toEqual({
       deletedTime: timestamp,
     });
+    expect(parsed.readingList['https://example.com/article'].title).toBe(
+      'Offline article'
+    );
   });
 
   it('accepts v1 payloads and round-trips the shadow-root opt-in in v2', () => {
@@ -52,7 +69,12 @@ describe('Google Drive sync payload', () => {
         styles: {},
         tombstones: {},
       })
-    ).toEqual({ styles: {}, tombstones: {} });
+    ).toEqual({
+      styles: {},
+      tombstones: {},
+      readingList: {},
+      readingListTombstones: {},
+    });
 
     const payload = createGoogleDriveSyncPayload(
       {

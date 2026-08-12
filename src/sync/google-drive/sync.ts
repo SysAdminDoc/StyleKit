@@ -19,10 +19,7 @@ import {
   downloadSyncFile,
   writeSyncFile,
 } from './sync-file';
-import {
-  createGoogleDriveSyncPayload,
-  StyleSyncState,
-} from './sync-payload';
+import { createGoogleDriveSyncPayload, StyleSyncState } from './sync-payload';
 import {
   combineSelectiveSyncState,
   filterSelectiveSyncState,
@@ -35,15 +32,33 @@ import {
   createStylesRollbackSnapshot,
 } from '../../background/styles';
 import { getSelectiveSyncConfig } from '../../background/selective-sync';
+import {
+  getReadingListModifiedTime,
+  getReadingListSyncState,
+  setReadingListSyncState,
+} from '../../background/reading-list';
+import { mergeReadingLists } from '../reading-list';
 
 const EMPTY_REPORT: GoogleDriveSyncReport = {
   conflicts: [],
   tombstonesApplied: 0,
 };
 
+const stylesEqual = (left: StyleSyncState, right: StyleSyncState): boolean =>
+  JSON.stringify([left.styles, left.tombstones]) ===
+  JSON.stringify([right.styles, right.tombstones]);
+
+const readingListsEqual = (
+  left: StyleSyncState,
+  right: StyleSyncState
+): boolean =>
+  JSON.stringify([left.readingList, left.readingListTombstones]) ===
+  JSON.stringify([right.readingList, right.readingListTombstones]);
+
 const getFullLocalSyncState = async (): Promise<StyleSyncState> => ({
   styles: await getAllStyles(),
   tombstones: await getStyleTombstones(),
+  ...(await getReadingListSyncState()),
 });
 
 const getLocalSyncState = async (): Promise<StyleSyncState> =>
@@ -52,10 +67,27 @@ const getLocalSyncState = async (): Promise<StyleSyncState> =>
     await getSelectiveSyncConfig()
   );
 
-const getStylesBlob = ({ styles, tombstones }: StyleSyncState) =>
-  new Blob([JSON.stringify(createGoogleDriveSyncPayload(styles, tombstones))], {
-    type: 'application/json',
-  });
+const getStylesBlob = ({
+  styles,
+  tombstones,
+  readingList,
+  readingListTombstones,
+}: StyleSyncState) =>
+  new Blob(
+    [
+      JSON.stringify(
+        createGoogleDriveSyncPayload(
+          styles,
+          tombstones,
+          readingList,
+          readingListTombstones
+        )
+      ),
+    ],
+    {
+      type: 'application/json',
+    }
+  );
 
 /**
  * Copy local styles to remote and update sync metadata
@@ -83,14 +115,20 @@ const writeToLocal = async (
   state: StyleSyncState
 ) => {
   const selectiveSync = await getSelectiveSyncConfig();
+  const localState = await getFullLocalSyncState();
   const combined = combineSelectiveSyncState(
-    await getFullLocalSyncState(),
+    localState,
     filterSelectiveSyncState(state, selectiveSync),
     selectiveSync
   );
-  await createStylesRollbackSnapshot('google-drive-sync');
-  await setStyleTombstones(combined.tombstones);
-  await setAllStyles(combined.styles, { recordTombstones: false });
+  if (!stylesEqual(localState, combined)) {
+    await createStylesRollbackSnapshot('google-drive-sync');
+    await setStyleTombstones(combined.tombstones);
+    await setAllStyles(combined.styles, { recordTombstones: false });
+  }
+  if (!readingListsEqual(localState, combined)) {
+    await setReadingListSyncState(combined);
+  }
 
   return setGoogleDriveSyncMetadata({
     ...syncMetadata,
@@ -121,6 +159,7 @@ const merge = async (
   const mergedState = {
     styles: merged.styles,
     tombstones: merged.tombstones,
+    ...mergeReadingLists(localState, remoteState),
   };
 
   await writeToLocal(syncMetadata, mergedState);
@@ -160,11 +199,18 @@ const runSync = async (accessToken: string): Promise<GoogleDriveSyncReport> => {
     return merge(accessToken, remoteSyncMetadata);
   }
 
-  const localStylesMetadata = await getLocalStylesMetadata();
+  const [localStylesMetadata, readingListModifiedTime] = await Promise.all([
+    getLocalStylesMetadata(),
+    getReadingListModifiedTime(),
+  ]);
 
   const localSyncTime = new Date(localSyncMetadata.modifiedTime);
   const remoteSyncTime = new Date(remoteSyncMetadata.modifiedTime);
-  const localStylesModifiedTime = new Date(localStylesMetadata.modifiedTime);
+  const localStylesModifiedTime = new Date(
+    localStylesMetadata.modifiedTime > readingListModifiedTime
+      ? localStylesMetadata.modifiedTime
+      : readingListModifiedTime
+  );
 
   console.debug('sync info', {
     localSyncTime,

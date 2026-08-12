@@ -22,6 +22,7 @@ import { defineComponent } from 'vue';
 import TheBasicsTab from './components/TheBasicsTab.vue';
 import TheStylesTab from './components/TheStylesTab.vue';
 import TheSyncTab from './components/TheSyncTab.vue';
+import TheReadingListTab from './components/TheReadingListTab.vue';
 import TheNavigation from './components/TheNavigation.vue';
 
 export default defineComponent({
@@ -31,6 +32,7 @@ export default defineComponent({
     TheBasicsTab,
     TheStylesTab,
     TheSyncTab,
+    TheReadingListTab,
     TheNavigation,
   },
 
@@ -39,8 +41,9 @@ export default defineComponent({
     tabs: Array<string>;
   } {
     return {
-      currentTab: 'basics',
-      tabs: ['basics', 'styles', 'sync'],
+      currentTab:
+        window.location.hash === '#reading-list' ? 'reading-list' : 'basics',
+      tabs: ['basics', 'styles', 'reading-list', 'sync'],
     };
   },
 

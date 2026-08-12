@@ -29,12 +29,37 @@ export const shouldRunOnUrl = (): boolean => {
     return false;
   }
 
-  if (blockedHosts.some(blockedHost => window.location.hostname.endsWith(blockedHost))) {
+  if (
+    blockedHosts.some(blockedHost =>
+      window.location.hostname.endsWith(blockedHost)
+    )
+  ) {
     return false;
   }
 
   return true;
 };
+
+const parseReadabilityDocument = (doc: Document): ReadabilityArticle => {
+  doc
+    .querySelectorAll('#stylebot, #stylebot-reader')
+    .forEach(node => node.remove());
+  const article = new Readability(doc).parse();
+  if (!article?.content) {
+    throw new Error('This page does not contain a readable article');
+  }
+  return {
+    title: article.title || doc.title || window.location.hostname,
+    byline: article.byline || '',
+    siteName: article.siteName || window.location.hostname,
+    content: article.content,
+    textContent: article.textContent || '',
+    excerpt: article.excerpt || '',
+  };
+};
+
+export const getReadabilityArticleFromDocument = (): ReadabilityArticle =>
+  parseReadabilityDocument(document.cloneNode(true) as Document);
 
 /**
  * Fetch document object and apply readability
@@ -61,14 +86,7 @@ export const getReadabilityArticle = async (): Promise<ReadabilityArticle> => {
       }
 
       try {
-        const article = new Readability(doc).parse();
-
-        if (article && article.content) {
-          resolve(article);
-          return;
-        }
-
-        reject();
+        resolve(parseReadabilityDocument(doc));
       } catch (e) {
         reject();
       }

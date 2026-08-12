@@ -33,6 +33,8 @@ describe('selective sync state', () => {
       tombstones: {
         'deleted.example': { deletedTime: '2026-08-12T11:00:00.000Z' },
       },
+      readingList: {},
+      readingListTombstones: {},
     };
     expect(
       filterSelectiveSyncState(state, {
@@ -42,6 +44,8 @@ describe('selective sync state', () => {
     ).toEqual({
       styles: { 'keep.example': state.styles['keep.example'] },
       tombstones: { 'deleted.example': state.tombstones['deleted.example'] },
+      readingList: {},
+      readingListTombstones: {},
     });
   });
 
@@ -52,6 +56,8 @@ describe('selective sync state', () => {
         'private.example': style('private{}', '2026-08-12T10:00:00.000Z'),
       },
       tombstones: {},
+      readingList: {},
+      readingListTombstones: {},
     };
     const synced = {
       styles: {
@@ -59,6 +65,8 @@ describe('selective sync state', () => {
         'unexpected.example': style('remote{}', '2026-08-12T11:00:00.000Z'),
       },
       tombstones: {},
+      readingList: {},
+      readingListTombstones: {},
     };
     const combined = combineSelectiveSyncState(local, synced, {
       mode: 'selected',
