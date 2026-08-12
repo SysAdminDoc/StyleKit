@@ -42,14 +42,24 @@ import {
   ExportCollaborativePackResponse,
   TeamSpaceSummary,
   TeamSpaceUpdateEnvelope,
+  RemoteSyncConfig,
+  RemoteSyncProvider,
+  RemoteSyncSettings,
+  RemoteSyncResult,
   TeamSpaceMutation,
   GetTeamSpaces,
   CreateTeamSpace,
   MutateTeamSpace,
   ExportTeamSpace,
   ImportTeamSpace,
+  GetRemoteSyncSettings,
+  SaveRemoteSyncConfig,
+  DeleteRemoteSyncConfig,
+  RunRemoteSync,
   GetTeamSpacesResponse,
   ExportTeamSpaceResponse,
+  GetRemoteSyncSettingsResponse,
+  RunRemoteSyncResponse,
 } from '@stylekit/types';
 import postcss from 'postcss';
 import normalizeWhitespace from 'postcss-normalize-whitespace';
@@ -365,6 +375,53 @@ export const importTeamSpace = async (
     envelope,
   };
   return unwrapTeamSpaces(await chrome.runtime.sendMessage(message));
+};
+
+const unwrapRemoteSyncSettings = (
+  response: GetRemoteSyncSettingsResponse
+): RemoteSyncSettings => {
+  if (response.error || !response.settings) {
+    throw new Error(response.error || 'Remote sync settings are unavailable');
+  }
+  return response.settings;
+};
+
+export const getRemoteSyncSettings = async (): Promise<RemoteSyncSettings> => {
+  const message: GetRemoteSyncSettings = { name: 'GetRemoteSyncSettings' };
+  return unwrapRemoteSyncSettings(await chrome.runtime.sendMessage(message));
+};
+
+export const saveRemoteSyncConfig = async (
+  config: RemoteSyncConfig
+): Promise<RemoteSyncSettings> => {
+  const message: SaveRemoteSyncConfig = {
+    name: 'SaveRemoteSyncConfig',
+    config,
+  };
+  return unwrapRemoteSyncSettings(await chrome.runtime.sendMessage(message));
+};
+
+export const deleteRemoteSyncConfig = async (
+  provider: RemoteSyncProvider
+): Promise<RemoteSyncSettings> => {
+  const message: DeleteRemoteSyncConfig = {
+    name: 'DeleteRemoteSyncConfig',
+    provider,
+  };
+  return unwrapRemoteSyncSettings(await chrome.runtime.sendMessage(message));
+};
+
+export const runRemoteSync = async (
+  provider: RemoteSyncProvider
+): Promise<RemoteSyncResult> => {
+  const message: RunRemoteSync = { name: 'RunRemoteSync', provider };
+  const response = (await chrome.runtime.sendMessage(
+    message
+  )) as RunRemoteSyncResponse;
+  if (response.error || !response.result) {
+    throw new Error(response.error || 'Remote sync failed');
+  }
+  return response.result;
 };
 
 const getDiagnosticErrorMessage = (error: unknown): string =>

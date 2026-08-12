@@ -62,6 +62,16 @@
     </b-row>
 
     <b-row no-gutters class="mt-5 mb-1">
+      <h2>WebDAV &amp; S3 Sync</h2>
+    </b-row>
+
+    <b-row no-gutters class="mb-4">
+      <b-col>
+        <the-remote-sync-providers />
+      </b-col>
+    </b-row>
+
+    <b-row no-gutters class="mt-5 mb-1">
       <h2>Collaborative style packs</h2>
     </b-row>
 
@@ -167,6 +177,7 @@ import type { StyleImportPreview } from '../../utils/style-import';
 import AppButton from './AppButton.vue';
 import TheGoogleDriveSync from './sync/TheGoogleDriveSync.vue';
 import TheGistBackup from './sync/TheGistBackup.vue';
+import TheRemoteSyncProviders from './sync/TheRemoteSyncProviders.vue';
 import TheCollaborativePacks from './sync/TheCollaborativePacks.vue';
 import TheTeamSpaces from './sync/TheTeamSpaces.vue';
 
@@ -186,6 +197,7 @@ export default defineComponent({
     AppButton,
     TheGoogleDriveSync,
     TheGistBackup,
+    TheRemoteSyncProviders,
     TheCollaborativePacks,
     TheTeamSpaces,
   },

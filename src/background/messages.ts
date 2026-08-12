@@ -49,6 +49,9 @@ import {
   MutateTeamSpace as MutateTeamSpaceType,
   ExportTeamSpace as ExportTeamSpaceType,
   ImportTeamSpace as ImportTeamSpaceType,
+  SaveRemoteSyncConfig as SaveRemoteSyncConfigType,
+  DeleteRemoteSyncConfig as DeleteRemoteSyncConfigType,
+  RunRemoteSync as RunRemoteSyncType,
   SetStyleShadowRoots as SetStyleShadowRootsType,
   PreviewStyleSource as PreviewStyleSourceType,
   SetStyleSource as SetStyleSourceType,
@@ -106,6 +109,8 @@ import {
   ExportCollaborativePackResponse,
   GetTeamSpacesResponse,
   ExportTeamSpaceResponse,
+  GetRemoteSyncSettingsResponse,
+  RunRemoteSyncResponse,
 } from '@stylekit/types';
 import { runGoogleDriveSync } from '@stylekit/sync';
 import {
@@ -163,6 +168,12 @@ import {
   importTeamSpace,
   mutateTeamSpace,
 } from './team-spaces';
+import {
+  deleteRemoteSyncConfig,
+  getRemoteSyncSettings,
+  runRemoteSync,
+  saveRemoteSyncConfig,
+} from './remote-sync';
 
 import {
   get as getReadabilitySettings,
@@ -483,6 +494,66 @@ export const ImportTeamSpace = async (
     () => importTeamSpace(message.envelope),
     sendResponse
   );
+};
+
+const sendRemoteSyncSettings = async (
+  operation: () => ReturnType<typeof getRemoteSyncSettings>,
+  sendResponse: (response: GetRemoteSyncSettingsResponse) => void
+): Promise<void> => {
+  try {
+    sendResponse({ settings: await operation() });
+  } catch (error) {
+    sendResponse({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const GetRemoteSyncSettings = async (
+  sendResponse: (response: GetRemoteSyncSettingsResponse) => void
+): Promise<void> => {
+  await sendRemoteSyncSettings(getRemoteSyncSettings, sendResponse);
+};
+
+export const SaveRemoteSyncConfig = async (
+  message: SaveRemoteSyncConfigType,
+  sendResponse: (response: GetRemoteSyncSettingsResponse) => void
+): Promise<void> => {
+  await sendRemoteSyncSettings(
+    () => saveRemoteSyncConfig(message.config),
+    sendResponse
+  );
+};
+
+export const DeleteRemoteSyncConfig = async (
+  message: DeleteRemoteSyncConfigType,
+  sendResponse: (response: GetRemoteSyncSettingsResponse) => void
+): Promise<void> => {
+  await sendRemoteSyncSettings(
+    () => deleteRemoteSyncConfig(message.provider),
+    sendResponse
+  );
+};
+
+export const RunRemoteSync = async (
+  message: RunRemoteSyncType,
+  sendResponse: (response: RunRemoteSyncResponse) => void
+): Promise<void> => {
+  try {
+    const result = await runRemoteSync(message.provider);
+    if (result.localChanged) await applyStylesToAllTabs();
+    sendResponse({ result });
+  } catch (error) {
+    await recordDiagnostic({
+      category: 'sync',
+      operation: `remote-${message.provider}`,
+      error,
+      level: 'error',
+    });
+    sendResponse({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 };
 
 export const SetStyleShadowRoots = async (

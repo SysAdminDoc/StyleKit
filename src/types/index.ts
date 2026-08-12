@@ -223,6 +223,54 @@ export type TeamSpaceExportResponse = {
   error?: string;
 };
 
+export type RemoteSyncProvider = 'webdav' | 's3';
+
+export type WebDavSyncConfig = {
+  provider: 'webdav';
+  url: string;
+  username: string;
+  password: string;
+};
+
+export type S3SyncConfig = {
+  provider: 's3';
+  url: string;
+  region: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken?: string;
+};
+
+export type RemoteSyncConfig = WebDavSyncConfig | S3SyncConfig;
+
+export type RemoteSyncMetadata = {
+  provider: RemoteSyncProvider;
+  lastSyncedAt: Timestamp;
+  etag?: string;
+};
+
+export type RemoteSyncSettings = {
+  configs: Partial<Record<RemoteSyncProvider, RemoteSyncConfig>>;
+  metadata: Partial<Record<RemoteSyncProvider, RemoteSyncMetadata>>;
+};
+
+export type RemoteSyncResult = GoogleDriveSyncReport & {
+  provider: RemoteSyncProvider;
+  syncedAt: Timestamp;
+  remoteCreated: boolean;
+  localChanged: boolean;
+};
+
+export type RemoteSyncSettingsResponse = {
+  settings?: RemoteSyncSettings;
+  error?: string;
+};
+
+export type RemoteSyncRunResponse = {
+  result?: RemoteSyncResult;
+  error?: string;
+};
+
 export type StyleSyncTombstone = {
   deletedTime: Timestamp;
 };
@@ -247,6 +295,7 @@ export type StylesRollbackReason =
   | 'json-import'
   | 'gist-import'
   | 'google-drive-sync'
+  | 'remote-sync'
   | 'collaboration-merge';
 
 export type StylesRollbackSnapshot = {

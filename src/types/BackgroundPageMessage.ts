@@ -13,6 +13,8 @@ import {
   CollaborativePackUpdateEnvelope,
   TeamSpaceMutation,
   TeamSpaceUpdateEnvelope,
+  RemoteSyncConfig,
+  RemoteSyncProvider,
 } from '@stylekit/types';
 
 export type SetStyle = {
@@ -125,6 +127,25 @@ export type ExportTeamSpace = {
 export type ImportTeamSpace = {
   name: 'ImportTeamSpace';
   envelope: TeamSpaceUpdateEnvelope;
+};
+
+export type GetRemoteSyncSettings = {
+  name: 'GetRemoteSyncSettings';
+};
+
+export type SaveRemoteSyncConfig = {
+  name: 'SaveRemoteSyncConfig';
+  config: RemoteSyncConfig;
+};
+
+export type DeleteRemoteSyncConfig = {
+  name: 'DeleteRemoteSyncConfig';
+  provider: RemoteSyncProvider;
+};
+
+export type RunRemoteSync = {
+  name: 'RunRemoteSync';
+  provider: RemoteSyncProvider;
 };
 
 export type SetStyleShadowRoots = {
@@ -352,6 +373,10 @@ type BackgroundPageMessage =
   | MutateTeamSpace
   | ExportTeamSpace
   | ImportTeamSpace
+  | GetRemoteSyncSettings
+  | SaveRemoteSyncConfig
+  | DeleteRemoteSyncConfig
+  | RunRemoteSync
   | SetStyleShadowRoots
   | PreviewStyleSource
   | SetStyleSource

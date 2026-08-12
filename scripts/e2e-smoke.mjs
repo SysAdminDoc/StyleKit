@@ -121,13 +121,48 @@ const waitForEditorReceiver = async (serviceWorker, fixtureUrl) => {
 
 const createFixtureServer = () => {
   let liveCss = `#fixture { color: ${expectedReloadColor} !important; }`;
-  const server = createServer((request, response) => {
+  let remoteBackup = null;
+  let remoteAuthorization = '';
+  let remoteEtag = 0;
+  const server = createServer(async (request, response) => {
     if (request.url === '/live.css') {
       response.writeHead(200, {
         'Content-Type': 'text/css; charset=utf-8',
         'Cache-Control': 'no-store',
       });
       response.end(liveCss);
+      return;
+    }
+    if (request.url === '/stylekit-sync.json') {
+      remoteAuthorization = request.headers.authorization || '';
+      if (request.method === 'GET') {
+        if (remoteBackup === null) {
+          response.writeHead(404, { 'Cache-Control': 'no-store' });
+          response.end();
+          return;
+        }
+        response.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store',
+          ETag: `"e2e-${remoteEtag}"`,
+        });
+        response.end(remoteBackup);
+        return;
+      }
+      if (request.method === 'PUT') {
+        const chunks = [];
+        for await (const chunk of request) chunks.push(chunk);
+        remoteBackup = Buffer.concat(chunks).toString('utf8');
+        remoteEtag += 1;
+        response.writeHead(201, {
+          'Cache-Control': 'no-store',
+          ETag: `"e2e-${remoteEtag}"`,
+        });
+        response.end();
+        return;
+      }
+      response.writeHead(405);
+      response.end();
       return;
     }
     response.writeHead(200, {
@@ -146,6 +181,9 @@ const createFixtureServer = () => {
         server,
         url: 'https://www.youtube.com/watch?v=stylekit-e2e',
         sourceUrl: `http://127.0.0.1:${address.port}/live.css`,
+        remoteSyncUrl: `http://127.0.0.1:${address.port}/stylekit-sync.json`,
+        getRemoteBackup: () => remoteBackup,
+        getRemoteAuthorization: () => remoteAuthorization,
         setLiveCss: css => {
           liveCss = css;
         },
@@ -942,6 +980,56 @@ try {
     await optionsPage.getByRole('heading', {
       name: 'Collaborative style packs',
     }).waitFor();
+    await optionsPage
+      .getByRole('heading', { name: 'WebDAV & S3 Sync' })
+      .waitFor();
+    const remoteProviders = optionsPage.locator('.remote-sync-providers');
+    const webDavCard = remoteProviders
+      .locator('.provider-card')
+      .filter({ hasText: 'WebDAV' });
+    await webDavCard
+      .getByLabel('WebDAV object URL')
+      .fill(fixtureServer.remoteSyncUrl);
+    await webDavCard.getByLabel('WebDAV username').fill('alice');
+    await webDavCard.getByLabel('WebDAV password').fill('app-pass');
+    await webDavCard
+      .getByRole('button', { name: 'Save credentials', exact: true })
+      .click();
+    await webDavCard
+      .getByRole('status')
+      .getByText('Credentials saved locally.')
+      .waitFor();
+    await webDavCard
+      .getByRole('button', { name: 'Sync now', exact: true })
+      .click();
+    await webDavCard
+      .getByRole('status')
+      .getByText('Remote backup created.')
+      .waitFor();
+    const remoteBackup = fixtureServer.getRemoteBackup();
+    assert(remoteBackup, 'WebDAV sync did not upload the remote object');
+    const remotePayload = JSON.parse(remoteBackup);
+    assert.equal(remotePayload.app, 'StyleKit');
+    assert(remotePayload.styles[styleKey]);
+    assert.equal(
+      fixtureServer.getRemoteAuthorization(),
+      'Basic YWxpY2U6YXBwLXBhc3M='
+    );
+    assert(
+      await serviceWorker.evaluate(async () => {
+        const stored = await chrome.storage.local.get([
+          'stylekit-remote-sync-configs',
+          'stylekit-remote-sync-metadata',
+        ]);
+        return Boolean(
+          stored['stylekit-remote-sync-configs']?.webdav?.url &&
+            stored['stylekit-remote-sync-metadata']?.webdav?.lastSyncedAt
+        );
+      })
+    );
+    console.log(
+      '✓ Saved WebDAV credentials and created a versioned remote sync object'
+    );
     const collaborativePacks = optionsPage.locator('.collaborative-packs');
     await collaborativePacks
       .getByLabel('Collaborative pack name')

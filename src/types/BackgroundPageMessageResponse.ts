@@ -20,6 +20,8 @@ import {
   CollaborativePackExportResponse,
   TeamSpacesResponse,
   TeamSpaceExportResponse,
+  RemoteSyncSettingsResponse,
+  RemoteSyncRunResponse,
 } from '@stylekit/types';
 
 export type GetAllOptionsResponse = StylebotOptions;
@@ -74,6 +76,8 @@ export type GetCollaborativePacksResponse = CollaborativePacksResponse;
 export type ExportCollaborativePackResponse = CollaborativePackExportResponse;
 export type GetTeamSpacesResponse = TeamSpacesResponse;
 export type ExportTeamSpaceResponse = TeamSpaceExportResponse;
+export type GetRemoteSyncSettingsResponse = RemoteSyncSettingsResponse;
+export type RunRemoteSyncResponse = RemoteSyncRunResponse;
 
 type BackgroundPageMessageResponse =
   | GetAllOptionsResponse
@@ -107,6 +111,8 @@ type BackgroundPageMessageResponse =
   | GetCollaborativePacksResponse
   | ExportCollaborativePackResponse
   | GetTeamSpacesResponse
-  | ExportTeamSpaceResponse;
+  | ExportTeamSpaceResponse
+  | GetRemoteSyncSettingsResponse
+  | RunRemoteSyncResponse;
 
 export default BackgroundPageMessageResponse;

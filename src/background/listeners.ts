@@ -31,6 +31,10 @@ import {
   MutateTeamSpace,
   ExportTeamSpace,
   ImportTeamSpace,
+  GetRemoteSyncSettings,
+  SaveRemoteSyncConfig,
+  DeleteRemoteSyncConfig,
+  RunRemoteSync,
   SetStyleShadowRoots,
   PreviewStyleSource,
   SetStyleSource,
@@ -186,6 +190,10 @@ const ASYNC_MESSAGES = new Set([
   'MutateTeamSpace',
   'ExportTeamSpace',
   'ImportTeamSpace',
+  'GetRemoteSyncSettings',
+  'SaveRemoteSyncConfig',
+  'DeleteRemoteSyncConfig',
+  'RunRemoteSync',
 ]);
 
 chrome.runtime.onMessage.addListener(
@@ -289,6 +297,18 @@ chrome.runtime.onMessage.addListener(
         break;
       case 'ImportTeamSpace':
         ImportTeamSpace(message, sendResponse);
+        break;
+      case 'GetRemoteSyncSettings':
+        GetRemoteSyncSettings(sendResponse);
+        break;
+      case 'SaveRemoteSyncConfig':
+        SaveRemoteSyncConfig(message, sendResponse);
+        break;
+      case 'DeleteRemoteSyncConfig':
+        DeleteRemoteSyncConfig(message, sendResponse);
+        break;
+      case 'RunRemoteSync':
+        RunRemoteSync(message, sendResponse);
         break;
       case 'SetStyleShadowRoots':
         SetStyleShadowRoots(message);
