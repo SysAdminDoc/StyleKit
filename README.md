@@ -113,12 +113,16 @@ Load from `firefox-dist/`.
 nvm use               # Node 22.12.0 or newer
 npm run watch          # Dev build with hot reload (Chrome/Edge)
 npm run watch:firefox  # Dev build (Firefox)
-npm test               # Run tests (25/25 suites, 138 tests)
+npm test               # Run tests (25/25 suites, 139 tests)
 npm run lint           # ESLint check
 npm run lint:fix       # Auto-fix lint issues
+npx playwright install chromium # One-time E2E browser install
+npm run test:e2e       # Build both targets and smoke-test a clean Chromium profile
 npm run dependencies:check # Report safe and compatibility-review dependency updates
 npm run release:artifacts  # Build and verify versioned ZIP/CRX release assets
 ```
+
+`npm run test:e2e` loads the built extension in an isolated temporary profile, renders the popup and options page, applies CSS to a local fixture, and opens the visual editor and Monaco iframe.
 
 `npm run release:artifacts` removes old versioned StyleKit assets, builds Chrome and Firefox, creates deterministic ZIPs with POSIX entry paths, and signs and verifies a CRX when `dist.pem` or `STYLEKIT_CRX_KEY` is available.
 

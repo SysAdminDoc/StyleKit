@@ -210,4 +210,19 @@ describe('extension UI accessibility', () => {
       expect(source, entry).toContain('accessibility.reduced-motion');
     }
   });
+
+  it('loads content scripts using manifest-compatible classic entries', () => {
+    const manifest = JSON.parse(
+      readFileSync(
+        resolve(process.cwd(), 'src/extension/manifest.json'),
+        'utf8'
+      )
+    );
+    expect(manifest.content_scripts).toHaveLength(2);
+    expect(manifest.content_scripts[0].js).toEqual(['editor/index.js']);
+    expect(manifest.content_scripts[1].js).toEqual(['inject-css/index.js']);
+    expect(manifest.content_scripts.every(entry => !('type' in entry))).toBe(
+      true
+    );
+  });
 });

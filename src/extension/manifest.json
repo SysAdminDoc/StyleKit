@@ -15,30 +15,16 @@
   },
   "content_scripts": [
     {
-      "js": [
-        "editor/index.js"
-      ],
-      "type": "module",
-      "matches": [
-        "<all_urls>"
-      ],
-      "exclude_matches": [
-        "*://*/*.xml"
-      ],
+      "js": ["editor/index.js"],
+      "matches": ["<all_urls>"],
+      "exclude_matches": ["*://*/*.xml"],
       "run_at": "document_idle"
     },
     {
       "all_frames": true,
-      "js": [
-        "inject-css/index.js"
-      ],
-      "type": "module",
-      "matches": [
-        "<all_urls>"
-      ],
-      "exclude_matches": [
-        "*://*/*.xml"
-      ],
+      "js": ["inject-css/index.js"],
+      "matches": ["<all_urls>"],
+      "exclude_matches": ["*://*/*.xml"],
       "run_at": "document_start"
     }
   ],
@@ -68,6 +54,7 @@
     "scripting"
   ],
   "host_permissions": [
+    "<all_urls>",
     "https://drive.google.com/*",
     "https://www.googleapis.com/*",
     "https://fonts.googleapis.com/*",
@@ -85,9 +72,7 @@
         "monaco-editor/iframe/index.html",
         "readability/index.css"
       ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "matches": ["<all_urls>"]
     }
   ]
 }

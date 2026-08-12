@@ -7,7 +7,9 @@ import {
   createWebAccessibleResourceRules,
 } from '../web-accessible-resources';
 
-const readManifest = (): { web_accessible_resources: { resources: string[] }[] } =>
+const readManifest = (): {
+  web_accessible_resources: { resources: string[] }[];
+} =>
   JSON.parse(
     readFileSync(join(process.cwd(), 'src/extension/manifest.json'), 'utf8')
   );
@@ -29,7 +31,7 @@ describe('web accessible resource policy', () => {
     });
   });
 
-  it('publishes only content-script imports and direct page loads', () => {
+  it('publishes only direct page loads for self-contained content scripts', () => {
     const bundle = {
       'editor/index.js': {
         type: 'chunk',
@@ -65,14 +67,17 @@ describe('web accessible resource policy', () => {
       },
     };
 
-    const importedResources = collectImportedWebAccessibleResources(bundle);
-    expect(importedResources).toEqual([
-      'chunks/editor.js',
+    expect(
+      collectImportedWebAccessibleResources(bundle, ['inject-css/index.js'])
+    ).toEqual([
       'chunks/inject.js',
       'chunks/readability.js',
       'chunks/shared.js',
       'readability/index.js',
     ]);
+
+    const importedResources = collectImportedWebAccessibleResources(bundle);
+    expect(importedResources).toEqual([]);
 
     const [chromeRule] = createWebAccessibleResourceRules(
       importedResources,
@@ -81,15 +86,12 @@ describe('web accessible resource policy', () => {
 
     expect(chromeRule.use_dynamic_url).toBe(true);
     expect(chromeRule.resources).toEqual([
-      'chunks/editor.js',
-      'chunks/inject.js',
-      'chunks/readability.js',
-      'chunks/shared.js',
       'editor/index.css',
       'monaco-editor/iframe/index.html',
       'readability/index.css',
-      'readability/index.js',
     ]);
+    expect(chromeRule.resources).not.toContain('chunks/editor.js');
+    expect(chromeRule.resources).not.toContain('chunks/inject.js');
     expect(chromeRule.resources).not.toContain('chunks/unused.js');
   });
 });

@@ -171,7 +171,7 @@ export default defineConfig({
 
   build: {
     outDir,
-    emptyOutDir: true,
+    emptyOutDir: process.env.STYLEKIT_PRESERVE_OUTDIR !== '1',
     sourcemap: process.env.NODE_ENV !== 'production' ? 'inline' : false,
     minify: process.env.NODE_ENV === 'production',
     target: 'esnext',
@@ -180,9 +180,7 @@ export default defineConfig({
       input: {
         'background/index': resolve(__dirname, 'src/background/index.ts'),
         'popup/index': resolve(__dirname, 'src/popup/index.ts'),
-        'editor/index': resolve(__dirname, 'src/editor/index.ts'),
         'options/index': resolve(__dirname, 'src/options/index.ts'),
-        'inject-css/index': resolve(__dirname, 'src/inject-css/index.ts'),
         'readability/index': resolve(__dirname, 'src/readability/index.ts'),
         'sync/index': resolve(__dirname, 'src/sync/index.ts'),
         'monaco-editor/iframe/index': resolve(__dirname, 'src/monaco-editor/iframe/index.ts'),

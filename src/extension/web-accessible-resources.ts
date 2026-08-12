@@ -11,12 +11,7 @@ export type WebAccessibleResourceRule = {
   use_dynamic_url?: boolean;
 };
 
-export const CONTENT_SCRIPT_ENTRY_FILES = [
-  'editor/index.js',
-  'inject-css/index.js',
-];
-
-export const DIRECT_PAGE_RESOURCE_FILES = [
+export const DIRECT_WEB_ACCESSIBLE_RESOURCE_FILES = [
   'editor/index.css',
   'monaco-editor/iframe/index.html',
   'readability/index.css',
@@ -33,7 +28,7 @@ export const DISALLOWED_BROAD_WEB_ACCESSIBLE_RESOURCES = [
 
 export const collectImportedWebAccessibleResources = (
   bundle: BundleGraph,
-  entryFiles = CONTENT_SCRIPT_ENTRY_FILES
+  entryFiles: readonly string[] = []
 ): string[] => {
   const resources = new Set<string>();
   const visited = new Set<string>();
@@ -61,7 +56,7 @@ export const createWebAccessibleResourceRules = (
   useDynamicUrl: boolean
 ): WebAccessibleResourceRule[] => {
   const resources = Array.from(
-    new Set([...DIRECT_PAGE_RESOURCE_FILES, ...importedResources])
+    new Set([...DIRECT_WEB_ACCESSIBLE_RESOURCE_FILES, ...importedResources])
   ).sort();
 
   const rule: WebAccessibleResourceRule = {
