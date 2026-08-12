@@ -506,6 +506,44 @@ try {
     console.log(
       '✓ Applied a conic gradient with the visual angle controls and exposed Copy CSS'
     );
+    const animationSectionState = await fixturePage
+      .locator('#stylebot')
+      .evaluate(host => {
+        const sections = Array.from(
+          host.shadowRoot?.querySelectorAll('.section') || []
+        );
+        const animationSection = sections.find(section =>
+          section
+            .querySelector('.section-title')
+            ?.textContent?.includes('Animations')
+        );
+        animationSection?.querySelector('.collapse-btn')?.click();
+        return Boolean(animationSection);
+      });
+    assert(animationSectionState, 'Animations section was not rendered');
+    const animationSection = fixturePage
+      .locator('#stylebot .section')
+      .filter({ hasText: 'Animations' });
+    await animationSection
+      .getByRole('button', { name: 'Edit keyframe at 0 percent' })
+      .waitFor();
+    assert.equal(
+      await animationSection.locator('.animation-marker').count(),
+      2
+    );
+    await animationSection
+      .getByRole('button', { name: 'Apply & Replay' })
+      .click();
+    await fixturePage.waitForFunction(() =>
+      ['#fixture', '#secondary'].every(selector =>
+        getComputedStyle(
+          document.querySelector(selector)
+        ).animationName.includes('stylekit-')
+      )
+    );
+    console.log(
+      '✓ Applied and replayed a selector-scoped animation from visual keyframe markers'
+    );
     await fixturePage.keyboard.press('c');
     await fixturePage.waitForFunction(() => {
       const host = document.querySelector('#stylebot');

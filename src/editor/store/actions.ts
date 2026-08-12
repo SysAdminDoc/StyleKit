@@ -55,9 +55,10 @@ export default {
     }
 
     const options = await getAllOptions();
-    if (!options.basicModeSections) {
-      options.basicModeSections = defaultOptions.basicModeSections;
-    }
+    options.basicModeSections = {
+      ...defaultOptions.basicModeSections,
+      ...options.basicModeSections,
+    };
     if (!options.layout) {
       options.layout = defaultOptions.layout;
     }
@@ -82,9 +83,11 @@ export default {
     initListeners(store);
   },
 
-  async refreshDefaultStyle(
-    { dispatch }: { dispatch: Dispatch }
-  ): Promise<void> {
+  async refreshDefaultStyle({
+    dispatch,
+  }: {
+    dispatch: Dispatch;
+  }): Promise<void> {
     const { defaultStyle } = await getStylesForPage(false);
     if (defaultStyle) {
       dispatch('initializeDefaultStyle', defaultStyle);

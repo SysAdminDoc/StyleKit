@@ -23,6 +23,7 @@ export const defaultOptions: StylebotOptions = {
     colors: false,
     layout: true,
     border: false,
+    animations: false,
     variables: false,
     computedStyles: false,
     snippets: false,

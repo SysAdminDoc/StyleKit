@@ -9,13 +9,39 @@
               <span class="section-title">{{ t('layout_properties') }}</span>
               <span class="section-hint">Hide, resize, margins, padding</span>
             </div>
-            <b-icon :icon="layout ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+            <b-icon
+              :icon="layout ? 'chevron-up' : 'chevron-down'"
+              class="section-chevron"
+            />
           </div>
         </b-button>
       </b-col>
       <b-collapse v-model="layout" class="collapse-content">
         <b-col cols="12" class="px-2 pt-1">
           <the-layout-properties class="pb-2" />
+        </b-col>
+      </b-collapse>
+    </b-row>
+
+    <b-row class="section" no-gutters>
+      <b-col cols="12">
+        <b-button class="collapse-btn" @click="animations = !animations">
+          <div class="section-header-inner">
+            <b-icon icon="play-circle" class="section-icon" />
+            <div class="section-header-text">
+              <span class="section-title">Animations</span>
+              <span class="section-hint">Visual keyframes, timing, replay</span>
+            </div>
+            <b-icon
+              :icon="animations ? 'chevron-up' : 'chevron-down'"
+              class="section-chevron"
+            />
+          </div>
+        </b-button>
+      </b-col>
+      <b-collapse v-model="animations" class="collapse-content">
+        <b-col cols="12" class="px-2 pt-1">
+          <the-animation-editor class="pb-2" />
         </b-col>
       </b-collapse>
     </b-row>
@@ -29,7 +55,10 @@
               <span class="section-title">{{ t('text_properties') }}</span>
               <span class="section-hint">Font, size, spacing, alignment</span>
             </div>
-            <b-icon :icon="text ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+            <b-icon
+              :icon="text ? 'chevron-up' : 'chevron-down'"
+              class="section-chevron"
+            />
           </div>
         </b-button>
       </b-col>
@@ -49,7 +78,10 @@
               <span class="section-title">{{ t('color_properties') }}</span>
               <span class="section-hint">Text color, background, shadows</span>
             </div>
-            <b-icon :icon="colors ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+            <b-icon
+              :icon="colors ? 'chevron-up' : 'chevron-down'"
+              class="section-chevron"
+            />
           </div>
         </b-button>
       </b-col>
@@ -67,9 +99,14 @@
             <b-icon icon="square" class="section-icon" />
             <div class="section-header-text">
               <span class="section-title">{{ t('border_properties') }}</span>
-              <span class="section-hint">Lines, thickness, rounded corners</span>
+              <span class="section-hint">
+                Lines, thickness, rounded corners
+              </span>
             </div>
-            <b-icon :icon="border ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+            <b-icon
+              :icon="border ? 'chevron-up' : 'chevron-down'"
+              class="section-chevron"
+            />
           </div>
         </b-button>
       </b-col>
@@ -89,7 +126,10 @@
               <span class="section-title">Snippets</span>
               <span class="section-hint">Ready-made styles and effects</span>
             </div>
-            <b-icon :icon="snippets ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+            <b-icon
+              :icon="snippets ? 'chevron-up' : 'chevron-down'"
+              class="section-chevron"
+            />
           </div>
         </b-button>
       </b-col>
@@ -109,7 +149,10 @@
               <span class="section-title">Variables</span>
               <span class="section-hint">CSS custom properties</span>
             </div>
-            <b-icon :icon="variables ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+            <b-icon
+              :icon="variables ? 'chevron-up' : 'chevron-down'"
+              class="section-chevron"
+            />
           </div>
         </b-button>
       </b-col>
@@ -122,14 +165,20 @@
 
     <b-row class="section" no-gutters>
       <b-col cols="12">
-        <b-button class="collapse-btn" @click="computedStyles = !computedStyles">
+        <b-button
+          class="collapse-btn"
+          @click="computedStyles = !computedStyles"
+        >
           <div class="section-header-inner">
             <b-icon icon="eye" class="section-icon" />
             <div class="section-header-text">
               <span class="section-title">Computed Styles</span>
               <span class="section-hint">Current element styles</span>
             </div>
-            <b-icon :icon="computedStyles ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+            <b-icon
+              :icon="computedStyles ? 'chevron-up' : 'chevron-down'"
+              class="section-chevron"
+            />
           </div>
         </b-button>
       </b-col>
@@ -147,9 +196,14 @@
             <b-icon icon="star" class="section-icon" />
             <div class="section-header-text">
               <span class="section-title">Site Recipes</span>
-              <span class="section-hint">One-click tweaks for popular sites</span>
+              <span class="section-hint">
+                One-click tweaks for popular sites
+              </span>
             </div>
-            <b-icon :icon="recipes ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+            <b-icon
+              :icon="recipes ? 'chevron-up' : 'chevron-down'"
+              class="section-chevron"
+            />
           </div>
         </b-button>
       </b-col>
@@ -169,7 +223,10 @@
               <span class="section-title">Media Queries</span>
               <span class="section-hint">Responsive screen-size rules</span>
             </div>
-            <b-icon :icon="mediaQueries ? 'chevron-up' : 'chevron-down'" class="section-chevron" />
+            <b-icon
+              :icon="mediaQueries ? 'chevron-up' : 'chevron-down'"
+              class="section-chevron"
+            />
           </div>
         </b-button>
       </b-col>
@@ -190,6 +247,7 @@ import TheTextProperties from './TheTextProperties.vue';
 import TheColorProperties from './TheColorProperties.vue';
 import TheLayoutProperties from './TheLayoutProperties.vue';
 import TheBorderProperties from './TheBorderProperties.vue';
+import TheAnimationEditor from './TheAnimationEditor.vue';
 import TheCssVariables from './TheCssVariables.vue';
 import TheComputedStyles from './TheComputedStyles.vue';
 import TheSnippetLibrary from './TheSnippetLibrary.vue';
@@ -204,6 +262,7 @@ export default defineComponent({
     TheColorProperties,
     TheLayoutProperties,
     TheBorderProperties,
+    TheAnimationEditor,
     TheCssVariables,
     TheComputedStyles,
     TheSnippetLibrary,
@@ -248,6 +307,14 @@ export default defineComponent({
       },
       set(value: boolean) {
         this.set('border', value);
+      },
+    },
+    animations: {
+      get(): boolean {
+        return this.$store.state.options.basicModeSections.animations;
+      },
+      set(value: boolean) {
+        this.set('animations', value);
       },
     },
     variables: {
