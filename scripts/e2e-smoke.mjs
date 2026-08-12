@@ -463,6 +463,49 @@ try {
     console.log(
       '✓ Built a deduplicated multi-selector with Shift-click while inspection stayed active'
     );
+    const sectionState = await fixturePage
+      .locator('#stylebot')
+      .evaluate(host => {
+        const sections = Array.from(
+          host.shadowRoot?.querySelectorAll('.section') || []
+        );
+        const colorSection = sections.find(section =>
+          section
+            .querySelector('.section-title')
+            ?.textContent?.includes('Colors')
+        );
+        colorSection?.querySelector('.collapse-btn')?.click();
+        return {
+          clicked: Boolean(colorSection),
+          labels: sections.map(section =>
+            section.textContent?.trim().slice(0, 80)
+          ),
+        };
+      });
+    assert(
+      sectionState.clicked,
+      `Colors section was not rendered: ${JSON.stringify(sectionState.labels)}`
+    );
+    const colorSection = fixturePage
+      .locator('#stylebot .section')
+      .filter({ hasText: 'Colors' });
+    await colorSection
+      .locator('select[aria-label="Gradient type"]')
+      .selectOption('conic');
+    await colorSection
+      .getByRole('button', { name: 'Set gradient angle to 90 degrees' })
+      .click();
+    await fixturePage.waitForFunction(() =>
+      ['#fixture', '#secondary'].every(selector =>
+        getComputedStyle(
+          document.querySelector(selector)
+        ).backgroundImage.includes('conic-gradient')
+      )
+    );
+    await colorSection.getByRole('button', { name: 'Copy CSS' }).waitFor();
+    console.log(
+      '✓ Applied a conic gradient with the visual angle controls and exposed Copy CSS'
+    );
     await fixturePage.keyboard.press('c');
     await fixturePage.waitForFunction(() => {
       const host = document.querySelector('#stylebot');
