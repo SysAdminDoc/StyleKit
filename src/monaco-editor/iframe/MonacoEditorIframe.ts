@@ -27,6 +27,12 @@ import {
   isParentUpdateCssMessage,
 } from '../messages';
 import type { IframeMessage } from '../messages';
+import {
+  formatStyleCode,
+  MONACO_FORMAT_ON_SAVE_STORAGE_KEY,
+  parseFormatOnSave,
+  type MonacoStyleLanguage,
+} from '../format-on-save';
 
 declare global {
   interface Window {
@@ -47,10 +53,16 @@ class MonacoEditorIframe {
   currentLintPreset: MonacoLintPreset = 'relaxed';
   lintSite?: string;
   lintSelect?: HTMLSelectElement;
+  formatOnSave = false;
+  formatting = false;
 
   constructor() {
     this.loadEditor(async () => {
-      await Promise.all([this.loadTheme(), this.loadLintSettings()]);
+      await Promise.all([
+        this.loadTheme(),
+        this.loadLintSettings(),
+        this.loadFormatOnSave(),
+      ]);
       this.attachWindowListeners();
       this.defineThemes();
       this.initEditor();
@@ -102,6 +114,19 @@ class MonacoEditorIframe {
     this.currentLintPreset = resolveMonacoLintPreset(this.lintSettings);
   }
 
+  async loadFormatOnSave(): Promise<void> {
+    try {
+      const stored = await chrome.storage.local.get(
+        MONACO_FORMAT_ON_SAVE_STORAGE_KEY
+      );
+      this.formatOnSave = parseFormatOnSave(
+        stored[MONACO_FORMAT_ON_SAVE_STORAGE_KEY]
+      );
+    } catch {
+      this.formatOnSave = false;
+    }
+  }
+
   initEditor(): void {
     const container = this.getContainer();
     const editorOptions = this.getEditorOptions();
@@ -114,6 +139,17 @@ class MonacoEditorIframe {
         css: this.editor.getValue(),
         type: 'stylebotMonacoIframeCssUpdated',
       });
+    });
+    this.editor.addAction({
+      id: 'stylekit.prettier-on-save',
+      label: 'Format with Prettier',
+      keybindings: [
+        window.monaco.KeyMod.CtrlCmd | window.monaco.KeyCode.KeyS,
+      ],
+      run: () => this.formatEditorOnSave(),
+    });
+    this.editor.onDidBlurEditorText(() => {
+      void this.formatEditorOnSave();
     });
   }
 
@@ -238,9 +274,42 @@ class MonacoEditorIframe {
     });
   }
 
+  async formatEditorOnSave(): Promise<void> {
+    if (!this.formatOnSave || this.formatting || !this.editor) return;
+
+    const model = this.editor.getModel();
+    if (!model) return;
+
+    this.formatting = true;
+    const container = this.getContainer();
+    try {
+      const current = model.getValue();
+      const formatted = await formatStyleCode(
+        current,
+        this.currentLanguage as MonacoStyleLanguage
+      );
+      if (formatted !== current) {
+        this.editor.pushUndoStop();
+        this.editor.executeEdits('stylekit-prettier', [
+          {
+            range: model.getFullModelRange(),
+            text: formatted,
+          },
+        ]);
+        this.editor.pushUndoStop();
+      }
+      container.dataset.stylekitFormatStatus = 'ready';
+    } catch {
+      container.dataset.stylekitFormatStatus = 'error';
+    } finally {
+      this.formatting = false;
+    }
+  }
+
   addToolbar(): void {
     const container = this.getContainer();
     container.dataset.stylekitMonacoTheme = this.currentTheme;
+    container.dataset.stylekitFormatOnSave = String(this.formatOnSave);
     const toolbar = document.createElement('div');
     Object.assign(toolbar.style, {
       position: 'absolute',
@@ -300,6 +369,32 @@ class MonacoEditorIframe {
     });
     this.refreshLintControl();
     toolbar.appendChild(this.lintSelect);
+
+    const formatLabel = document.createElement('label');
+    formatLabel.title = 'Format with Prettier on Ctrl/Cmd+S or focus loss';
+    Object.assign(formatLabel.style, {
+      alignItems: 'center',
+      color: '#a6adc8',
+      cursor: 'pointer',
+      display: 'flex',
+      fontFamily: 'sans-serif',
+      fontSize: '10px',
+      gap: '2px',
+      whiteSpace: 'nowrap',
+    });
+    const formatCheckbox = document.createElement('input');
+    formatCheckbox.type = 'checkbox';
+    formatCheckbox.checked = this.formatOnSave;
+    formatCheckbox.setAttribute('aria-label', 'Prettier on save');
+    formatCheckbox.addEventListener('change', () => {
+      this.formatOnSave = formatCheckbox.checked;
+      container.dataset.stylekitFormatOnSave = String(this.formatOnSave);
+      void chrome.storage.local.set({
+        [MONACO_FORMAT_ON_SAVE_STORAGE_KEY]: this.formatOnSave,
+      });
+    });
+    formatLabel.append(formatCheckbox, 'Prettier');
+    toolbar.appendChild(formatLabel);
 
     const btn = document.createElement('button');
     btn.textContent = 'CSS';

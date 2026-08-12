@@ -675,19 +675,45 @@ try {
     await monacoFrame
       .locator('#container[data-stylekit-lint-preset="strict"]')
       .waitFor();
+    const prettierOnSave = monacoFrame.getByLabel('Prettier on save');
+    await prettierOnSave.check();
+    await monacoFrame.locator('#container').evaluate(() => {
+      const model = window.monaco.editor.getModels()[0];
+      if (!model) throw new Error('Monaco CSS model was not created');
+      model.setValue('.prettier-smoke{color:red}');
+    });
+    await monacoFrame
+      .locator('.monaco-editor')
+      .click({ position: { x: 24, y: 36 } });
+    await fixturePage.keyboard.press('Control+s');
+    await monacoFrame
+      .locator('#container[data-stylekit-format-status="ready"]')
+      .waitFor();
+    assert.equal(
+      (
+        (await monacoFrame.locator('#container').evaluate(() =>
+          window.monaco.editor.getModels()[0]?.getValue()
+        )) || ''
+      ).replaceAll('\r\n', '\n'),
+      '.prettier-smoke {\n  color: red;\n}\n'
+    );
     await serviceWorker.evaluate(async () => {
       const deadline = Date.now() + 5000;
       while (Date.now() < deadline) {
-        const stored = await chrome.storage.local.get('stylekit-monaco-lint');
+        const stored = await chrome.storage.local.get([
+          'stylekit-monaco-lint',
+          'stylekit-monaco-format-on-save',
+        ]);
         if (
           stored['stylekit-monaco-lint']?.sitePresets?.['stylekit.test'] ===
-          'strict'
+            'strict' &&
+          stored['stylekit-monaco-format-on-save'] === true
         ) {
           return;
         }
         await new Promise(resolveWait => setTimeout(resolveWait, 50));
       }
-      throw new Error('Per-site Monaco lint preset was not persisted');
+      throw new Error('Monaco lint/format settings were not persisted');
     });
     await fixturePage.locator('#stylebot iframe').evaluate(iframe => {
       const src = iframe.getAttribute('src');
@@ -699,8 +725,10 @@ try {
     await monacoLint.waitFor();
     assert.equal(await monacoLint.inputValue(), 'strict');
     assert.match(await monacoLint.getAttribute('title'), /stylekit\.test/);
+    await prettierOnSave.waitFor();
+    assert(await prettierOnSave.isChecked());
     console.log(
-      '✓ Persisted Monaco Sepia and a Strict site lint override across iframe reload'
+      '✓ Persisted Monaco theme, site lint override, and Prettier-on-save formatting'
     );
   }
 
